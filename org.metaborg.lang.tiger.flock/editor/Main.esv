@@ -1,0 +1,20 @@
+module Main
+imports
+
+  Syntax
+  
+language
+
+  extensions : tig
+
+  provider : target/metaborg/stratego.ctree
+  provider : target/metaborg/stratego.jar
+  
+menus
+  
+  menu: "Flock" (openeditor)
+    
+    action: "Show parsed AST" = debug-show-aterm (source)
+    action: "Show built CFG"  = debug-show-cfg (source)
+    action: "Analysis"  = debug-analyze-cfg (source)
+  

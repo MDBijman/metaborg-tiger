@@ -1,0 +1,15 @@
+module tiger/Live
+imports
+ tiger/Cfg
+
+properties
+  live: MaySet[name]
+
+property rules
+  live(_.end) = {}
+  
+  live(VarDec(n, _, _) -> next) = {m | m <- live(next), m != n}
+    
+  live(Var(n) -> next) = {n} \/ live(next)  
+      
+  live(_ -> next) = live(next)

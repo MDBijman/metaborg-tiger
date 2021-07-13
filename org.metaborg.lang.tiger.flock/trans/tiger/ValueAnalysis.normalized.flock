@@ -1,0 +1,50 @@
+module tiger/ValueAnalysis
+
+  imports
+      tiger/Cfg
+  properties
+      values: SimpleMap[string, Value]
+  property rules
+      values(_.end) = tmp0 as SimpleMap[string, Value]
+        where
+          tmp0: SimpleMap[string, Value] = SimpleMap[string, Value].bottom
+      values(prev -> VarDec(usrn, _, Int(usri))) = tmp1 as SimpleMap[string, Value]
+        where
+          tmp4: Map[string, Value] = { usrk |-> usrv as Value | (usrk |-> usrv) <- values(prev), usrk != usrn }
+          tmp5: Map[string, Value] = { usrn |-> ConstProp.Const(usri) as Value }
+          tmp6: Map[string, Value] = tmp4 \[Map[string, Value]]/ tmp5
+          tmp1: Map[string, Value] = tmp6
+      values(prev -> VarDec(usrn, _, _)) = tmp2 as SimpleMap[string, Value]
+        where
+          tmp7: Map[string, Value] = { usrk |-> usrv as Value | (usrk |-> usrv) <- values(prev), usrk != usrn }
+          tmp8: Map[string, Value] = { usrn |-> ConstProp.Top( ) as Value }
+          tmp9: Map[string, Value] = tmp7 \[Map[string, Value]]/ tmp8
+          tmp2: Map[string, Value] = tmp9
+      values(prev -> _) = tmp3 as SimpleMap[string, Value]
+        where
+          tmp3: SimpleMap[string, Value] = values(prev)
+  types
+      ConstProp =
+          | Top( )
+          | Const(int)
+          | Bottom( )
+  lattices
+      Value is value where
+          type = ConstProp
+          bottom = let
+                     tmp10: ConstProp = ConstProp.Bottom( )
+                   in tmp10 as Value
+          top = let
+                  tmp11: ConstProp = ConstProp.Top( )
+                in tmp11 as Value
+          lub(usrl: ConstProp, usrr: ConstProp) = let
+                                                    tmp12: ConstProp = match (usrl, usrr) with
+                                                                         | (Top( ), _) => ConstProp.Top( )
+                                                                         | (_, Top( )) => ConstProp.Top( )
+                                                                         | (Const(usri), Const(usrj)) => if usri == usrj then
+                                                                                                           ConstProp.Const(usri)
+                                                                                                         else
+                                                                                                           ConstProp.Top( )
+                                                                         | (_, Bottom( )) => usrl
+                                                                         | (Bottom( ), _) => usrr
+                                                  in tmp12 as Value

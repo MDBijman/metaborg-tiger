@@ -1,0 +1,31 @@
+module tiger/ValueAnalysis
+
+imports
+ tiger/Cfg
+
+properties
+  values: SimpleMap[string, Value]
+
+property rules
+  values(_.end) = SimpleMap[string, Value].bottom
+  values(prev -> VarDec(n, _, Int(i))) = { k |-> v | (k |-> v) <- values(prev), k != n } \/ {n |-> Const(i)}
+  values(prev -> VarDec(n, _, _))      = { k |-> v | (k |-> v) <- values(prev), k != n } \/ {n |-> Top()}
+  values(prev -> _) = values(prev)
+
+types
+  ConstProp =
+  | Top()
+  | Const(int)
+  | Bottom()
+
+lattices
+  Value is value where
+    type = ConstProp
+    bottom = Bottom()
+    top = Top()
+    lub(l: ConstProp, r: ConstProp) = match (l, r) with
+      | (Top(), _) => Top()
+      | (_, Top()) => Top()
+      | (Const(i), Const(j)) => if i == j then (Const(i)) else (Top())
+      | (_, Bottom()) => l
+      | (Bottom(), _) => r

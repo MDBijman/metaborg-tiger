@@ -1,0 +1,23 @@
+module tiger/Live
+
+  imports
+      tiger/Cfg
+  properties
+      live: MaySet[name]
+  property rules
+      live(_.end) = tmp73 as MaySet[name]
+        where
+          tmp77: Set[name] = { }
+          tmp73: Set[name] = tmp77
+      live(VarDec(usrn, _, _) -> next) = tmp74 as MaySet[name]
+        where
+          tmp78: Set[name] = { usrm | usrm <- live(next), usrm != usrn }
+          tmp74: Set[name] = tmp78
+      live(Var(usrn) -> next) = tmp75 as MaySet[name]
+        where
+          tmp79: Set[name] = { usrn }
+          tmp80: Set[name] = tmp79 \/ live(next).inner
+          tmp75: Set[name] = tmp80
+      live(_ -> next) = tmp76 as MaySet[name]
+        where
+          tmp76: MaySet[name] = live(next)

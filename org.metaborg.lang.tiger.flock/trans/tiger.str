@@ -1,0 +1,56 @@
+module tiger
+
+imports
+
+  api
+  libstratego-lib
+  signatures/tiger-sig
+  pp
+
+signature
+
+  constructors
+  
+    Const: String -> Const
+
+rules // Debugging
+  
+  debug-show-aterm:
+    (node, _, _, path, project-path) -> (filename, result)
+    with
+      filename := <guarantee-extension(|"aterm")> path
+    ; result   := node
+
+  debug-show-cfg:
+    (p, _, _, path, project-path) -> ()
+    with
+      p' := <flock-add-id> p
+    ; <flock-analyse-program> p'
+    ; <flock-debug-graph(|"live")> ()
+
+  debug-analyze-cfg:
+    (p, _, _, path, project-path) -> (filename, result)
+    with
+      p' := <flock-add-id> p
+    ; <flock-analyse-program> p'
+    ; <flock-debug-graph> ()
+    ; p'' := <oncetd(flock-remove-all(is-dead-vardec))> p'
+    ; p''' := <topdown(try(replace-constant))> p''
+    //; <topdown(try(print-value))> p'''
+    ; filename := <guarantee-extension(|"opt.tig")> path
+    ; result   := <pp-tiger-string> p'''
+
+  is-dead-vardec: a@VarDec(n, _, _) -> ()
+  where
+    <not(flock-is-live(|n))> a
+  ; <concat-strings; flock-debug> ["dead variable ", n]
+  
+  replace-constant: v@Var(n) -> new-node
+  where
+    <flock-debug> v
+  ; n-no-annos := <strip-annos; flock-debug> n
+  ; [Const(new-value)] := <flock-get-value; flock-debug; filter(?(name, value); equal(|name, n-no-annos); !value); flock-debug> v
+  ; new-node := Int(new-value)
+  ; <flock-replace-node(|v)> new-node 
+  
+  

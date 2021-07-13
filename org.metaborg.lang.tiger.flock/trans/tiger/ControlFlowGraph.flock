@@ -1,0 +1,74 @@
+module tiger/Cfg
+signature
+
+  sorts
+    Id = string
+    StrConst = string
+    IntConst = int
+    
+    Exp
+    Dec
+    FunDec
+    Type
+    TypeDec
+    Occ
+    TypeId
+    FArg
+	Var
+	Int
+	
+  constructors
+    Mod : Exp -> Exp
+    Let : list(Dec) * list(Exp) -> Exp
+    FunDecs : list(FunDec) -> Dec
+    ProcDec : Occ * list(FArg) * Exp -> FunDec 
+    FunDec : Occ * list(FArg) * Type * Exp -> FunDec
+    VarDec : Id * Type * Exp -> Dec
+    TypeDecs : list(TypeDec) -> Dec
+    TypeDec : Occ * Type -> TypeDec
+    Type : TypeId -> Type
+    Occ : Id -> Occ 
+    Tid : Occ -> TypeId
+    
+    Minus : Exp * Exp -> Exp
+    Plus : Exp * Exp -> Exp
+    Lt : Exp * Exp -> Exp
+    Eq : Exp * Exp -> Exp
+    Times : Exp * Exp -> Exp
+    Divide : Exp * Exp -> Exp
+    
+    Call : Occ * list(Exp) -> Exp
+    If : Exp * Exp * Exp -> Exp
+    Seq : list(Exp) -> Exp
+    
+    String : StrConst -> Exp
+    Int : IntConst -> Exp
+    Var : Id -> Var
+    
+control-flow rules
+
+  root Mod(s) = start -> s -> end
+  root ProcDec(n, args, body) = start -> body -> end
+  root FunDec(n, args, rt, body) = start -> body -> end
+  
+  FunDecs(_) = entry -> exit
+  VarDec(n, t, e) = entry -> e -> this -> exit
+  Let(decs, exps) = entry -> decs -> exps -> exit
+
+  Call(_, args) = entry -> args -> this -> exit
+  
+  Minus(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Plus(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Lt(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Eq(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Times(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Divide(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+
+  If(c, t, e) = entry -> c -> t -> exit,
+                         c -> e -> exit
+  Seq(stmts) = entry -> stmts -> exit
+  
+  node Var(_)
+  node Int(_)
+  node String(_)
+  

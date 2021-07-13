@@ -1,0 +1,1683 @@
+scope graph
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_418-47 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_272-30 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_498-53 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp1" @-}, MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])))
+      decl : static-semantics/common!Variable{"tmp1" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_487-57
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_314-36 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1537-153 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_527-75 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #.-inst_448-81 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_712-74
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1636-159 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-armScope_1587-165
+    }
+  }
+  #.-inst_1528-178 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new5_612-47
+    }
+  }
+  #.-inst_766-108 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_585-65
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1357-139 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new1_1346-140
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_2267-176 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"lhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"rhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"lhs" @-}
+             static-semantics/common!Variable{"rhs" @-}
+             static-semantics/common!Variable{"entry" @-}
+             static-semantics/common!Variable{"exit" @-}
+             static-semantics/common!Variable{"end" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-moduleScope_2-50 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Constructor{"Top" @-}, CONSTRUCTOR(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []))
+                                               (static-semantics/common!Constructor{"Bottom" @-}, CONSTRUCTOR(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []))
+                                               (static-semantics/common!Type{"ConstProp" @-}, USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18))
+                                               (static-semantics/common!Property{"values" @-}, PROPERTY(INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), [])])))
+                                               (static-semantics/common!Lattice{"Value" @-}, LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7))
+                                               (static-semantics/common!Constructor{"Const" @-}, CONSTRUCTOR(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), [INT()]))
+      decl : static-semantics/common!Constructor{"Const" @-}
+             static-semantics/common!Constructor{"Top" @-}
+             static-semantics/common!Property{"values" @-}
+             static-semantics/common!Type{"ConstProp" @-}
+             static-semantics/common!Constructor{"Bottom" @-}
+             static-semantics/common!Lattice{"Value" @-}
+    }
+    edges {
+      static-semantics/common!P : #-s_1-1
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #.-inst_266-68 {
+    relations {
+      decl : static-semantics/common!TVariable{"k" @-}
+             static-semantics/common!TVariable{"v" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_439-49
+    }
+  }
+  #.-inst_1008-133 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_1301-134
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-ruleScope_165-23 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"prev" @-}, INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), [])]))
+      decl : static-semantics/common!Variable{"prev" @-}
+             static-semantics/common!Variable{"prev" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-moduleScope_2-50
+    }
+  }
+  #.-inst_707-100 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_1119-121
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-mapCompScope_574-66 {
+    relations {
+      decl : static-semantics/common!Variable{"usrk" @-}
+             static-semantics/common!Variable{"usrv" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"usrk" @-}, STRING())
+                                               (static-semantics/common!Variable{"usrv" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_429-73
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1616-157 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new1_1605-158
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_8-144 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"lhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"rhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"lhs" @-}
+             static-semantics/common!Variable{"rhs" @-}
+             static-semantics/common!Variable{"end" @-}
+             static-semantics/common!Variable{"entry" @-}
+             static-semantics/common!Variable{"exit" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #.-inst_389-75 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new5_800-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-lubScope_29-144 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"usrr" @-}, INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []))
+                                               (static-semantics/common!Variable{"usrl" @-}, INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []))
+      decl : static-semantics/common!Variable{"usrr" @-}
+             static-semantics/common!Variable{"usrl" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88
+    }
+  }
+  #.-inst_248-63 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_945-117
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_2078-157 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_138-27 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"prev" @-}, INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])]))
+      decl : static-semantics/common!Variable{"prev" @-}
+             static-semantics/common!Variable{"prev" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-ruleScope_358-40 {
+    relations {
+      decl : static-semantics/common!Variable{"i" @-}
+             static-semantics/common!Variable{"n" @-}
+             static-semantics/common!Variable{"prev" @-}
+             static-semantics/common!Variable{"prev" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"i" @-}, INT())
+                                               (static-semantics/common!Variable{"n" @-}, STRING())
+                                               (static-semantics/common!Variable{"prev" @-}, INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), [])]))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-moduleScope_2-50
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_459-54 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"s" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"s" @-}
+             static-semantics/common!Variable{"start" @-}
+             static-semantics/common!Variable{"end" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1927-174 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_23-9 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"lhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"rhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"lhs" @-}
+             static-semantics/common!Variable{"rhs" @-}
+             static-semantics/common!Variable{"exit" @-}
+             static-semantics/common!Variable{"entry" @-}
+             static-semantics/common!Variable{"end" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #.-inst_552-89 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_256-36
+    }
+  }
+  #.-inst_628-96 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6
+    }
+  }
+  #.-inst_666-97 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_240-39
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_209-33 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"t" @-}, INST(USERTYPE("Type", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_807-76), []))
+                                               (static-semantics/common!Variable{"e" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"n" @-}, STRING())
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"t" @-}
+             static-semantics/common!Variable{"e" @-}
+             static-semantics/common!Variable{"n" @-}
+             static-semantics/common!Variable{"end" @-}
+             static-semantics/common!Variable{"entry" @-}
+             static-semantics/common!Variable{"exit" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_1327-142 {
+    relations {
+      decl : static-semantics/common!Variable{"tmp11" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp11" @-}, INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88
+    }
+  }
+  #.-inst_365-73 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_1430-149
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1143-118 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new1_1132-119
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_81-12 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1845-169 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_416-45 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_245-42 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp7" @-}, MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])))
+      decl : static-semantics/common!Variable{"tmp7" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_209-48
+    }
+  }
+  #.-inst_1593-186 {
+    relations {
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #.-inst_719-101 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_349-40
+    }
+  }
+  #.-inst_862-120 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_471-60
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_1053-96 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-typeScope_114-18
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-armScope_1853-175 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-lubScope_29-144
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_79-78 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new0_72-2
+    }
+  }
+  #.-inst_1029-135 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_460-64
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_606-42 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #.-inst_1516-177 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-latticeScope_14-7
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-armScope_1774-170 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-lubScope_29-144
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_1907-147 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_465-67 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp4" @-}, MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])))
+      decl : static-semantics/common!Variable{"tmp4" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_429-73
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_13-4 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"lhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"rhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"lhs" @-}
+             static-semantics/common!Variable{"rhs" @-}
+             static-semantics/common!Variable{"end" @-}
+             static-semantics/common!Variable{"exit" @-}
+             static-semantics/common!Variable{"entry" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_1456-176 {
+    relations {
+      decl : static-semantics/common!Variable{"tmp12" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp12" @-}, INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-lubScope_29-144
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_689-70 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_104-77 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-latticeScope_14-7
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_278-122 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp2" @-}, MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])))
+      decl : static-semantics/common!Variable{"tmp2" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_267-32
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_51-15 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"rhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"lhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"rhs" @-}
+             static-semantics/common!Variable{"lhs" @-}
+             static-semantics/common!Variable{"exit" @-}
+             static-semantics/common!Variable{"entry" @-}
+             static-semantics/common!Variable{"end" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_209-48 {
+    relations {
+      decl : static-semantics/common!Variable{"usrn" @-}
+             static-semantics/common!Variable{"prev" @-}
+             static-semantics/common!Variable{"prev" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"usrn" @-}, STRING())
+                                               (static-semantics/common!Variable{"prev" @-}, INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])]))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1377-141 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-lubScope_29-82 {
+    relations {
+      decl : static-semantics/common!Variable{"r" @-}
+             static-semantics/common!Variable{"l" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"r" @-}, INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []))
+                                               (static-semantics/common!Variable{"l" @-}, INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-moduleScope_2-50
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_1169-104 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-typeScope_114-18
+    }
+  }
+  #.-inst_738-102 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1000-116 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_465-67
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_2164-170 {
+    relations {
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"c" @-}
+             static-semantics/common!Variable{"e" @-}
+             static-semantics/common!Variable{"t" @-}
+             static-semantics/common!Variable{"entry" @-}
+             static-semantics/common!Variable{"exit" @-}
+             static-semantics/common!Variable{"end" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"c" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"e" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"t" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_777-78 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_702-81
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_972-93 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new0_954-94
+    }
+  }
+  #.-inst_675-98 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6
+    }
+  }
+  #.-inst_1041-136 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_262-31
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_905-89 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-typeScope_114-18
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1668-160 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new1_1646-161
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_794-80 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #.-inst_407-80 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"k" @-}, STRING())
+                                               (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_712-74
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1298-132 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1163-120 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_245-42
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_637-46 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new5_612-47
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-armScope_823-88 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-lubScope_29-82
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_2014-152 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #.-inst_1545-179 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-ruleScope_547-43
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1815-168 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-armScope_1774-170
+    }
+  }
+  #.-inst_473-82 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_702-81
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_476-61 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp5" @-}, MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])))
+      decl : static-semantics/common!Variable{"tmp5" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_465-67
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_1947-155 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"rhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"lhs" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"rhs" @-}
+             static-semantics/common!Variable{"lhs" @-}
+             static-semantics/common!Variable{"end" @-}
+             static-semantics/common!Variable{"entry" @-}
+             static-semantics/common!Variable{"exit" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1688-162 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-armScope_1587-165
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_2158-161 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_174-22 {
+    relations {
+      decl : static-semantics/common!Variable{"tmp3" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp3" @-}, INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])]))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_138-27
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1742-163 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1894-173 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-armScope_1853-175
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_1837-143 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_825-84 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new5_800-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_1078-98 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new0_1071-99
+    }
+  }
+  #.-inst_983-132 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_148-18
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_1248-133 {
+    relations {
+      decl : static-semantics/common!Variable{"tmp10" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp10" @-}, INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_278-39 {
+    relations {
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"exit" @-}
+             static-semantics/common!Variable{"entry" @-}
+             static-semantics/common!Variable{"end" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_187-22 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_141-27 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"decs" @-}, LIST(USERTYPE("Dec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82)))
+                                               (static-semantics/common!Variable{"exps" @-}, LIST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)))
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"decs" @-}
+             static-semantics/common!Variable{"exps" @-}
+             static-semantics/common!Variable{"end" @-}
+             static-semantics/common!Variable{"exit" @-}
+             static-semantics/common!Variable{"entry" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #.-inst_353-72 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_273-123
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_256-36 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp8" @-}, MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])))
+      decl : static-semantics/common!Variable{"tmp8" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_245-42
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_198-26 {
+    relations {
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #.-inst_606-95 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_733-77
+    }
+  }
+  #.-inst_329-70 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_1322-138
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1579-155 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-mapCompScope_259-25 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"k" @-}, STRING())
+                                               (static-semantics/common!Variable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+      decl : static-semantics/common!Variable{"k" @-}
+             static-semantics/common!Variable{"v" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-ruleScope_198-31
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_1756-140 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_87-21 {
+    relations {
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"args" @-}
+             static-semantics/common!Variable{"exit" @-}
+             static-semantics/common!Variable{"end" @-}
+             static-semantics/common!Variable{"entry" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"args" @-}, LIST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_941-91 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new0_934-92
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-armScope_913-97 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"j" @-}, INT())
+                                               (static-semantics/common!Variable{"i" @-}, INT())
+      decl : static-semantics/common!Variable{"j" @-}
+             static-semantics/common!Variable{"i" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-lubScope_29-82
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-armScope_868-90 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-lubScope_29-82
+    }
+  }
+  #.-inst_1720-199 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #.-inst_687-99 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_493-52
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_320-44 {
+    relations {
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"rt" @-}
+             static-semantics/common!Variable{"args" @-}
+             static-semantics/common!Variable{"body" @-}
+             static-semantics/common!Variable{"n" @-}
+             static-semantics/common!Variable{"end" @-}
+             static-semantics/common!Variable{"start" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"rt" @-}, INST(USERTYPE("Type", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_807-76), []))
+                                               (static-semantics/common!Variable{"args" @-}, LIST(USERTYPE("FArg", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_866-101)))
+                                               (static-semantics/common!Variable{"body" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"n" @-}, INST(USERTYPE("Occ", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_791-70), []))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_682-113 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_393-49 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"args" @-}, LIST(USERTYPE("FArg", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_866-101)))
+                                               (static-semantics/common!Variable{"body" @-}, INST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), []))
+                                               (static-semantics/common!Variable{"n" @-}, INST(USERTYPE("Occ", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_791-70), []))
+      static-semantics/flow!cfgRootPatternNames : []
+      decl : static-semantics/common!Variable{"args" @-}
+             static-semantics/common!Variable{"body" @-}
+             static-semantics/common!Variable{"n" @-}
+             static-semantics/common!Variable{"start" @-}
+             static-semantics/common!Variable{"end" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #.-inst_916-126 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_169-21
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-armScope_1542-156 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-lubScope_29-144
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_506-52 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_2049-156 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #.-inst_491-87 {
+    relations {
+      decl : static-semantics/common!TVariable{"k" @-}
+             static-semantics/common!TVariable{"v" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_219-28
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_536-39 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_429-73 {
+    relations {
+      decl : static-semantics/common!Variable{"usrn" @-}
+             static-semantics/common!Variable{"usri" @-}
+             static-semantics/common!Variable{"prev" @-}
+             static-semantics/common!Variable{"prev" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"usrn" @-}, STRING())
+                                               (static-semantics/common!Variable{"usri" @-}, INT())
+                                               (static-semantics/common!Variable{"prev" @-}, INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])]))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_412-32 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new0_400-33
+    }
+  }
+  #.-inst_570-94 {
+    relations {
+      decl : static-semantics/common!TVariable{"k" @-}
+             static-semantics/common!TVariable{"v" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"k" @-}, STRING())
+                                               (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_733-77
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-ruleScope_198-31 {
+    relations {
+      decl : static-semantics/common!Variable{"n" @-}
+             static-semantics/common!Variable{"prev" @-}
+             static-semantics/common!Variable{"prev" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"n" @-}, STRING())
+                                               (static-semantics/common!Variable{"prev" @-}, INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), [])]))
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-moduleScope_2-50
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-armScope_1116-105 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-lubScope_29-82
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_1026-95 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-typeScope_114-18
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1769-164 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_2334-173 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_1136-102 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new0_1129-103
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Constructor{"Tid" @-}, CONSTRUCTOR(USERTYPE("TypeId", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_786-69), [USERTYPE("Occ", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_791-70)]))
+                                               (static-semantics/common!Constructor{"Minus" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"Plus" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"Lt" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"Eq" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"Times" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"Divide" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"Call" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [USERTYPE("Occ", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_791-70), LIST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85))]))
+                                               (static-semantics/common!Constructor{"If" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"Seq" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [LIST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85))]))
+                                               (static-semantics/common!Constructor{"String" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [STRING()]))
+                                               (static-semantics/common!Constructor{"Int" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [INT()]))
+                                               (static-semantics/common!Constructor{"Var" @-}, CONSTRUCTOR(USERTYPE("Var", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_882-107), [STRING()]))
+                                               (static-semantics/common!Constructor{"Occ" @-}, CONSTRUCTOR(USERTYPE("Occ", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_791-70), [STRING()]))
+                                               (static-semantics/common!Constructor{"Type" @-}, CONSTRUCTOR(USERTYPE("Type", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_807-76), [USERTYPE("TypeId", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_786-69)]))
+                                               (static-semantics/common!Constructor{"TypeDec" @-}, CONSTRUCTOR(USERTYPE("TypeDec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_799-73), [USERTYPE("Occ", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_791-70), USERTYPE("Type", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_807-76)]))
+                                               (static-semantics/common!Type{"Var" @-}, USERTYPE("Var", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_882-107))
+                                               (static-semantics/common!Type{"Int" @-}, USERTYPE("Int", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_874-104))
+                                               (static-semantics/common!Type{"FArg" @-}, USERTYPE("FArg", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_866-101))
+                                               (static-semantics/common!Type{"TypeId" @-}, USERTYPE("TypeId", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_786-69))
+                                               (static-semantics/common!Type{"Occ" @-}, USERTYPE("Occ", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_791-70))
+                                               (static-semantics/common!Type{"TypeDec" @-}, USERTYPE("TypeDec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_799-73))
+                                               (static-semantics/common!Constructor{"TypeDecs" @-}, CONSTRUCTOR(USERTYPE("Dec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82), [LIST(USERTYPE("TypeDec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_799-73))]))
+                                               (static-semantics/common!Type{"Exp" @-}, USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85))
+                                               (static-semantics/common!Type{"Dec" @-}, USERTYPE("Dec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82))
+                                               (static-semantics/common!Type{"FunDec" @-}, USERTYPE("FunDec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_815-79))
+                                               (static-semantics/common!Type{"Type" @-}, USERTYPE("Type", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_807-76))
+                                               (static-semantics/common!Constructor{"FunDecs" @-}, CONSTRUCTOR(USERTYPE("Dec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82), [LIST(USERTYPE("FunDec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_815-79))]))
+                                               (static-semantics/common!Constructor{"Let" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [LIST(USERTYPE("Dec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82)), LIST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85))]))
+                                               (static-semantics/common!Constructor{"ProcDec" @-}, CONSTRUCTOR(USERTYPE("FunDec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_815-79), [USERTYPE("Occ", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_791-70), LIST(USERTYPE("FArg", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_866-101)), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"Mod" @-}, CONSTRUCTOR(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85), [USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"FunDec" @-}, CONSTRUCTOR(USERTYPE("FunDec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_815-79), [USERTYPE("Occ", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_791-70), LIST(USERTYPE("FArg", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_866-101)), USERTYPE("Type", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_807-76), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Constructor{"VarDec" @-}, CONSTRUCTOR(USERTYPE("Dec", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82), [STRING(), USERTYPE("Type", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_807-76), USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)]))
+                                               (static-semantics/common!Type{"IntConst" @-}, INT())
+                                               (static-semantics/common!Type{"StrConst" @-}, STRING())
+                                               (static-semantics/common!Type{"Id" @-}, STRING())
+      decl : static-semantics/common!Constructor{"Tid" @-}
+             static-semantics/common!Constructor{"Minus" @-}
+             static-semantics/common!Constructor{"Plus" @-}
+             static-semantics/common!Constructor{"Lt" @-}
+             static-semantics/common!Constructor{"Eq" @-}
+             static-semantics/common!Constructor{"Times" @-}
+             static-semantics/common!Constructor{"Divide" @-}
+             static-semantics/common!Constructor{"Call" @-}
+             static-semantics/common!Constructor{"If" @-}
+             static-semantics/common!Constructor{"Seq" @-}
+             static-semantics/common!Constructor{"String" @-}
+             static-semantics/common!Constructor{"Int" @-}
+             static-semantics/common!Constructor{"Var" @-}
+             static-semantics/common!Constructor{"Occ" @-}
+             static-semantics/common!Constructor{"Type" @-}
+             static-semantics/common!Constructor{"TypeDec" @-}
+             static-semantics/common!Type{"Var" @-}
+             static-semantics/common!Type{"Int" @-}
+             static-semantics/common!Type{"FArg" @-}
+             static-semantics/common!Type{"TypeId" @-}
+             static-semantics/common!Type{"Occ" @-}
+             static-semantics/common!Constructor{"VarDec" @-}
+             static-semantics/common!Constructor{"Mod" @-}
+             static-semantics/common!Type{"Dec" @-}
+             static-semantics/common!Type{"StrConst" @-}
+             static-semantics/common!Constructor{"TypeDecs" @-}
+             static-semantics/common!Type{"Id" @-}
+             static-semantics/common!Constructor{"FunDec" @-}
+             static-semantics/common!Type{"Type" @-}
+             static-semantics/common!Constructor{"Let" @-}
+             static-semantics/common!Type{"IntConst" @-}
+             static-semantics/common!Constructor{"ProcDec" @-}
+             static-semantics/common!Constructor{"FunDecs" @-}
+             static-semantics/common!Type{"TypeDec" @-}
+             static-semantics/common!Type{"Exp" @-}
+             static-semantics/common!Type{"FunDec" @-}
+    }
+    edges {
+      static-semantics/common!P : #-s_1-1
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_767-81 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new0_46-80
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_345-28 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_388-42 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_815-79
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_863-87 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-typeScope_114-18
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_980-114 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new1_958-115
+    }
+  }
+  #.-inst_1507-176 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-latticeScope_14-7
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_267-32 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp9" @-}, MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])))
+      decl : static-semantics/common!Variable{"tmp9" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_256-36
+    }
+  }
+  #.-inst_1494-171 {
+    relations {
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #.-inst_827-114 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_476-61
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_584-41 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-ruleScope_547-43
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_2261-167 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_247-76 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-new0_240-24
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-ruleScope_2111-164 {
+    relations {
+      decl : static-semantics/common!Variable{"stmts" @-}
+             static-semantics/common!Variable{"exit" @-}
+             static-semantics/common!Variable{"entry" @-}
+             static-semantics/common!Variable{"end" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"stmts" @-}, LIST(USERTYPE("Exp", [], #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85)))
+      static-semantics/flow!cfgRootPatternNames : []
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_702-81 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88
+    }
+  }
+  #.-inst_947-131 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"k" @-}, STRING())
+                                               (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_148-18
+    }
+  }
+  #.-inst_236-62 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_1243-129
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_487-57 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp6" @-}, MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])))
+      decl : static-semantics/common!Variable{"tmp6" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_476-61
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_203-24 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #.-inst_754-107 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_1381-143
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1278-130 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new1_1267-131
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_135-18 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_831-85
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-mapCompScope_424-34 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"k" @-}, STRING())
+                                               (static-semantics/common!Variable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+      decl : static-semantics/common!Variable{"k" @-}
+             static-semantics/common!Variable{"v" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-ruleScope_358-40
+    }
+  }
+  #.-inst_1017-134 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_1451-152
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-armScope_1587-165 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"usrj" @-}, INT())
+                                               (static-semantics/common!Variable{"usri" @-}, INT())
+      decl : static-semantics/common!Variable{"usrj" @-}
+             static-semantics/common!Variable{"usri" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-lubScope_29-144
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_77-126 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1874-171 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new1_1863-172
+    }
+  }
+  #.-inst_341-71 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_251-35
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_1108-100 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.flock-typeScope_114-18
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-ruleScope_547-43 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-moduleScope_2-50
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-thisBindingScope_738-79 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"tmp0" @-}, INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])]))
+      decl : static-semantics/common!Variable{"tmp0" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_702-81
+    }
+  }
+  #.-inst_302-69 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_439-49
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_691-72 {
+    relations {
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #.-inst_527-88 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new3_219-28
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_534-37 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_823-82
+    }
+  }
+  #.-inst_846-115 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-inst_347-30 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.flock-typeScope_114-18), []), #trans/tiger/ValueAnalysis.flock-latticeScope_14-7), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-armScope_1497-154 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-lubScope_29-144
+    }
+  }
+  #.-inst_811-109 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #.-mapLatticeScope_4-5
+    }
+  }
+  #.-inst_377-74 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_482-56
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-mapCompScope_338-41 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!Variable{"usrk" @-}, STRING())
+                                               (static-semantics/common!Variable{"usrv" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+      decl : static-semantics/common!Variable{"usrk" @-}
+             static-semantics/common!Variable{"usrv" @-}
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.normalized.flock-ruleScope_209-48
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_454-47 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_815-79
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-inst_1795-166 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new1_1784-167
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-armScope_1058-101 {
+    relations {
+    }
+    edges {
+      static-semantics/common!P : #trans/tiger/ValueAnalysis.flock-lubScope_29-82
+    }
+  }
+  #trans/tiger/ControlFlowGraph.flock-inst_2107-158 {
+    relations {
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-sortTypeScope_882-107
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88 {
+    relations {
+      decl : static-semantics/common!Lattice{"Value" @-}
+             static-semantics/common!Constructor{"Bottom" @-}
+             static-semantics/common!Type{"ConstProp" @-}
+             static-semantics/common!Constructor{"Top" @-}
+             static-semantics/common!Constructor{"Const" @-}
+             static-semantics/common!Property{"values" @-}
+      static-semantics/common!occurrenceType : (static-semantics/common!Constructor{"Bottom" @-}, CONSTRUCTOR(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []))
+                                               (static-semantics/common!Lattice{"Value" @-}, LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6))
+                                               (static-semantics/common!Constructor{"Const" @-}, CONSTRUCTOR(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), [INT()]))
+                                               (static-semantics/common!Constructor{"Top" @-}, CONSTRUCTOR(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []))
+                                               (static-semantics/common!Property{"values" @-}, PROPERTY(INST(LATTICE("SimpleMap", ["k", "v"], MAP(STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])), #.-mapLatticeScope_4-5), [STRING(), INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), [])])))
+                                               (static-semantics/common!Type{"ConstProp" @-}, USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17))
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94
+      static-semantics/common!P : #-s_1-1
+    }
+  }
+  #.-inst_880-125 {
+    relations {
+      static-semantics/common!occurrenceType : (static-semantics/common!TVariable{"v" @-}, INST(LATTICE("Value", [], INST(USERTYPE("ConstProp", [], #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17), []), #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6), []))
+                                               (static-semantics/common!TVariable{"k" @-}, STRING())
+      decl : static-semantics/common!TVariable{"v" @-}
+             static-semantics/common!TVariable{"k" @-}
+    }
+    edges {
+      static-semantics/common!I : #trans/tiger/ValueAnalysis.normalized.flock-new6_169-21
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-typeScope_114-18 {
+    relations {
+      static-semantics/common!occurrenceScope : (static-semantics/common!BASE_TYPE{ @-}, #trans/tiger/ValueAnalysis.flock-typeScope_114-18)
+      decl : static-semantics/common!BASE_TYPE{ @-}
+    }
+    edges {
+    }
+  }
+  #-s_1-1 {
+    relations {
+      decl : static-semantics/common!Module{"tiger/ValueAnalysis" @-}
+             static-semantics/common!Module{"tiger/Cfg" @-}
+             static-semantics/common!Module{"tiger/ValueAnalysis" @-}
+             static-semantics/common!Lattice{"MaySet" @-}
+             static-semantics/common!Lattice{"MustSet" @-}
+             static-semantics/common!Lattice{"SimpleMap" @-}
+             static-semantics/common!Type{"Name" @-}
+             static-semantics/common!Module{"Set" @-}
+             static-semantics/common!Module{"flowspec/linear-list" @-}
+      static-semantics/common!occurrenceScope : (static-semantics/common!Module{"tiger/ValueAnalysis" @-}, #trans/tiger/ValueAnalysis.normalized.flock-moduleScope_2-88)
+                                                (static-semantics/common!Module{"tiger/Cfg" @-}, #trans/tiger/ControlFlowGraph.flock-moduleScope_2-94)
+                                                (static-semantics/common!Module{"tiger/ValueAnalysis" @-}, #trans/tiger/ValueAnalysis.flock-moduleScope_2-50)
+      static-semantics/common!occurrenceType : (static-semantics/common!Lattice{"MaySet" @-}, LATTICE("MaySet", ["t"], SET(TVAR("t")), #.-maySetScope_3-7))
+                                               (static-semantics/common!Lattice{"MustSet" @-}, LATTICE("MustSet", ["t"], SET(TVAR("t")), #.-mustSetScope_5-6))
+                                               (static-semantics/common!Lattice{"SimpleMap" @-}, LATTICE("SimpleMap", ["k", "v"], MAP(TVAR("k"), TVAR("v")), #.-mapLatticeScope_4-5))
+                                               (static-semantics/common!Type{"Name" @-}, USERTYPE("Name", [], #.-nameScope_2-4))
+    }
+    edges {
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17 {
+    relations {
+      decl : static-semantics/common!BASE_TYPE{ @-}
+      static-semantics/common!occurrenceScope : (static-semantics/common!BASE_TYPE{ @-}, #trans/tiger/ValueAnalysis.normalized.flock-typeScope_87-17)
+    }
+    edges {
+    }
+  }
+  #trans/tiger/ValueAnalysis.normalized.flock-latticeScope_14-6 {
+    relations {
+      decl : static-semantics/common!UNIQUE_PART{"lub" @-}
+             static-semantics/common!UNIQUE_PART{"top" @-}
+             static-semantics/common!UNIQUE_PART{"type" @-}
+             static-semantics/common!UNIQUE_PART{"bottom" @-}
+    }
+    edges {
+    }
+  }
+  #trans/tiger/ValueAnalysis.flock-latticeScope_14-7 {
+    relations {
+      decl : static-semantics/common!UNIQUE_PART{"lub" @-}
+             static-semantics/common!UNIQUE_PART{"top" @-}
+             static-semantics/common!UNIQUE_PART{"type" @-}
+             static-semantics/common!UNIQUE_PART{"bottom" @-}
+    }
+    edges {
+    }
+  }

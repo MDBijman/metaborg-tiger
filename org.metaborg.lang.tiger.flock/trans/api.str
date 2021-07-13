@@ -1,0 +1,45 @@
+module api
+
+signature
+  constructors
+    FlockNodeId : Int -> FlockNodeId
+
+strategies
+
+  flock-add-id = topdown(flock-add-id-single)
+  flock-add-id-single: t -> t { FlockNodeId(<flock-make-id>) }
+  flock-debug: t -> t where <debug> t
+
+strategies
+
+  external flock-disable-incremental(|)
+  external flock-enable-incremental(|)
+
+  external flock-debug-graph(|)
+  external flock-debug-graph(|prop-name)
+
+  external flock-analyse-program(|)
+
+  external flock-remove-node(|)
+  external flock-update(|)
+  external flock-make-id(|)
+  
+  flock-replace-node(|old): new -> <flock-add-id; flock-replace-node-impl(|old)> new
+  external flock-replace-node-impl(|n)
+
+strategies
+
+  flock-remove-all(s): [] -> []
+  flock-remove-all(s): l@[h|t] -> res
+  where
+    res := <remove-all(s; flock-remove-node)> l 
+
+strategies
+      
+  flock-is-live(|name): node {FlockNodeId(n)} -> <flock-is-live> (name, n)
+  flock-is-live: (name, loc) -> <get-live; !(name, <id>); strip-annos; elem> loc
+  external get-live(|)
+  
+  flock-get-value: node {FlockNodeId(n)} -> <get-values; strip-annos> n
+  external get-values(|)
+  
