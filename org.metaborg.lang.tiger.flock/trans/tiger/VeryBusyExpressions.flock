@@ -1,0 +1,16 @@
+module tiger/VeryBusyExpressions
+
+imports
+  
+  tiger/Cfg
+  
+properties
+
+  busyExpressions: SimpleMap[term, MustSet[string]]
+  
+property rules
+
+  busyExpressions(_.end) = {}
+  busyExpressions(VarDec(n, _, e) -> next) = { k |-> (v \ {n}) | (k |-> v) <- busyExpressions(next)} \/ { e |-> {n} }
+  busyExpressions(_ -> next) = busyExpressions(next)
+  // { k |-> (v \ {n}) | (k |-> v) <- expressions(prev)} \/ { e |-> {n} }

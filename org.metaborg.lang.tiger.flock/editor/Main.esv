@@ -16,5 +16,13 @@ menus
     
     action: "Show parsed AST" = debug-show-aterm (source)
     action: "Show built CFG"  = debug-show-cfg (source)
-    action: "Analysis"  = debug-analyze-cfg (source)
+    
+    submenu: "Opt" (openeditor)
+	    action: "Optimize"      = editor-analyze-and-transform (source)
+	    action: "Inline"        = editor-transform-inline (source)
+	    action: "Const. Prop."  = editor-transform-const-prop (source)
+	end
   
+    submenu: "Analyze" (openeditor)
+	    action: "Const. Prop."  = editor-analyze-const-prop (source)
+	end

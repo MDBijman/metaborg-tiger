@@ -1,0 +1,2 @@
+for a := 1 to 5 do
+	print("in a loop")

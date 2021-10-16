@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.spoofax.interpreter.terms.IStrategoAppl;
 import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoList;
@@ -95,5 +96,13 @@ public class Helpers {
 		assert TermUtils.isAppl(n.getAnnotations().getSubterm(0), "FlockNodeId", 1);
 		IStrategoInt id = (IStrategoInt) n.getAnnotations().getSubterm(0).getSubterm(0);
 		return new CfgNodeId(id.intValue());
+	}
+
+	public static Node getTermNode(IStrategoTerm n) {
+		if (n.getAnnotations().size() == 0)
+			return null;
+		assert TermUtils.isAppl(n.getAnnotations().getSubterm(0), "FlockNodeId", 1);
+		IStrategoInt id = (IStrategoInt) n.getAnnotations().getSubterm(0).getSubterm(0);
+		return new Node(new CfgNodeId(id.intValue()));
 	}
 }

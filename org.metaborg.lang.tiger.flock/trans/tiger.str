@@ -22,35 +22,168 @@ rules // Debugging
     ; result   := node
 
   debug-show-cfg:
-    (p, _, _, path, project-path) -> ()
-    with
-      p' := <flock-add-id> p
-    ; <flock-analyse-program> p'
-    ; <flock-debug-graph(|"live")> ()
-
-  debug-analyze-cfg:
     (p, _, _, path, project-path) -> (filename, result)
     with
       p' := <flock-add-id> p
     ; <flock-analyse-program> p'
-    ; <flock-debug-graph> ()
-    ; p'' := <oncetd(flock-remove-all(is-dead-vardec))> p'
-    ; p''' := <topdown(try(replace-constant))> p''
-    //; <topdown(try(print-value))> p'''
-    ; filename := <guarantee-extension(|"opt.tig")> path
-    ; result   := <pp-tiger-string> p'''
+    ; filename := <guarantee-extension(|"cfg")> path
+    ; result := <flock-debug-graph(|"live")> ()
 
-  is-dead-vardec: a@VarDec(n, _, _) -> ()
+rules /// editor transformation actions
+
+  editor-transform-const-prop: (p, _, _, path, project-path) -> (filename, result)
+    with
+      p' := <transform-const-prop> p
+    ; filename := <guarantee-extension(|"constprop.tig")> path
+    ; result   := <pp-tiger-string> p'
+
+  editor-analyze-const-prop: (p, _, _, path, project-path) -> ()
+    with
+      p' := <analyze-const-prop> p
+
+  editor-transform-inline: (p, _, _, path, project-path) -> (filename, result)
+    with
+      p' := <transform-inline> p
+    ; filename := <guarantee-extension(|"inlined.tig")> path
+    ; result   := <pp-tiger-string> p'  
+
+  editor-analyze-and-transform:
+    (p, _, _, path, project-path) -> (filename, result)
+    with
+      p' := <pipeline> p
+    ; <flock-debug-graph(|"values")> ()
+    ; filename := <guarantee-extension(|"opt.tig")> path
+    ; result   := <pp-tiger-string> p'
+
+rules // transformation actions
+
+  analyze-const-prop: p -> with-ids
+    with
+      with-ids := <flock-add-id> p
+    ; <flock-analyse-program> with-ids
+    ; <topdown(try(flock-get-value))> with-ids
+    ; <flock-debug-graph(|"values")> ()
+  
+  transform-const-prop: p -> p'
+    with
+      with-ids := <flock-add-id> p
+    ; <flock-analyse-program> with-ids
+    ; <flock-debug-graph(|"values")> ()
+    ; p' := <topdown(try(replace-constant))> with-ids
+    ; <flock-debug-graph(|"values")> ()
+
+  transform-inline: p -> p'
+    with
+      with-ids := <flock-add-id> p
+    ; <flock-analyse-program> with-ids
+    ; p' := <inline-in-module> with-ids
+
+rules // pipeline
+
+  pipeline: p -> p'
+  with
+    with-ids := <flock-add-id> p
+  //; debug
+  //; strip-annos
+  ; <flock-analyse-program> with-ids
+  //; where(flock-debug-graph)
+  //; oncetd(flock-remove-all(is-dead-vardec))
+  //; topdown(try(replace-constant))
+  ; <flock-debug-graph(|"values")> ()
+  ; p' := <
+  	inline-in-module
+  ; where(flock-debug-graph(|"values"))
+  ; where(flock-update-term-map)
+  ; oncetd(replace-constant)
+  ; where(flock-update-term-map)
+  ; where(flock-debug-graph(|"values"))
+  ; oncetd(replace-constant)
+  > with-ids 
+  //; oncetd(flock-remove-all(is-dead-vardec))
+
+strategies
+
+  inline-in-module: Mod(l@Let(decs, expr)) -> Mod(Let(decs, new-expr))
+  where
+  	  {| InlineFn:
+  		<try(bind-fns-in-let-binding)> l
+  	  ; new-expr := <bottomup(try(InlineFn))> expr
+  	  |}
+  	
+  inline-rec = rec x({| InlineFn: try(bind-fns-in-let-binding); try(InlineFn); all(x) |})
+  
+  bind-fns-in-let-binding: Let(bindings, expr) -> <id>
+  where
+    <retain-all(?FunDecs(fns); !fns); concat; retain-all(no-free-vars; bind-fn)> bindings
+  
+  // We are relying on the preorder-traversal of topdown to match the way
+  // names are bound in the program!
+  
+  no-free-vars: FunDec(n, params, _, body) -> <id>
+  where
+  {| BoundName: 
+    <map(bind-names)> params
+  ; <topdown(try(bind-names); not(free-var))> body
+  |}
+  
+  no-free-vars: ProcDec(n, params, body) -> <id>
+  where
+  {| BoundName: 
+    <map(bind-names)> params
+  ; <topdown(try(bind-names); not(free-var))> body
+  |}
+  	
+  bind-names: FArg(n, _) -> <id> where rules(BoundName: n{an*} -> <id>)//; <debug> ("bound", n)
+  bind-names: VarDec(n, _, _) -> <id> where rules(BoundName: n{an*} -> <id>)//; <debug> ("bound", n)
+  //bind-names: FunDec(n, _, _, _) -> <id> where rules(BoundName: n{an*} -> <id>); <debug> ("bound", n)
+  //bind-names: ProcDec(n, _, _) -> <id> where rules(BoundName: n{an*} -> <id>); <debug> ("bound", n)
+  
+  free-var: t@Var(n) -> <not(BoundName)> n
+  //free-var: Call(n, _) -> <not(BoundName)> n
+
+///
+ 
+  bind-fn: FunDec(n, params, rt, body) -> <id>
+  where
+  	rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
+  		where
+  		  <should-inline> n
+  		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [body])
+  		; new-node := <flock-replace-node(|c)> replacement)
+  	
+  bind-fn: ProcDec(n, params, body) -> <id>
+  where
+  	rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
+  		where
+  		  <should-inline> n
+  		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [body])
+  		; new-node := <flock-replace-node(|c)> replacement)
+
+  // This limits the amount of inlining to 3 per function definition
+  should-inline: n -> n
+  where
+    count := <(InlineCount + !0); inc> n
+  ; <lt> (count, 3)
+  ; rules(InlineCount: n -> count)
+
+  create-inlining-decs = zip; map(create-inlining-dec)
+  
+  create-inlining-dec: (FArg(occ, ty), arg) -> VarDec(occ, ty, arg)
+
+strategies
+
+  is-dead-vardec: a@VarDec(n, _, _) -> a
   where
     <not(flock-is-live(|n))> a
   ; <concat-strings; flock-debug> ["dead variable ", n]
   
   replace-constant: v@Var(n) -> new-node
   where
-    <flock-debug> v
-  ; n-no-annos := <strip-annos; flock-debug> n
-  ; [Const(new-value)] := <flock-get-value; flock-debug; filter(?(name, value); equal(|name, n-no-annos); !value); flock-debug> v
+    n-no-annos := <strip-annos> n
+  ; [Const(new-value)] := <flock-get-value; filter(?(name, value); equal(|name, n-no-annos); !value)> v
   ; new-node := Int(new-value)
-  ; <flock-replace-node(|v)> new-node 
+  ; <flock-replace-node(|v)> new-node
+  
+  get-vbe: n -> n where <flock-get-ae> n
   
   

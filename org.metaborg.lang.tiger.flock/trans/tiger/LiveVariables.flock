@@ -3,13 +3,10 @@ imports
  tiger/Cfg
 
 properties
-  live: MaySet[name]
+  live: MaySet[string]
 
 property rules
   live(_.end) = {}
-  
   live(VarDec(n, _, _) -> next) = {m | m <- live(next), m != n}
-    
   live(Var(n) -> next) = {n} \/ live(next)  
-      
   live(_ -> next) = live(next)

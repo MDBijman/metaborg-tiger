@@ -10,7 +10,7 @@
     function inttostring(n : int) : string =
       if n < 10 
       then chr(48 + n)
-      else concat(inttostring(n / 10), inttostring(mod(n, 10)))
+      else concat(inttotring(n / 10), inttostring(mod(n, 10)))
 
     /* calculate n! */
     function nfactor(n: int): int =

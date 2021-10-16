@@ -12,9 +12,9 @@ public class flock_debug_graph_0_1 extends Strategy {
 	
 	@Override 
 	public IStrategoTerm invoke(Context context, IStrategoTerm program, IStrategoTerm propertyName) {
-		Flock.printDebug(propertyName.toString());
 		IStrategoString name = (IStrategoString) propertyName;
-		Flock.log("debug", Flock.instance.graph.toGraphviz(name.stringValue()).replace("\n", "\t"));
-        return program;
+		String result = Flock.instance.graph.toGraphviz(name.stringValue()).replace("\n", "\t");
+		Flock.log("debug", result);
+		return context.getFactory().makeString(result);
     }
 }

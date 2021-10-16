@@ -64,6 +64,11 @@ public interface FlockLattice {
 	public static class MustSet implements FlockCollectionLattice {
 		Set value;
 		
+		public MustSet(MustSet o) {
+			this.value = new HashSet<>();
+			this.value.addAll(o.value);
+		}
+		
 		public MustSet(Set v) {
 			this.value = v;
 		}

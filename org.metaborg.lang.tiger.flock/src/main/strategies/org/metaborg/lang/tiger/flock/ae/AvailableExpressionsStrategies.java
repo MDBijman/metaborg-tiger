@@ -1,5 +1,6 @@
-package org.metaborg.lang.tiger.flock.value;
+package org.metaborg.lang.tiger.flock.ae;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -11,12 +12,13 @@ import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
+import org.spoofax.terms.util.TermUtils;
 import org.strategoxt.lang.Context;
 import org.strategoxt.lang.Strategy;
 
-public class FlowAnalysisStrategies {
-	public static class get_values_0_0 extends Strategy {
-		public static get_values_0_0 instance = new get_values_0_0();
+public class AvailableExpressionsStrategies {
+	public static class get_expressions_0_0 extends Strategy {
+		public static get_expressions_0_0 instance = new get_expressions_0_0();
 
 		@Override
 		public IStrategoTerm invoke(Context context, IStrategoTerm current) {
@@ -25,12 +27,12 @@ public class FlowAnalysisStrategies {
 			Node node = Flock.instance.getNode(id);
 			if (node == null) {
 				Flock.printDebug("CfgNode is null with id " + id.getId());
-				return null;
+				return current;
 			}
-			Flock.instance.analysisWithName("values").updateResultUntilBoundary(Flock.instance.graph, node);
-			IStrategoList result = factory.makeList(
-					((Map<IStrategoTerm, IStrategoTerm>) node.getProperty("values").lattice.value()).entrySet().stream()
-							.map(n -> factory.makeTuple(Helpers.toTerm(n.getKey()), Helpers.toTerm(n.getValue())))
+			Flock.instance.analysisWithName("expressions").updateResultUntilBoundary(Flock.instance.graph, node);
+			IStrategoList result = factory
+					.makeList(((Map<IStrategoTerm, IStrategoTerm>) node.getProperty("expressions").lattice.value())
+							.entrySet().stream().map(e -> factory.makeList(Helpers.toTerm(e.getKey()), Helpers.toTerm(e.getValue())))
 							.collect(Collectors.toList()));
 			return result;
 		}

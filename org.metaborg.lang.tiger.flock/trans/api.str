@@ -18,6 +18,7 @@ strategies
   external flock-debug-graph(|)
   external flock-debug-graph(|prop-name)
 
+  external flock-update-term-map(|)
   external flock-analyse-program(|)
 
   external flock-remove-node(|)
@@ -27,12 +28,8 @@ strategies
   flock-replace-node(|old): new -> <flock-add-id; flock-replace-node-impl(|old)> new
   external flock-replace-node-impl(|n)
 
-strategies
-
   flock-remove-all(s): [] -> []
-  flock-remove-all(s): l@[h|t] -> res
-  where
-    res := <remove-all(s; flock-remove-node)> l 
+  flock-remove-all(s): l@[h|t] -> <remove-all(s; flock-remove-node)> l 
 
 strategies
       
@@ -42,4 +39,7 @@ strategies
   
   flock-get-value: node {FlockNodeId(n)} -> <get-values; strip-annos> n
   external get-values(|)
+
+  flock-get-ae: node {FlockNodeId(n)} -> <get-expressions; strip-annos> n
+  external get-expressions(|)
   

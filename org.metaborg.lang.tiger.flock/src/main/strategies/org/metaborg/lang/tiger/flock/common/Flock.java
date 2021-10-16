@@ -7,13 +7,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
+import org.metaborg.lang.tiger.flock.ae.AvailableExpressions;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.impl.LiveVariables;
 import org.metaborg.lang.tiger.flock.value.FlowAnalysis;
 import org.spoofax.interpreter.library.IOAgent;
 import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoTerm;
+import org.spoofax.interpreter.terms.ITermFactory;
 import org.strategoxt.lang.Context;
 
 public abstract class Flock {
@@ -25,8 +28,9 @@ public abstract class Flock {
 
 	public Flock() {
 		this.analyses = new ArrayList<Analysis>();
-		this.analyses.add(new LiveVariables());
+		//this.analyses.add(new LiveVariables());
 		this.analyses.add(new FlowAnalysis());
+		//this.analyses.add(new AvailableExpressions());
 	}
 	
 	public Set<Node> getTermDependencies(Graph g, Node n) {
@@ -35,6 +39,49 @@ public abstract class Flock {
 			deps.addAll(a.getTermDependencies(g, n));
 		}
 		return deps;
+	}
+	
+	protected void applyGhostMask(Set<Node> mask) {
+		for (Node n : this.graph.nodes()) {
+			if (mask.contains(n)) {
+				n.isGhost = true;
+			}
+		}
+	}
+
+	protected void initPosition(Graph g, ITermFactory factory) {
+		int i = 0;
+		for (Node n : g.nodes()) {
+			n.addProperty("position", new PositionLattice(factory.makeInt(i)));
+			i += 1;
+		}
+	}
+	
+	public void setNodeTerms(IStrategoTerm term) {
+		Node id = Helpers.getTermNode(term);
+		if (id != null && this.graph.getNode(id.getId()) != null) {
+			this.graph.getNode(id.getId()).term = term;
+		}
+
+		for (IStrategoTerm subterm : term.getSubterms()) {
+			setNodeTerms(subterm);
+		}
+	}
+
+	protected Set<Node> getAllNodes(IStrategoTerm program) {
+		Set<Node> set = new HashSet<>();
+		getAllNodes(set, program);
+		return set;
+	}
+
+	protected void getAllNodes(Set<Node> visited, IStrategoTerm program) {
+		for (IStrategoTerm term : program.getSubterms()) {
+			getAllNodes(visited, term);
+		}
+		Node id = Helpers.getTermNode(program);
+		if (id != null && this.graph.getNode(id.getId()) != null) {
+			visited.add(this.graph.getNode(id.getId()));
+		}
 	}
 	
 	public abstract void init(IStrategoTerm program);
@@ -50,7 +97,28 @@ public abstract class Flock {
 	public abstract Node getNode(CfgNodeId id);
 	
 	public abstract Analysis analysisWithName(String name);
+	
+	/*
+	 * Helpers for mutating graph analyses
+	 */
 
+	protected void addToDirty(Node n) {
+		for (Analysis ga : analyses) {
+			ga.addToDirty(n);
+		}
+	}
+
+	protected void addToNew(Node n) {
+		for (Analysis ga : analyses) {
+			ga.addToNew(n);
+		}
+	}
+
+	protected void clearAnalyses() {
+		for (Analysis ga : analyses) {
+			ga.clear();
+		}
+	}
 	
 	/*
 	 * Timing and Debugging
@@ -64,9 +132,9 @@ public abstract class Flock {
 		"time",
 		"count",
 		"debug",
-		// "incremental",
-		// "validation",
-		//"api",
+		//"incremental",
+		//"validation",
+		"api",
 		//"dependencies",
 		//"graphviz"
 	};

@@ -4,9 +4,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockCollectionLattice;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.spoofax.terms.util.NotImplementedException;
 import org.spoofax.terms.util.TermUtils;
 
 public abstract class Analysis {
@@ -20,17 +22,13 @@ public abstract class Analysis {
 	public HashSet<Node> dirtyNodes = new HashSet<>();
 	public HashSet<Node> newNodes = new HashSet<>();
 	public HashSet<Node> changedNodes = new HashSet<>();
+	public HashMap<Node, Set<Node>> patternParentNodes = new HashMap<>();
+	public HashMap<Node, Set<Node>> failedPatternParentNodes = new HashMap<>();
 	private boolean hasRunOnce = false;
 
 	public Analysis(String name, Direction dir) {
 		this.name = name;
 		this.propertyName = name;
-		this.direction = dir;
-	}
-
-	public Analysis(String name, String propertyName, Direction dir) {
-		this.name = name;
-		this.propertyName = propertyName;
 		this.direction = dir;
 	}
 	
@@ -45,42 +43,29 @@ public abstract class Analysis {
 	public void remove(Graph g, Set<Node> nodes) {
 		this.dirtyNodes.removeAll(nodes);
 		this.newNodes.removeAll(nodes);
-		
-		for (Node node : nodes) {
-			this.dependents.remove(node.getId());
-		}
-
-		for (Set<Dependency> s : this.dependents.values()) {
-			for (Node node : nodes) {
-				s.remove(new Dependency(node.getId()));
-			}
-		}
-		
-		for (Node n : g.nodes()) {
-			if (n.isGhost) {
-				continue;
-			}
-			
-			Property prop = n.getProperty(this.propertyName);
-			
-			if (prop == null) {
-				continue;
-			}
-			
-		}
 	}
 
 	public void clear() {
 		this.newNodes.clear();
 		this.dirtyNodes.clear();
-		this.dependents.clear();
 	}
-
+	
 	/*
 	 * Analysis Logic
 	 */
+	
+	public void removeResultAfterBoundary(Graph graph, float boundary) {
+		for (Node n : graph.nodes()) {
+			if (!this.withinBoundary(boundary, n.interval)) {
+				continue;
+			}
+			
+			this.addToDirty(n);
+			this.initNodeValue(n);
+		}
+	}
 
-	public void updateUntilBoundary(Graph graph, Node node) {
+	public void updateResultUntilBoundary(Graph graph, Node node) {
 		float boundary = graph.intervalOf(node);
 		Set<Node> dirtyNodes = new HashSet<>(this.dirtyNodes);
 
@@ -98,96 +83,62 @@ public abstract class Analysis {
 			this.updateDataAnalysis(graph, this.newNodes, dirtyNodes, boundary);
 		}
 
-		removeNodesUntilBoundary(graph, boundary);
+		// Remove the updated nodes from the dirty/new collections
+		this.dirtyNodes.removeIf(n -> this.withinBoundary(graph.intervalOf(n), boundary));
+		this.newNodes.removeIf(n   -> this.withinBoundary(graph.intervalOf(n), boundary));
 	}
 
-	private void removeNodesUntilBoundary(Graph graph, float boundary) {
+	private boolean withinBoundary(float interval, float boundary) {
 		if (this.direction == Direction.FORWARD) {
-			this.dirtyNodes.removeIf(n -> graph.intervalOf(n) <= boundary);
-			this.newNodes.removeIf(n -> graph.intervalOf(n) <= boundary);
+			return interval <= boundary;
 		} else if (this.direction == Direction.BACKWARD) {
-			this.dirtyNodes.removeIf(n -> graph.intervalOf(n) >= boundary);
-			this.newNodes.removeIf(n -> graph.intervalOf(n) >= boundary);
+			return interval >= boundary;
+		} else {
+			throw new NotImplementedException();
 		}
 	}
-
+	
+	public Set<Node> getTermDependencies(Graph g, Node n)
+	{
+		// Return set of nodes after n in g
+		return g.nodes().stream().filter(o -> this.withinBoundary(n.interval, o.interval)).collect(Collectors.toSet());
+	}
+	
 	/*
-	 * Analysis specific methods
+	 * The pattern parents are the (indirect) parents of a node that were matched on in a dataflow rule.
 	 */
 	
-	// FIXME autogenerate
-	// Add this as abstract method to generated analysis file and invoke
-	public abstract Set<Node> getTermDependencies(Graph g, Node n);
-
-	// Maps node to all the nodes that depend on it
-	private HashMap<CfgNodeId, Set<Dependency>> dependents = new HashMap<>();
-	
-	public void updateDependents(Set<Node> nodes) {
-		Flock.beginTime("Analysis@updateDependents");
-		for (Node n : nodes) {
-			if (n.isGhost) {
-				continue;
-			}
-			
-			Property prop = n.getProperty(this.propertyName);
-			
-			if (prop == null) {
-				continue;
-			}
-			
-			FlockLattice l = prop.lattice;
-			
-			if (l == null) {
-				throw new RuntimeException("Lattice doesn't have dependency tracking: " + this.name);
-			}
-			for (Dependency d : LatticeDependencyUtils.gatherDependencies(l)) {
-				dependents.putIfAbsent(d.id, new HashSet<>());
-				dependents.get(d.id).add(new Dependency(n.getId()));
-			}
+	protected void addNodePatternParent(Node child, Node parent) {
+		if (!this.patternParentNodes.containsKey(child)) {
+			this.patternParentNodes.put(child, new HashSet<>());
 		}
-		Flock.endTime("Analysis@updateDependents");
+		this.patternParentNodes.get(child).add(parent);
+	}
+
+	protected Set<Node> getPatternParents(Node n) {
+		return this.patternParentNodes.get(n);
 	}
 	
-	public void removeFacts(Graph g, CfgNodeId origin) {
-		Flock.beginTime("Analysis@removeFacts");
-		
-		updateDependents(this.changedNodes);
-		this.changedNodes.clear();
-		
-		Set<Dependency> deps = dependents.get(origin);
-		if (deps == null) return;
-
-		
-		for (Dependency d : deps) {
-			Node n = g.getNode(d.id);
-			
-			if (n.isGhost) {
-				continue;
-			}
-			
-			Property prop = n.getProperty(this.propertyName);
-			
-			if (prop == null) {
-				continue;
-			}
-			
-			FlockCollectionLattice l = (FlockCollectionLattice) prop.lattice;
-			
-			if (l == null) {
-				throw new RuntimeException("Lattice doesn't have dependency tracking: " + this.name);
-			}
-			
-			LatticeDependencyUtils.removeValuesByDependency(l, new Dependency(origin));
-			this.addToDirty(n);
-		}
-		
-		Flock.endTime("Analysis@removeFacts");
-	}
+	/*
+	 * The pattern parents are the (indirect) parents of a node that failed to match in a dataflow rule.
+	 */
 	
+	protected void addFailedNodePatternParent(Node child, Node parent) {
+		if (!this.failedPatternParentNodes.containsKey(child)) {
+			this.failedPatternParentNodes.put(child, new HashSet<>());
+		}
+		this.failedPatternParentNodes.get(child).add(parent);
+	}
+
+	protected Set<Node> getFailedPatternParents(Node n) {
+		return this.failedPatternParentNodes.get(n);
+	}
 
 	/*
 	 * Analysis implementation
 	 */
+	
+	public abstract void initNodeValue(Node node);
 	
 	public void performDataAnalysis(Graph g, Node root) {
 		HashSet<Node> nodeset = new HashSet<Node>();

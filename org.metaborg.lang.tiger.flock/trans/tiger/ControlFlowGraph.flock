@@ -7,6 +7,7 @@ signature
     IntConst = int
     
     Exp
+    LoopBinding
     Dec
     FunDec
     Type
@@ -16,34 +17,50 @@ signature
     FArg
 	Var
 	Int
+	LValue
 	
   constructors
     Mod : Exp -> Exp
-    Let : list(Dec) * list(Exp) -> Exp
     FunDecs : list(FunDec) -> Dec
     ProcDec : Occ * list(FArg) * Exp -> FunDec 
     FunDec : Occ * list(FArg) * Type * Exp -> FunDec
     VarDec : Id * Type * Exp -> Dec
+    VarDecNoType : Occ * Exp -> Dec
     TypeDecs : list(TypeDec) -> Dec
     TypeDec : Occ * Type -> TypeDec
     Type : TypeId -> Type
     Occ : Id -> Occ 
     Tid : Occ -> TypeId
     
+    UMinus : Exp -> Exp
     Minus : Exp * Exp -> Exp
     Plus : Exp * Exp -> Exp
-    Lt : Exp * Exp -> Exp
-    Eq : Exp * Exp -> Exp
     Times : Exp * Exp -> Exp
     Divide : Exp * Exp -> Exp
+    Lt : Exp * Exp -> Exp
+    Eq : Exp * Exp -> Exp
+    Geq : Exp * Exp -> Exp
+    Leq : Exp * Exp -> Exp
+    Neq : Exp * Exp -> Exp
+    And : Exp * Exp -> Exp
+    Or : Exp * Exp -> Exp
     
     Call : Occ * list(Exp) -> Exp
     If : Exp * Exp * Exp -> Exp
+    IfThen : Exp * Exp -> Exp
     Seq : list(Exp) -> Exp
+    For : LoopBinding * Exp -> Exp
+    LoopBinding : Var * Exp * Exp -> LoopBinding
+    Assign : LValue * Exp -> Exp
+    Let : list(Dec) * list(Exp) -> Exp
     
     String : StrConst -> Exp
     Int : IntConst -> Exp
     Var : Id -> Var
+    Array : TypeId * Exp * Exp -> Exp
+    Subscript : LValue * Exp -> LValue
+    Exp : LValue -> Exp
+    LValue : Var -> LValue
     
 control-flow rules
 
@@ -52,21 +69,36 @@ control-flow rules
   root FunDec(n, args, rt, body) = start -> body -> end
   
   FunDecs(_) = entry -> exit
+  TypeDecs(typeDecs) = entry -> exit
+  TypeDec(occ, t) = entry -> exit
   VarDec(n, t, e) = entry -> e -> this -> exit
-  Let(decs, exps) = entry -> decs -> exps -> exit
-
-  Call(_, args) = entry -> args -> this -> exit
+  VarDecNoType(n, e) = entry -> e -> this -> exit
   
+  UMinus(exp) = entry -> exp -> this -> exit
   Minus(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
   Plus(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
-  Lt(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
-  Eq(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
   Times(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
   Divide(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Lt(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Eq(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Geq(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Leq(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Neq(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  And(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Or(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Subscript(lval, idx) = entry -> idx -> lval -> this -> exit
 
+  Call(_, args) = entry -> args -> this -> exit
   If(c, t, e) = entry -> c -> t -> exit,
                          c -> e -> exit
+  IfThen(c, t) = entry -> c -> t -> exit
+  Assign(lval, expr) = entry -> expr -> this -> exit
   Seq(stmts) = entry -> stmts -> exit
+  For(binding, body) = entry -> binding -> body -> exit,
+  	body -> binding
+  LoopBinding(var, from, to) = entry -> this -> exit
+  Let(decs, exps) = entry -> decs -> exps -> exit
+  Array(_, len, init) = entry -> len -> init -> this -> exit
   
   node Var(_)
   node Int(_)

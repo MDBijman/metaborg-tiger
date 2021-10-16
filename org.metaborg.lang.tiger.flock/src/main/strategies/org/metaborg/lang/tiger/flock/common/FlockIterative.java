@@ -38,7 +38,7 @@ public class FlockIterative extends Flock {
 	@Override
 	public void createControlFlowGraph(Context context, IStrategoTerm current) {
 		this.io = context.getIOAgent();
-		this.graph = GraphFactory.createCfg(current);
+		this.graph = GraphFactory.createCfgRecursive(current);
 		Flock.printDebug(this.graph.toGraphviz());
 		this.graph.removeGhostNodes();
 		this.graph.computeIntervals();
@@ -58,7 +58,7 @@ public class FlockIterative extends Flock {
 		// depending on them (static analysis)
 		Set<Node> dependents = new HashSet<>();
 
-		Node currentNode = GraphFactory.getTermNode(current);
+		Node currentNode = Helpers.getTermNode(current);
 		if (currentNode != null && this.graph.getNode(currentNode.getId()) != null) {
 			dependents.addAll(getTermDependencies(this.graph, currentNode));
 		}
@@ -80,7 +80,7 @@ public class FlockIterative extends Flock {
 
 		// Here we patch the graph
 		Flock.beginTime("Program@replaceNode - b");
-		Graph subGraph = GraphFactory.createCfg(replacement);
+		Graph subGraph = GraphFactory.createCfgRecursive(replacement);
 		subGraph.removeGhostNodes();
 		subGraph.computeIntervals();
 		this.graph.replaceNodes(removedNodes, subGraph);
@@ -103,7 +103,7 @@ public class FlockIterative extends Flock {
 		// depending on them (static analysis)
 		Set<Node> dependents = new HashSet<>();
 
-		Node currentNode = GraphFactory.getTermNode(node);
+		Node currentNode = Helpers.getTermNode(node);
 		if (currentNode != null && this.graph.getNode(currentNode.getId()) != null) {
 			dependents.addAll(getTermDependencies(this.graph, currentNode));
 		}
@@ -138,79 +138,6 @@ public class FlockIterative extends Flock {
 		throw new RuntimeException("No analysis with name " + name);
 	}
 	
-	private void applyGhostMask(Set<Node> mask) {
-		for (Node n : this.graph.nodes()) {
-			if (mask.contains(n)) {
-				n.isGhost = true;
-			}
-		}
-	}
-
-	private void initPosition(Graph g, ITermFactory factory) {
-		int i = 0;
-		for (Node n : g.nodes()) {
-			n.addProperty("position", new PositionLattice(factory.makeInt(i)));
-			i += 1;
-		}
-	}
-	
-	private void setNodeTerms(IStrategoTerm term) {
-		Node id = GraphFactory.getTermNode(term);
-		if (id != null && this.graph.getNode(id.getId()) != null) {
-			this.graph.getNode(id.getId()).term = term;
-		}
-
-		for (IStrategoTerm subterm : term.getSubterms()) {
-			setNodeTerms(subterm);
-		}
-	}
-
-	private Set<Node> getAllNodes(IStrategoTerm program) {
-		HashSet<Node> set = new HashSet<>();
-		getAllNodes(set, program);
-		return set;
-	}
-
-	private void getAllNodes(Set<Node> visited, IStrategoTerm program) {
-		for (IStrategoTerm term : program.getSubterms()) {
-			getAllNodes(visited, term);
-		}
-		Node id = GraphFactory.getTermNode(program);
-		if (id != null) {
-			visited.add(id);
-		}
-	}
-	
-	
-	/*
-	 * Helpers for mutating graph analyses
-	 */
-
-	private void addToDirty(Node n) {
-		for (Analysis ga : analyses) {
-			ga.addToDirty(n);
-		}
-	}
-
-	private void addToNew(Node n) {
-		for (Analysis ga : analyses) {
-			ga.addToNew(n);
-		}
-	}
-
-	private void removeFromAnalysis(Set<Node> n) {
-		for (Analysis ga : analyses) {
-			ga.remove(graph, n);
-		}
-	} 
-
-	private void clearAnalyses() {
-		for (Analysis ga : analyses) {
-			ga.clear();
-		}
-	}
-
-
 	private void removeAnalysisFacts(Set<Node> toRemove) {
 		for (Analysis a : analyses) {
 			for (Node id : toRemove) {

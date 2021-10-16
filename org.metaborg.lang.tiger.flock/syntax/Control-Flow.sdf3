@@ -29,9 +29,11 @@ context-free syntax
   > 
   
   Exp.For = <
-    for <Var> := <Exp> to <Exp> do 
+    for <LoopBinding> do 
       <Exp>
   > 
+  
+  LoopBinding.LoopBinding = <<Var> := <Exp> to <Exp>>
   
   Exp.Break = <break> 
 

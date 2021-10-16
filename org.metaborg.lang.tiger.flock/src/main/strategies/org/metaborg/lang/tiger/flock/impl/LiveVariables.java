@@ -24,7 +24,8 @@ public class LiveVariables extends Analysis {
 		super("live", Direction.BACKWARD);
 	}
 
-	public static void initNodeValue(Node node) {
+	@Override
+	public void initNodeValue(Node node) {
 		node.addProperty("live", MaySet.bottom());
 	}
 
@@ -122,11 +123,6 @@ public class LiveVariables extends Analysis {
 				}
 			}
 		}
-	}
-
-	@Override
-	public Set<Node> getTermDependencies(Graph g, Node n) {
-		return null;
 	}
 }
 

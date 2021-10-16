@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.metaborg.lang.tiger.flock.common.Analysis;
@@ -33,23 +32,63 @@ public class FlowAnalysis extends Analysis {
 		super("values", Direction.FORWARD);
 	}
 
-	public static void initNodeValue(Node node) {
+	public void initNodeValue(Node node) {
 		node.addProperty("values", SimpleMap.bottom());
 	}
 
-	public static void initNodeTransferFunction(Node node) {
+	private boolean matchPattern0(Node node) {
+		IStrategoTerm term = node.term;
+		return true;
+	}
+
+	private boolean matchPattern1(Node node) {
+		IStrategoTerm term = node.term;
+		if (!(TermUtils.isAppl(term) && M.appl(term).getName().equals("VarDec") && term.getSubtermCount() == 3)) {
+			return false;
+		}
+		IStrategoTerm term_0 = Helpers.at(term, 0);
+		IStrategoTerm term_1 = Helpers.at(term, 1);
+		IStrategoTerm term_2 = Helpers.at(term, 2);
+		addNodePatternParent(node, Helpers.getTermNode(term));
+		return true;
+	}
+
+	private boolean matchPattern2(Node node) {
+		IStrategoTerm term = node.term;
+		if (!(TermUtils.isAppl(term) && M.appl(term).getName().equals("VarDec") && term.getSubtermCount() == 3)) {
+			return false;
+		}
+		IStrategoTerm term_0 = Helpers.at(term, 0);
+		IStrategoTerm term_1 = Helpers.at(term, 1);
+		IStrategoTerm term_2 = Helpers.at(term, 2);
+		if (!(TermUtils.isAppl(term_2) && M.appl(term_2).getName().equals("Int") && term_2.getSubtermCount() == 1)) {
+			addFailedNodePatternParent(node, Helpers.getTermNode(term));
+			return false;
+		}
+		IStrategoTerm term_2_0 = Helpers.at(term_2, 0);
+		addNodePatternParent(node, Helpers.getTermNode(term));
+		addNodePatternParent(node, Helpers.getTermNode(term_2));
+		return true;
+	}
+
+	private boolean matchPattern3(Node node) {
+		IStrategoTerm term = node.term;
+		return true;
+	}
+
+	public void initNodeTransferFunction(Node node) {
 		{
-			if (true) {
+			if (matchPattern0(node)) {
 				node.getProperty("values").transfer = TransferFunctions.TransferFunction0;
 			}
-			if (TermUtils.isAppl(node.term) && (M.appl(node.term).getName().equals("VarDec")
-					&& (node.term.getSubtermCount() == 3 && (TermUtils.isAppl(Helpers.at(node.term, 2))
-							&& (M.appl(Helpers.at(node.term, 2)).getName().equals("Int")
-									&& Helpers.at(node.term, 2).getSubtermCount() == 1))))) {
+			if (matchPattern1(node)) {
 				node.getProperty("values").transfer = TransferFunctions.TransferFunction1;
 			}
-			if (true) {
-				node.getProperty("values").init = TransferFunctions.TransferFunction2;
+			if (matchPattern2(node)) {
+				node.getProperty("values").transfer = TransferFunctions.TransferFunction2;
+			}
+			if (matchPattern3(node)) {
+				node.getProperty("values").init = TransferFunctions.TransferFunction3;
 			}
 		}
 	}
@@ -130,11 +169,6 @@ public class FlowAnalysis extends Analysis {
 			}
 		}
 	}
-	
-	@Override
-	public Set<Node> getTermDependencies(Graph g, Node n) {
-		return null;
-	}
 }
 
 class Value implements FlockValueLattice {
@@ -159,15 +193,15 @@ class Value implements FlockValueLattice {
 	}
 
 	public static Value bottom() {
-		ConstProp tmp149 = (ConstProp) new ConstProp(
+		ConstProp tmp10 = (ConstProp) new ConstProp(
 				new StrategoAppl(new StrategoConstructor("Bottom", 0), new IStrategoTerm[] {}, null));
-		return new Value(tmp149);
+		return new Value(tmp10);
 	}
 
 	public static Value top() {
-		ConstProp tmp150 = (ConstProp) new ConstProp(
+		ConstProp tmp11 = (ConstProp) new ConstProp(
 				new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
-		return new Value(tmp150);
+		return new Value(tmp11);
 	}
 
 	@Override
@@ -212,8 +246,8 @@ class Value implements FlockValueLattice {
 		if (result0 == null) {
 			throw new RuntimeException("Could not match term");
 		}
-		ConstProp tmp151 = (ConstProp) result0;
-		return new Value(tmp151);
+		ConstProp tmp12 = (ConstProp) result0;
+		return new Value(tmp12);
 	}
 }
 
@@ -221,6 +255,7 @@ class TransferFunctions {
 	public static TransferFunction TransferFunction0 = new TransferFunction0();
 	public static TransferFunction TransferFunction1 = new TransferFunction1();
 	public static TransferFunction TransferFunction2 = new TransferFunction2();
+	public static TransferFunction TransferFunction3 = new TransferFunction3();
 }
 
 class TransferFunction0 extends TransferFunction {
@@ -228,8 +263,8 @@ class TransferFunction0 extends TransferFunction {
 	public FlockLattice eval(Node node) {
 		IStrategoTerm term = node.term;
 		Node prev = node;
-		SimpleMap tmp145 = (SimpleMap) UserFunctions.values_f(prev);
-		return new SimpleMap(tmp145);
+		SimpleMap tmp3 = (SimpleMap) UserFunctions.values_f(prev);
+		return tmp3;
 	}
 }
 
@@ -239,9 +274,8 @@ class TransferFunction1 extends TransferFunction {
 		IStrategoTerm term = node.term;
 		Node prev = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
-		IStrategoTerm usri = Helpers.at(Helpers.at(term, 2), 0);
 		Map result1 = new HashMap();
-		for (Object o : ((Map) UserFunctions.values_f(prev).value()).entrySet()) {
+		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
 			Entry entry = (Entry) o;
 			Object usrk = entry.getKey();
 			Object usrv = entry.getValue();
@@ -249,13 +283,12 @@ class TransferFunction1 extends TransferFunction {
 				result1.put(usrk, usrv);
 			}
 		}
-		Map tmp146 = (Map) result1;
-		Map tmp147 = (Map) MapUtils.create(usrn,
-				new Value(new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
-						new IStrategoTerm[] { Helpers.toTerm(usri) }, null))));
-		Map tmp148 = (Map) MapUtils.union(tmp146, tmp147);
-		Map tmp144 = (Map) tmp148;
-		return new SimpleMap(tmp144);
+		Map tmp7 = (Map) result1;
+		Map tmp8 = (Map) MapUtils.create(usrn, new Value(
+				new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null))));
+		Map tmp9 = (Map) new HashMap(MapUtils.union(tmp7, tmp8));
+		Map tmp2 = (Map) tmp9;
+		return new SimpleMap(tmp2);
 	}
 }
 
@@ -263,8 +296,34 @@ class TransferFunction2 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
 		IStrategoTerm term = node.term;
-		SimpleMap tmp143 = (SimpleMap) SimpleMap.bottom();
-		return new SimpleMap(tmp143);
+		Node prev = node;
+		IStrategoTerm usrn = Helpers.at(term, 0);
+		IStrategoTerm usri = Helpers.at(Helpers.at(term, 2), 0);
+		Map result2 = new HashMap();
+		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
+			Entry entry = (Entry) o;
+			Object usrk = entry.getKey();
+			Object usrv = entry.getValue();
+			if (!usrk.equals(usrn)) {
+				result2.put(usrk, usrv);
+			}
+		}
+		Map tmp4 = (Map) result2;
+		Map tmp5 = (Map) MapUtils.create(usrn,
+				new Value(new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
+						new IStrategoTerm[] { Helpers.toTerm(usri) }, null))));
+		Map tmp6 = (Map) new HashMap(MapUtils.union(tmp4, tmp5));
+		Map tmp1 = (Map) tmp6;
+		return new SimpleMap(tmp1);
+	}
+}
+
+class TransferFunction3 extends TransferFunction {
+	@Override
+	public FlockLattice eval(Node node) {
+		IStrategoTerm term = node.term;
+		SimpleMap tmp0 = (SimpleMap) SimpleMap.bottom();
+		return tmp0;
 	}
 }
 

@@ -1,0 +1,16 @@
+module tiger/AvailableExpressions
+
+imports
+  
+  tiger/Cfg
+  
+properties
+
+  expressions: SimpleMap[term, MustSet[string]]
+  
+property rules
+
+  expressions(_.end) = {}
+  expressions(prev -> VarDec(n, _, e)) = { k |-> (v \ {n}) | (k |-> v) <- expressions(prev)} \/ { e |-> {n} }
+  expressions(prev -> _) = expressions(prev)
+  // { k |-> (v \ {n}) | (k |-> v) <- expressions(prev)} \/ { e |-> {n} }

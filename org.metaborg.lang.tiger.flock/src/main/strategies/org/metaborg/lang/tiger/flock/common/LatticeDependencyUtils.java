@@ -51,7 +51,7 @@ public abstract class LatticeDependencyUtils {
 		return out;
 	}
 
-	public static void gatherDependencies(Set<Dependency> out, FlockLattice l) {
+	public static void gatherDependencies(Set<Dependency> out, Object l) {
 		if (l instanceof SimpleMap) {
 			for (Object o : (SimpleMap) l) {
 				Entry e = (Entry) o;
@@ -60,25 +60,18 @@ public abstract class LatticeDependencyUtils {
 		}
 		else if (l instanceof FlockCollectionLattice) {
 			for (Object o : (FlockCollectionLattice) l) {
-				if (o instanceof FlockLattice) {
-					gatherDependencies(out, (FlockLattice) o);
-				} else if (o instanceof FlockValueWithDependencies) {
-					out.addAll(((FlockValueWithDependencies) o).dependencies());
-				} else {
-					throw new RuntimeException("Unknown lattice instance: " + l);
-				}
+				gatherDependencies(out, o);
 			}
 		} else if (l instanceof FlockValueLattice) {
-			if (l.value() instanceof FlockValueWithDependencies) {
-				out.addAll(((FlockValueWithDependencies) l.value()).dependencies());
-			} else if (l.value() instanceof FlockValue) {
+			if (((FlockValueLattice) l).value() instanceof FlockValueWithDependencies) {
+				out.addAll(((FlockValueWithDependencies) ((FlockValueLattice) l).value()).dependencies());
+			} else if (((FlockValueLattice) l).value() instanceof FlockValue) {
 				return;
 			} else {
 				throw new RuntimeException("Invalid lattice type");
 			}
 		} else {
-			Flock.printDebug(l.toString());
-			throw new RuntimeException("Invalid lattice type");
+			throw new RuntimeException("Invalid lattice type: " + l.getClass().toString());
 		}
 	}
 	
