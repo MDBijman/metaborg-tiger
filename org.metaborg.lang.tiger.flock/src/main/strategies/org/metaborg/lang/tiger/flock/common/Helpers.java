@@ -1,10 +1,12 @@
 package org.metaborg.lang.tiger.flock.common;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.spoofax.interpreter.terms.IStrategoAppl;
 import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoList;
@@ -14,6 +16,7 @@ import org.spoofax.terms.StrategoInt;
 import org.spoofax.terms.StrategoList;
 import org.spoofax.terms.StrategoString;
 import org.spoofax.terms.StrategoTuple;
+import org.spoofax.terms.TermFactory;
 import org.spoofax.terms.util.TermUtils;
 
 public class Helpers {
@@ -38,15 +41,12 @@ public class Helpers {
 		}
 		if (o instanceof HashMap) {
 			HashMap m = (HashMap) o;
-			IStrategoList result =  new StrategoList(null, null, null);
+			IStrategoList result = new StrategoList(null, null, null);
 			for (Object eo : m.entrySet()) {
 				Entry e = (Entry) eo;
-				
-				IStrategoTerm[] pair = {
-					toTerm(e.getKey()),
-					toTerm(e.getValue())
-				};
-				
+
+				IStrategoTerm[] pair = { toTerm(e.getKey()), toTerm(e.getValue()) };
+
 				result = new StrategoList(new StrategoTuple(pair, null), result, null);
 			}
 			return result;
@@ -56,6 +56,9 @@ public class Helpers {
 		}
 		if (o instanceof FlockValue) {
 			return ((FlockValue) o).toTerm();
+		}
+		if (o instanceof ITerm) {
+			return ((ITerm) o).toTerm();
 		}
 		throw new RuntimeException("Could not identify proper term type of " + o.toString());
 	}
@@ -90,12 +93,23 @@ public class Helpers {
 		return o;
 	}
 	
-	public static CfgNodeId getTermPosition(IStrategoTerm n) {
+	public static void validateIds(IStrategoTerm n) {
+		TermId id = getTermId(n);
+		if (id == null) {
+			throw new RuntimeException("Null id on term " + n.toString());
+		}
+		
+		for (IStrategoTerm t : n.getAllSubterms()) {
+			validateIds(t);
+		}
+	}
+
+	public static TermId getTermId(IStrategoTerm n) {
 		if (n.getAnnotations().size() == 0)
 			return null;
 		assert TermUtils.isAppl(n.getAnnotations().getSubterm(0), "FlockNodeId", 1);
 		IStrategoInt id = (IStrategoInt) n.getAnnotations().getSubterm(0).getSubterm(0);
-		return new CfgNodeId(id.intValue());
+		return new TermId(id.intValue());
 	}
 
 	public static Node getTermNode(IStrategoTerm n) {
@@ -103,6 +117,35 @@ public class Helpers {
 			return null;
 		assert TermUtils.isAppl(n.getAnnotations().getSubterm(0), "FlockNodeId", 1);
 		IStrategoInt id = (IStrategoInt) n.getAnnotations().getSubterm(0).getSubterm(0);
-		return new Node(new CfgNodeId(id.intValue()));
+		return new Node(new TermId(id.intValue()));
+	}
+
+	public static IStrategoTerm annotateWithIds(IStrategoTerm t) {
+		TermFactory tf = new TermFactory();
+		IStrategoList existing = t.getAnnotations();
+		IStrategoList newAnnot = tf
+				.makeListCons(tf.makeAppl("FlockNodeId", tf.makeInt((int) Flock.nextNodeId().getId())), existing);
+
+		ArrayList<IStrategoTerm> children = new ArrayList<>();
+		for (IStrategoTerm subterm : t.getSubterms()) {
+			IStrategoTerm subTermAnnotated = annotateWithIds(subterm);
+			children.add(subTermAnnotated);
+		}
+		IStrategoTerm[] childrenArray = children.stream().toArray(IStrategoTerm[]::new);
+
+		if (TermUtils.isAppl(t)) {
+			IStrategoAppl asAppl = (IStrategoAppl) t;
+			return tf.makeAppl(asAppl.getConstructor(), childrenArray, newAnnot);
+		} else if (TermUtils.isList(t)) {
+			return tf.makeList(childrenArray, newAnnot);
+		} else if (TermUtils.isTuple(t)) {
+			return tf.makeTuple(childrenArray, newAnnot);
+		} else {
+			if (children.size() > 0) {
+				throw new RuntimeException("Did not expect this term to have children");
+			}
+			IStrategoTerm annotated = tf.annotateTerm(t, newAnnot);
+			return annotated;
+		}
 	}
 }

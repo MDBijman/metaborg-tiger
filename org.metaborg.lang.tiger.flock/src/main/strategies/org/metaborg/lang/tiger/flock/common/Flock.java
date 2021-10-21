@@ -21,18 +21,19 @@ import org.strategoxt.lang.Context;
 
 public abstract class Flock {
 	public static Flock instance = new FlockIncremental();
-	
+
 	public IOAgent io;
 	public Graph graph;
+	public TermTree termTree;
 	public List<Analysis> analyses;
 
 	public Flock() {
 		this.analyses = new ArrayList<Analysis>();
-		//this.analyses.add(new LiveVariables());
+		// this.analyses.add(new LiveVariables());
 		this.analyses.add(new FlowAnalysis());
-		//this.analyses.add(new AvailableExpressions());
+		// this.analyses.add(new AvailableExpressions());
 	}
-	
+
 	public Set<Node> getTermDependencies(Graph g, Node n) {
 		HashSet<Node> deps = new HashSet<>();
 		for (Analysis a : analyses) {
@@ -40,7 +41,7 @@ public abstract class Flock {
 		}
 		return deps;
 	}
-	
+
 	protected void applyGhostMask(Set<Node> mask) {
 		for (Node n : this.graph.nodes()) {
 			if (mask.contains(n)) {
@@ -54,17 +55,6 @@ public abstract class Flock {
 		for (Node n : g.nodes()) {
 			n.addProperty("position", new PositionLattice(factory.makeInt(i)));
 			i += 1;
-		}
-	}
-	
-	public void setNodeTerms(IStrategoTerm term) {
-		Node id = Helpers.getTermNode(term);
-		if (id != null && this.graph.getNode(id.getId()) != null) {
-			this.graph.getNode(id.getId()).term = term;
-		}
-
-		for (IStrategoTerm subterm : term.getSubterms()) {
-			setNodeTerms(subterm);
 		}
 	}
 
@@ -83,21 +73,21 @@ public abstract class Flock {
 			visited.add(this.graph.getNode(id.getId()));
 		}
 	}
-	
+
 	public abstract void init(IStrategoTerm program);
-	
-	public abstract void update(IStrategoTerm program);
-	
+
+	public abstract void createTermGraph(IStrategoTerm term);
+
 	public abstract void createControlFlowGraph(Context context, IStrategoTerm current);
-	
+
 	public abstract void removeNode(IStrategoTerm node);
-	
+
 	public abstract void replaceNode(IStrategoTerm node, IStrategoTerm replacement);
-	
-	public abstract Node getNode(CfgNodeId id);
-	
+
+	public abstract Node getNode(TermId id);
+
 	public abstract Analysis analysisWithName(String name);
-	
+
 	/*
 	 * Helpers for mutating graph analyses
 	 */
@@ -119,24 +109,24 @@ public abstract class Flock {
 			ga.clear();
 		}
 	}
-	
+
 	/*
 	 * Timing and Debugging
 	 */
 
 	public static void printDebug(String t) {
+		// When called from stratego we need to print like this
 		instance.io.printError(t);
+		// When called from other projects stdout will work
+		System.out.println(t);
 	}
 
-	private static String[] enabled = {
-		"time",
-		"count",
-		"debug",
-		//"incremental",
-		//"validation",
-		"api",
-		//"dependencies",
-		//"graphviz"
+	private static String[] enabled = { "time", "count", "debug",
+			// "incremental",
+			// "validation",
+			"api",
+			// "dependencies",
+			// "graphviz"
 	};
 	private static HashSet<String> enabledTags = new HashSet<>(Arrays.asList(enabled));
 
@@ -151,7 +141,7 @@ public abstract class Flock {
 	}
 
 	private static HashMap<String, Long> runningMap = new HashMap<>();
-	
+
 	private static HashMap<String, Long> cumulMap = new HashMap<>();
 
 	public static void beginTime(String tag) {
@@ -195,14 +185,18 @@ public abstract class Flock {
 			Flock.log("count", e.getKey() + ": " + e.getValue());
 		}
 	}
-	
-	public static CfgNodeId nextNodeId() {
-		return Graph.Node.nextNodeId();
+
+	static private TermId nextId = new TermId(0);
+
+	public static TermId nextNodeId() {
+		TermId next = Flock.nextId;
+		Flock.nextId = new TermId(next.getId() + 1);
+		return next;
 	}
+
 }
 
 class PositionLattice implements FlockLattice {
-
 	IStrategoInt value;
 
 	PositionLattice(IStrategoInt v) {

@@ -24,6 +24,7 @@ public class flock_analyse_program_0_0 extends Strategy {
 			context.getIOAgent().printError("Creating CFG");
 			Flock.resetTimers();
 			Flock.beginTime("api@analyse");
+			Flock.instance.createTermGraph(current);
 			Flock.instance.createControlFlowGraph(context, current);
 			Flock.log("graphviz", Flock.instance.graph.toGraphviz());
 			Flock.log("api", "analyse_program");

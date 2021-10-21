@@ -68,9 +68,7 @@ rules // transformation actions
     with
       with-ids := <flock-add-id> p
     ; <flock-analyse-program> with-ids
-    ; <flock-debug-graph(|"values")> ()
-    ; p' := <topdown(try(replace-constant))> with-ids
-    ; <flock-debug-graph(|"values")> ()
+    ; p' := <topdown(try(propagate-constant))> with-ids
 
   transform-inline: p -> p'
     with
@@ -83,29 +81,83 @@ rules // pipeline
   pipeline: p -> p'
   with
     with-ids := <flock-add-id> p
-  //; debug
-  //; strip-annos
   ; <flock-analyse-program> with-ids
-  //; where(flock-debug-graph)
-  //; oncetd(flock-remove-all(is-dead-vardec))
-  //; topdown(try(replace-constant))
-  ; <flock-debug-graph(|"values")> ()
   ; p' := <
-  	inline-in-module
-  ; where(flock-debug-graph(|"values"))
-  ; where(flock-update-term-map)
-  ; oncetd(replace-constant)
-  ; where(flock-update-term-map)
-  ; where(flock-debug-graph(|"values"))
-  ; oncetd(replace-constant)
-  > with-ids 
-  //; oncetd(flock-remove-all(is-dead-vardec))
+      inline-pass
+  	; forward-pass
+  > with-ids
+  ; <flock-debug-graph> ()
+  ; <debug> <run-time>
+  //; <flock-debug-graph(|"values")> ()
+  
+  inline-pass = flock-fixpoint(inline-in-module|15)
+
+  forward-pass = flock-fixpoint(forward-pass-single|140)
+  forward-pass-single: p -> p'
+    where
+      p' := <oncetd(propagate-constant + simplify-let + simplify-seq + fold-constant + remove-dead-branch)> p
+   //; <flock-debug-graph(|"values")> ()
+
+strategies
+  
+  propagate-constant: v@Var(n) -> new-node
+  where
+    n-no-annos := <strip-annos> n
+  ; [Const(new-value)] := <flock-get-value; filter(compare-names(|n-no-annos))> v
+  ; new-node := <flock-replace-node(|v)> Int(new-value)
+  compare-names(|other): (name, value) -> value where <equal(|name, other)> ()
+  
+  fold-constant: e@Plus(Int(v1), Int(v2)) -> new-node
+  where 
+    sum := <(string-to-int, string-to-int); addi; int-to-string> (v1, v2)
+  ; <concat-strings; flock-debug> ["[fold-expressions] ", v1, " + ", v2, " -> ", sum]
+  ; new-node := <flock-replace-node(|e)> Int(sum)
+  
+  fold-constant: e@Minus(Int(v1), Int(v2)) -> new-node
+  where
+    sub := <(string-to-int, string-to-int); subti; int-to-string> (v1, v2)
+  ; <concat-strings; flock-debug> ["[fold-expressions] ", v1, " + ", v2, " -> ", sub]
+  ; new-node := <flock-replace-node(|e)> Int(sub)
+
+  fold-constant: e@Times(Int(v1), Int(v2)) -> new-node
+  where
+    mul := <(string-to-int, string-to-int); muli; int-to-string> (v1, v2)
+  ; <concat-strings; flock-debug> ["[fold-expressions] ", v1, " + ", v2, " -> ", mul]
+  ; new-node := <flock-replace-node(|e)> Int(mul)
+
+  fold-constant: e@Eq(Int(v1), Int(v2)) -> new-node
+  where
+    res := <(string-to-int, string-to-int); eq < !Int("1") + !Int("0")> (v1, v2)
+  ; <concat-strings; flock-debug> ["[fold-expressions] ", v1, " > ", v2]
+  ; new-node := <flock-replace-node(|e)> res
+
+  fold-constant: e@Gt(Int(v1), Int(v2)) -> new-node
+  where
+    res := <(string-to-int, string-to-int); gti < !Int("1") + !Int("0")> (v1, v2)
+  ; <concat-strings; flock-debug> ["[fold-expressions] ", v1, " > ", v2]
+  ; new-node := <flock-replace-node(|e)> res
 
 strategies
 
-  inline-in-module: Mod(l@Let(decs, expr)) -> Mod(Let(decs, new-expr))
+  remove-dead-branch: e@If(Int("0"), then, else) -> <strip-annos; flock-replace-node(|e)> else
+  remove-dead-branch: e@If(Int("1"), then, else) -> <strip-annos; flock-replace-node(|e)> then
+  simplify-let: e@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|e)> i 
+  simplify-seq: e@Seq([inner]) -> <strip-annos; flock-replace-node(|e)> inner
+  
+strategies
+
+  is-dead-vardec: a@VarDec(n, _, _) -> a
   where
-  	  {| InlineFn:
+    <not(flock-is-live(|n))> a
+  ; <concat-strings; flock-debug> ["dead variable ", n]
+  
+  get-vbe: n -> n where <flock-get-ae> n
+  
+strategies
+
+  inline-in-module: Mod(l@Let(decs, expr){a1*}){a2*} -> Mod(Let(decs, new-expr){a1*}){a2*}
+  where
+  	  {| InlineFn, InlineCount:
   		<try(bind-fns-in-let-binding)> l
   	  ; new-expr := <bottomup(try(InlineFn))> expr
   	  |}
@@ -169,21 +221,4 @@ strategies
   create-inlining-decs = zip; map(create-inlining-dec)
   
   create-inlining-dec: (FArg(occ, ty), arg) -> VarDec(occ, ty, arg)
-
-strategies
-
-  is-dead-vardec: a@VarDec(n, _, _) -> a
-  where
-    <not(flock-is-live(|n))> a
-  ; <concat-strings; flock-debug> ["dead variable ", n]
-  
-  replace-constant: v@Var(n) -> new-node
-  where
-    n-no-annos := <strip-annos> n
-  ; [Const(new-value)] := <flock-get-value; filter(?(name, value); equal(|name, n-no-annos); !value)> v
-  ; new-node := Int(new-value)
-  ; <flock-replace-node(|v)> new-node
-  
-  get-vbe: n -> n where <flock-get-ae> n
-  
   

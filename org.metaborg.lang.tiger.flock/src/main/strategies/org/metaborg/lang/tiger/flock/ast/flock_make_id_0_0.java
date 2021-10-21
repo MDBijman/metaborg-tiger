@@ -13,7 +13,7 @@ public class flock_make_id_0_0 extends Strategy {
 	@Override 
 	public IStrategoTerm invoke(Context context, IStrategoTerm c) {
         ITermFactory factory = context.getFactory();
-        int id = (int) Flock.instance.nextNodeId().getId();
+        int id = (int) Flock.nextNodeId().getId();
 		return factory.makeInt(id);
     }
 }

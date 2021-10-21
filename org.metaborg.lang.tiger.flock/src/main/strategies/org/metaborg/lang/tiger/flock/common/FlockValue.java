@@ -42,14 +42,14 @@ public abstract class FlockValue {
 			return value;
 		}
 		
-		public Name withOrigin(Set<CfgNodeId> ids) {
-			for (CfgNodeId id : ids) {
+		public Name withOrigin(Set<TermId> ids) {
+			for (TermId id : ids) {
 				this.dependencies.add(new Dependency(id));
 			}
 			return this;
 		}
 		
-		public Name withOrigin(CfgNodeId id) {
+		public Name withOrigin(TermId id) {
 			this.dependencies.add(new Dependency(id));
 			return this;
 		}

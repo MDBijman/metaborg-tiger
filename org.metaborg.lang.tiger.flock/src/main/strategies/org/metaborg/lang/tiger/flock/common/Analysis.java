@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockCollectionLattice;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
+import org.metaborg.lang.tiger.flock.value.FlowAnalysis;
 import org.spoofax.terms.util.NotImplementedException;
 import org.spoofax.terms.util.TermUtils;
 
@@ -21,9 +23,6 @@ public abstract class Analysis {
 	public final Direction direction;
 	public HashSet<Node> dirtyNodes = new HashSet<>();
 	public HashSet<Node> newNodes = new HashSet<>();
-	public HashSet<Node> changedNodes = new HashSet<>();
-	public HashMap<Node, Set<Node>> patternParentNodes = new HashMap<>();
-	public HashMap<Node, Set<Node>> failedPatternParentNodes = new HashMap<>();
 	private boolean hasRunOnce = false;
 
 	public Analysis(String name, Direction dir) {
@@ -54,6 +53,13 @@ public abstract class Analysis {
 	 * Analysis Logic
 	 */
 	
+	public void removeNodeResults(Set<Node> nodes) {
+		for (Node n : nodes) {
+			this.addToDirty(n);
+			this.initNodeValue(n);
+		}
+	}
+	
 	public void removeResultAfterBoundary(Graph graph, float boundary) {
 		for (Node n : graph.nodes()) {
 			if (!this.withinBoundary(boundary, n.interval)) {
@@ -79,16 +85,18 @@ public abstract class Analysis {
 		if (!this.hasRunOnce) {
 			this.performDataAnalysis(graph, graph.roots(), this.newNodes, dirtyNodes, boundary);
 			this.hasRunOnce = true;
+			
+			// Remove the updated nodes from the dirty/new collections
+			this.dirtyNodes.removeIf(n -> this.withinBoundary(graph.intervalOf(n), boundary));
+			this.newNodes.removeIf(n   -> this.withinBoundary(graph.intervalOf(n), boundary));
 		} else {
 			this.updateDataAnalysis(graph, this.newNodes, dirtyNodes, boundary);
+
 		}
 
-		// Remove the updated nodes from the dirty/new collections
-		this.dirtyNodes.removeIf(n -> this.withinBoundary(graph.intervalOf(n), boundary));
-		this.newNodes.removeIf(n   -> this.withinBoundary(graph.intervalOf(n), boundary));
 	}
 
-	private boolean withinBoundary(float interval, float boundary) {
+	protected boolean withinBoundary(float interval, float boundary) {
 		if (this.direction == Direction.FORWARD) {
 			return interval <= boundary;
 		} else if (this.direction == Direction.BACKWARD) {
@@ -104,36 +112,6 @@ public abstract class Analysis {
 		return g.nodes().stream().filter(o -> this.withinBoundary(n.interval, o.interval)).collect(Collectors.toSet());
 	}
 	
-	/*
-	 * The pattern parents are the (indirect) parents of a node that were matched on in a dataflow rule.
-	 */
-	
-	protected void addNodePatternParent(Node child, Node parent) {
-		if (!this.patternParentNodes.containsKey(child)) {
-			this.patternParentNodes.put(child, new HashSet<>());
-		}
-		this.patternParentNodes.get(child).add(parent);
-	}
-
-	protected Set<Node> getPatternParents(Node n) {
-		return this.patternParentNodes.get(n);
-	}
-	
-	/*
-	 * The pattern parents are the (indirect) parents of a node that failed to match in a dataflow rule.
-	 */
-	
-	protected void addFailedNodePatternParent(Node child, Node parent) {
-		if (!this.failedPatternParentNodes.containsKey(child)) {
-			this.failedPatternParentNodes.put(child, new HashSet<>());
-		}
-		this.failedPatternParentNodes.get(child).add(parent);
-	}
-
-	protected Set<Node> getFailedPatternParents(Node n) {
-		return this.failedPatternParentNodes.get(n);
-	}
-
 	/*
 	 * Analysis implementation
 	 */

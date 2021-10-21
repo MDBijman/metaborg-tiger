@@ -23,66 +23,69 @@ public class FlockIncremental extends Flock {
 		for (Node n : this.graph.nodes()) {
 			this.addToNew(n);
 		}
-		update(program);
 	}
 
 	@Override
-	public void update(IStrategoTerm program) {
-		Flock.beginTime("Program@update");
-		for (Node node : this.graph.nodes()) {
-			node.interval = this.graph.intervalOf(node);
-		}
-		setNodeTerms(program);
-		Flock.endTime("Program@update");
+	public void createTermGraph(IStrategoTerm term) {
+		this.termTree = new TermTree(term);
 	}
 
 	@Override
 	public void createControlFlowGraph(Context context, IStrategoTerm current) {
 		this.io = context.getIOAgent();
-		this.graph = GraphFactory.createCfgRecursive(current);
+		this.graph = GraphFactory.createCfgRecursive(this.termTree, current);
 		this.graph.removeGhostNodes();
 		this.graph.computeIntervals();
 		this.graph.validate();
-		this.update(current);
 		initPosition(graph, context.getFactory());
 	}
 
 	@Override
 	public void replaceNode(IStrategoTerm current, IStrategoTerm replacement) {
 		Flock.increment("replaceNode");
-		Flock.beginTime("Program@replaceNode");
-		Flock.beginTime("Program@replaceNode - a");
+		Flock.beginTime("FlockIncremental@replaceNode");
 
-		Node currentNode = Helpers.getTermNode(current);
+		Flock.beginTime("FlockIncremental@replaceNode - a");
 		Set<Node> removedNodes = getAllNodes(current);
+		{
+			Node currentNode = Helpers.getTermNode(current);
 
-		for (Analysis a : this.analyses) {
-			this.lowerAnalysisResults(a, removedNodes, currentNode);
+			for (Analysis a : this.analyses) {
+				this.lowerAnalysisResults(a, removedNodes, currentNode);
+			}
+
+			this.termTree.replace(Helpers.getTermId(current), replacement);
 		}
+		Flock.endTime("FlockIncremental@replaceNode - a");
 
-		Flock.endTime("Program@replaceNode - a");
-		Flock.beginTime("Program@replaceNode - b");
+		Flock.beginTime("FlockIncremental@replaceNode - b");
+		{
+			// Patch the graph, removing old nodes and placing new nodes
+			Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
+			subGraph.removeGhostNodes();
+			subGraph.computeIntervals();
+			this.graph.replaceNodes(removedNodes, subGraph);
 
-		// Patch the graph, removing old nodes and placing new nodes
-		Graph subGraph = GraphFactory.createCfgOnce(replacement);
-		// Flock.printDebug(replacement.toString());
-		// Flock.printDebug(subGraph.toGraphviz());
-		subGraph.removeGhostNodes();
-		subGraph.computeIntervals();
-		this.graph.replaceNodes(removedNodes, subGraph);
+			for (Node n : subGraph.nodes()) {
+				this.addToNew(n);
+			}
 
-		for (Node n : subGraph.nodes()) {
-			this.addToNew(n);
+			this.termTree.validate();
+
+			for (Node n : this.graph.nodes()) {
+				if (this.termTree.nodeById(n.getId()) == null) {
+					throw new RuntimeException("Null node in cfg");
+				}
+			}
 		}
-
-		Flock.endTime("Program@replaceNode - b");
-		Flock.endTime("Program@replaceNode");
+		Flock.endTime("FlockIncremental@replaceNode - b");
+		Flock.endTime("FlockIncremental@replaceNode");
 	}
 
 	@Override
 	public void removeNode(IStrategoTerm node) {
 		Flock.increment("removeNode");
-		Flock.beginTime("Program@removeNode");
+		Flock.beginTime("FlockIncremental@removeNode");
 		Flock.log("api", "removing node " + node.toString());
 
 		Node currentNode = Helpers.getTermNode(node);
@@ -95,7 +98,7 @@ public class FlockIncremental extends Flock {
 		// Go through graph and remove facts with origin in removed id's
 		this.applyGhostMask(removedNodes);
 		this.graph.removeGhostNodes();
-		Flock.endTime("Program@removeNode");
+		Flock.endTime("FlockIncremental@removeNode");
 	}
 
 	private void lowerAnalysisResults(Analysis a, Set<Node> removedNodes, Node currentNode) {
@@ -125,7 +128,7 @@ public class FlockIncremental extends Flock {
 	}
 
 	@Override
-	public Node getNode(CfgNodeId id) {
+	public Node getNode(TermId id) {
 		return graph.getNode(id);
 	}
 

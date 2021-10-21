@@ -22,19 +22,8 @@ public class FlockIterative extends Flock {
 		for (Node n : this.graph.nodes()) {
 			this.addToNew(n);
 		}
-		update(program);
 	}
 
-	@Override
-	public void update(IStrategoTerm program) {
-		Flock.beginTime("Program@update");
-		for (Node node : this.graph.nodes()) {
-			node.interval = this.graph.intervalOf(node);
-		}
-		setNodeTerms(program);
-		Flock.endTime("Program@update");
-	}
-	
 	@Override
 	public void createControlFlowGraph(Context context, IStrategoTerm current) {
 		this.io = context.getIOAgent();
@@ -43,7 +32,6 @@ public class FlockIterative extends Flock {
 		this.graph.removeGhostNodes();
 		this.graph.computeIntervals();
 		this.graph.validate();
-		this.update(current);
 		initPosition(graph, context.getFactory());
 	}
 
@@ -124,7 +112,7 @@ public class FlockIterative extends Flock {
 	}
 	
 	@Override
-	public Node getNode(CfgNodeId id) {
+	public Node getNode(TermId id) {
 		return graph.getNode(id);
 	}
 	

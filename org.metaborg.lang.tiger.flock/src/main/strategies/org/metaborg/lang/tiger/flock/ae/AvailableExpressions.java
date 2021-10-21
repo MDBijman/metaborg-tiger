@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.metaborg.lang.tiger.flock.common.Analysis;
-import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.MustSet;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.SimpleMap;
@@ -19,6 +18,8 @@ import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.Helpers;
 import org.metaborg.lang.tiger.flock.common.MapUtils;
 import org.metaborg.lang.tiger.flock.common.SetUtils;
+import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
+import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.metaborg.lang.tiger.flock.common.TransferFunction;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.terms.util.M;
@@ -34,24 +35,20 @@ public class AvailableExpressions extends Analysis {
 	}
 
 	private boolean matchPattern0(Node node) {
-		IStrategoTerm term = node.term;
+		ITerm term = node.virtualTerm;
 		return true;
 	}
 
 	private boolean matchPattern1(Node node) {
-		IStrategoTerm term = node.term;
-		if (!(TermUtils.isAppl(term) && M.appl(term).getName().equals("VarDec") && term.getSubtermCount() == 3)) {
+		ITerm term = node.virtualTerm;
+		if (!(term.isAppl() && ((ApplTerm) term).getConstructor().equals("VarDec") && term.childrenCount() == 3)) {
 			return false;
 		}
-		IStrategoTerm term_0 = Helpers.at(term, 0);
-		IStrategoTerm term_1 = Helpers.at(term, 1);
-		IStrategoTerm term_2 = Helpers.at(term, 2);
-		addNodePatternParent(node, Helpers.getTermNode(term));
 		return true;
 	}
 
 	private boolean matchPattern2(Node node) {
-		IStrategoTerm term = node.term;
+		ITerm term = node.virtualTerm;
 		return true;
 	}
 
@@ -93,7 +90,6 @@ public class AvailableExpressions extends Analysis {
 			if (root.interval > intervalBoundary)
 				continue;
 			root.getProperty("expressions").lattice = root.getProperty("expressions").init.eval(root);
-			this.changedNodes.add(root);
 		}
 		for (Node node : nodeset) {
 			if (node.interval > intervalBoundary)
@@ -105,7 +101,6 @@ public class AvailableExpressions extends Analysis {
 					init = init.lub(live_o);
 				}
 				node.getProperty("expressions").lattice = init;
-				this.changedNodes.add(node);
 			}
 		}
 		while (!worklist.isEmpty()) {
@@ -127,9 +122,6 @@ public class AvailableExpressions extends Analysis {
 					worklist.add(successor);
 					inWorklist.add(successor);
 				}
-				if (changed) {
-					this.changedNodes.add(successor);
-				}
 			}
 			for (Node successor : g.parentsOf(node)) {
 				boolean changed = false;
@@ -138,9 +130,6 @@ public class AvailableExpressions extends Analysis {
 				if (changed && !inWorklist.contains(successor)) {
 					worklist.add(successor);
 					inWorklist.add(successor);
-				}
-				if (changed) {
-					this.changedNodes.add(successor);
 				}
 			}
 		}
@@ -156,7 +145,7 @@ class TransferFunctions {
 class TransferFunction0 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		IStrategoTerm term = node.term;
+		ITerm term = node.virtualTerm;
 		Node prev = node;
 		SimpleMap tmp68 = (SimpleMap) UserFunctions.expressions_f(prev);
 		return tmp68;
@@ -166,10 +155,10 @@ class TransferFunction0 extends TransferFunction {
 class TransferFunction1 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		IStrategoTerm term = node.term;
+		ITerm term = node.virtualTerm;
 		Node prev = node;
-		IStrategoTerm usrn = Helpers.at(term, 0);
-		IStrategoTerm usre = Helpers.at(term, 2);
+		ITerm usrn = term.childAt(0);
+		ITerm usre = term.childAt(2);
 		Set tmp69 = (Set) SetUtils.create(usrn);
 		Map result10 = new HashMap();
 		for (Object o : ((Map) ((FlockLattice) UserFunctions.expressions_f(prev)).value()).entrySet()) {
@@ -179,8 +168,8 @@ class TransferFunction1 extends TransferFunction {
 			result10.put(usrk, new MustSet(SetUtils.difference(((FlockLattice) usrv).value(), tmp69)));
 		}
 		Map tmp70 = (Map) result10;
-		Set tmp71 = (Set) SetUtils.create(usrn);
-		Map tmp72 = (Map) MapUtils.create(Helpers.toTerm(usre), new MustSet(tmp71));
+		Set tmp71 = (Set) SetUtils.create(usrn.toTerm());
+		Map tmp72 = (Map) MapUtils.create(Helpers.toTerm(usre.toTerm()), new MustSet(tmp71));
 		Map tmp81 = (Map) MapUtils.union(tmp70, tmp72);
 		Map tmp67 = (Map) tmp81;
 		return new SimpleMap(tmp67);
@@ -190,7 +179,7 @@ class TransferFunction1 extends TransferFunction {
 class TransferFunction2 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		IStrategoTerm term = node.term;
+		ITerm term = node.virtualTerm;
 		Map tmp66 = (Map) MapUtils.create();
 		return new SimpleMap(tmp66);
 	}

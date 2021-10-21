@@ -9,7 +9,7 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.metaborg.lang.tiger.flock.common.Analysis;
-import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
+import org.metaborg.lang.tiger.flock.common.Flock;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockValueLattice;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.SimpleMap;
@@ -18,6 +18,8 @@ import org.metaborg.lang.tiger.flock.common.Graph;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.Helpers;
 import org.metaborg.lang.tiger.flock.common.MapUtils;
+import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
+import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
 import org.metaborg.lang.tiger.flock.common.TransferFunction;
 import org.metaborg.lang.tiger.flock.value.FlowAnalysisProperties.ConstProp;
 import org.spoofax.interpreter.terms.IStrategoTerm;
@@ -37,42 +39,32 @@ public class FlowAnalysis extends Analysis {
 	}
 
 	private boolean matchPattern0(Node node) {
-		IStrategoTerm term = node.term;
 		return true;
 	}
 
 	private boolean matchPattern1(Node node) {
-		IStrategoTerm term = node.term;
-		if (!(TermUtils.isAppl(term) && M.appl(term).getName().equals("VarDec") && term.getSubtermCount() == 3)) {
+		ITerm vnode = node.virtualTerm;
+		if (!(vnode.isAppl() && ((ApplTerm) vnode).getConstructor().equals("VarDec")
+				&& node.virtualTerm.childrenCount() == 3)) {
 			return false;
 		}
-		IStrategoTerm term_0 = Helpers.at(term, 0);
-		IStrategoTerm term_1 = Helpers.at(term, 1);
-		IStrategoTerm term_2 = Helpers.at(term, 2);
-		addNodePatternParent(node, Helpers.getTermNode(term));
 		return true;
 	}
 
 	private boolean matchPattern2(Node node) {
-		IStrategoTerm term = node.term;
-		if (!(TermUtils.isAppl(term) && M.appl(term).getName().equals("VarDec") && term.getSubtermCount() == 3)) {
+		ITerm vnode = node.virtualTerm;
+		if (!(vnode.isAppl() && ((ApplTerm) vnode).getConstructor().equals("VarDec") && vnode.childrenCount() == 3)) {
 			return false;
 		}
-		IStrategoTerm term_0 = Helpers.at(term, 0);
-		IStrategoTerm term_1 = Helpers.at(term, 1);
-		IStrategoTerm term_2 = Helpers.at(term, 2);
-		if (!(TermUtils.isAppl(term_2) && M.appl(term_2).getName().equals("Int") && term_2.getSubtermCount() == 1)) {
-			addFailedNodePatternParent(node, Helpers.getTermNode(term));
+		ITerm vnode_2 = vnode.childAt(2);
+		if (!(vnode_2.isAppl() && ((ApplTerm) vnode_2).getConstructor().equals("Int")
+				&& vnode_2.childrenCount() == 1)) {
 			return false;
 		}
-		IStrategoTerm term_2_0 = Helpers.at(term_2, 0);
-		addNodePatternParent(node, Helpers.getTermNode(term));
-		addNodePatternParent(node, Helpers.getTermNode(term_2));
 		return true;
 	}
 
 	private boolean matchPattern3(Node node) {
-		IStrategoTerm term = node.term;
 		return true;
 	}
 
@@ -117,7 +109,6 @@ public class FlowAnalysis extends Analysis {
 			if (root.interval > intervalBoundary)
 				continue;
 			root.getProperty("values").lattice = root.getProperty("values").init.eval(root);
-			this.changedNodes.add(root);
 		}
 		for (Node node : nodeset) {
 			if (node.interval > intervalBoundary)
@@ -129,9 +120,9 @@ public class FlowAnalysis extends Analysis {
 					init = init.lub(live_o);
 				}
 				node.getProperty("values").lattice = init;
-				this.changedNodes.add(node);
 			}
 		}
+		HashSet<Node> keepDirty = new HashSet<>();
 		while (!worklist.isEmpty()) {
 			Node node = worklist.poll();
 			inWorklist.remove(node);
@@ -139,8 +130,10 @@ public class FlowAnalysis extends Analysis {
 				continue;
 			FlockLattice values_n = node.getProperty("values").transfer.eval(node);
 			for (Node successor : g.childrenOf(node)) {
-				if (successor.interval > intervalBoundary)
+				if (successor.interval > intervalBoundary) {
+					keepDirty.add(node);
 					continue;
+				}
 				boolean changed = false;
 				FlockLattice values_o = successor.getProperty("values").lattice;
 				if (values_n.nleq(values_o)) {
@@ -151,23 +144,12 @@ public class FlowAnalysis extends Analysis {
 					worklist.add(successor);
 					inWorklist.add(successor);
 				}
-				if (changed) {
-					this.changedNodes.add(successor);
-				}
-			}
-			for (Node successor : g.parentsOf(node)) {
-				boolean changed = false;
-				if (successor.interval > intervalBoundary)
-					continue;
-				if (changed && !inWorklist.contains(successor)) {
-					worklist.add(successor);
-					inWorklist.add(successor);
-				}
-				if (changed) {
-					this.changedNodes.add(successor);
-				}
 			}
 		}
+
+		// Remove the updated nodes from the dirty/new collections
+		this.dirtyNodes.removeIf(n -> !keepDirty.contains(n) && this.withinBoundary(g.intervalOf(n), intervalBoundary));
+		this.newNodes.removeIf(n -> this.withinBoundary(g.intervalOf(n), intervalBoundary));
 	}
 }
 
@@ -261,7 +243,7 @@ class TransferFunctions {
 class TransferFunction0 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		IStrategoTerm term = node.term;
+		ITerm term = node.virtualTerm;
 		Node prev = node;
 		SimpleMap tmp3 = (SimpleMap) UserFunctions.values_f(prev);
 		return tmp3;
@@ -271,20 +253,20 @@ class TransferFunction0 extends TransferFunction {
 class TransferFunction1 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		IStrategoTerm term = node.term;
+		ITerm term = node.virtualTerm;
 		Node prev = node;
-		IStrategoTerm usrn = Helpers.at(term, 0);
+		ITerm usrn = term.childAt(0);
 		Map result1 = new HashMap();
 		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
 			Entry entry = (Entry) o;
 			Object usrk = entry.getKey();
 			Object usrv = entry.getValue();
-			if (!usrk.equals(usrn)) {
+			if (!usrk.equals(usrn.toTermWithoutAnnotations())) {
 				result1.put(usrk, usrv);
 			}
 		}
 		Map tmp7 = (Map) result1;
-		Map tmp8 = (Map) MapUtils.create(usrn, new Value(
+		Map tmp8 = (Map) MapUtils.create(usrn.toTermWithoutAnnotations(), new Value(
 				new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null))));
 		Map tmp9 = (Map) new HashMap(MapUtils.union(tmp7, tmp8));
 		Map tmp2 = (Map) tmp9;
@@ -295,23 +277,23 @@ class TransferFunction1 extends TransferFunction {
 class TransferFunction2 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		IStrategoTerm term = node.term;
+		ITerm term = node.virtualTerm;
 		Node prev = node;
-		IStrategoTerm usrn = Helpers.at(term, 0);
-		IStrategoTerm usri = Helpers.at(Helpers.at(term, 2), 0);
+		ITerm usrn = term.childAt(0);
+		ITerm usri = term.childAt(2).childAt(0);
 		Map result2 = new HashMap();
 		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
 			Entry entry = (Entry) o;
 			Object usrk = entry.getKey();
 			Object usrv = entry.getValue();
-			if (!usrk.equals(usrn)) {
+			if (!usrk.equals(usrn.toTermWithoutAnnotations())) {
 				result2.put(usrk, usrv);
 			}
 		}
 		Map tmp4 = (Map) result2;
-		Map tmp5 = (Map) MapUtils.create(usrn,
+		Map tmp5 = (Map) MapUtils.create(usrn.toTermWithoutAnnotations(),
 				new Value(new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
-						new IStrategoTerm[] { Helpers.toTerm(usri) }, null))));
+						new IStrategoTerm[] { usri.toTermWithoutAnnotations() }, null))));
 		Map tmp6 = (Map) new HashMap(MapUtils.union(tmp4, tmp5));
 		Map tmp1 = (Map) tmp6;
 		return new SimpleMap(tmp1);
@@ -321,7 +303,7 @@ class TransferFunction2 extends TransferFunction {
 class TransferFunction3 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		IStrategoTerm term = node.term;
+		ITerm term = node.virtualTerm;
 		SimpleMap tmp0 = (SimpleMap) SimpleMap.bottom();
 		return tmp0;
 	}

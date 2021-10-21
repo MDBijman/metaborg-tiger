@@ -1,9 +1,9 @@
 package org.metaborg.lang.tiger.flock.common;
 
-public class CfgNodeId {
+public class TermId {
 	private long id;
 
-	public CfgNodeId(long id) {
+	public TermId(long id) {
 		this.id = id;
 	}
 
@@ -11,16 +11,16 @@ public class CfgNodeId {
 		return id;
 	}
 
-	public CfgNodeId successor() {
-		return new CfgNodeId(id + 1);
+	public TermId successor() {
+		return new TermId(id + 1);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (!(obj instanceof CfgNodeId)) {
+		if (!(obj instanceof TermId)) {
 			return false;
 		}
-		CfgNodeId other = (CfgNodeId) obj;
+		TermId other = (TermId) obj;
 		return other.id == this.id;
 	}
 

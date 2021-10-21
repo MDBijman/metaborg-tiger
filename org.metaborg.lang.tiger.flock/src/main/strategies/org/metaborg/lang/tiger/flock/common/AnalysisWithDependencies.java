@@ -6,12 +6,14 @@ import java.util.Set;
 
 import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockCollectionLattice;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 
 public abstract class AnalysisWithDependencies extends Analysis {
 
 	// Maps node to all the nodes that depend on it
-	private HashMap<CfgNodeId, Set<Dependency>> dependents = new HashMap<>();
-	
+	private HashMap<TermId, Set<Dependency>> dependents = new HashMap<>();
+	public HashSet<Node> changedNodes = new HashSet<>();
+
 	public AnalysisWithDependencies(String name, Direction dir) {
 		super(name, dir);
 	}
@@ -25,7 +27,7 @@ public abstract class AnalysisWithDependencies extends Analysis {
 	@Override
 	public Set<Node> getTermDependencies(Graph g, Node n)
 	{
-		return this.patternParentNodes.getOrDefault(n, new HashSet<>());
+		throw new RuntimeException("Not yet implemented");
 	}
 
 	@Override
@@ -69,7 +71,7 @@ public abstract class AnalysisWithDependencies extends Analysis {
 		Flock.endTime("Analysis@updateDependents");
 	}
 
-	public void removeFacts(Graph g, CfgNodeId origin) {
+	public void removeFacts(Graph g, TermId origin) {
 		Flock.beginTime("Analysis@removeFacts");
 		
 		updateDependents(this.changedNodes);

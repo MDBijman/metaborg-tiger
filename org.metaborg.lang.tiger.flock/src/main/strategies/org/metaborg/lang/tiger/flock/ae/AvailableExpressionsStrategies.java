@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.metaborg.lang.tiger.flock.common.CfgNodeId;
+import org.metaborg.lang.tiger.flock.common.TermId;
 import org.metaborg.lang.tiger.flock.common.Flock;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.Helpers;
@@ -23,7 +23,7 @@ public class AvailableExpressionsStrategies {
 		@Override
 		public IStrategoTerm invoke(Context context, IStrategoTerm current) {
 			ITermFactory factory = context.getFactory();
-			CfgNodeId id = new CfgNodeId(((IStrategoInt) current).intValue());
+			TermId id = new TermId(((IStrategoInt) current).intValue());
 			Node node = Flock.instance.getNode(id);
 			if (node == null) {
 				Flock.printDebug("CfgNode is null with id " + id.getId());

@@ -1,9 +1,9 @@
 package org.metaborg.lang.tiger.flock.common;
 
 public class Dependency {
-	public CfgNodeId id;
+	public TermId id;
 
-	public Dependency(CfgNodeId id) {
+	public Dependency(TermId id) {
 		this.id = id;
 	}
 

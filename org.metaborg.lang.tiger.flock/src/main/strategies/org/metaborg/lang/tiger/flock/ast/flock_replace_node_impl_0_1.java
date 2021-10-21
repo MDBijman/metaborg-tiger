@@ -1,6 +1,7 @@
 package org.metaborg.lang.tiger.flock.ast;
 
 import org.metaborg.lang.tiger.flock.common.Flock;
+import org.metaborg.lang.tiger.flock.common.Helpers;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
 import org.strategoxt.lang.Context;
@@ -12,8 +13,9 @@ public class flock_replace_node_impl_0_1 extends Strategy {
 	
 	@Override 
 	public IStrategoTerm invoke(Context context, IStrategoTerm newNode, IStrategoTerm oldNode) {
-        ITermFactory factory = context.getFactory();
         Flock.beginTime("api@replace");
+        Helpers.validateIds(newNode);
+        Helpers.validateIds(oldNode);
         Flock.log("api", "[replace-node] " + oldNode.toString() + " with " + newNode.toString());
         Flock.instance.replaceNode(oldNode, newNode);
         Flock.endTime("api@replace");

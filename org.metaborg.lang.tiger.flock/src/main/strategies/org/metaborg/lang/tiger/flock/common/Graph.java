@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
@@ -18,26 +19,25 @@ import org.spoofax.terms.util.TermUtils;
 
 public class Graph {
 	public static class Node {
-		private CfgNodeId id;
-		static private CfgNodeId nextId = new CfgNodeId(0);
+		private TermId id;
 
 		public boolean isGhost = false;
-		public IStrategoTerm term = null;
+		public ITerm virtualTerm = null;
 		public float interval = 0.0f;
 		public HashMap<String, Property> properties = new HashMap<>();
 
 		public Node() {
 			this.isGhost = true;
-			this.id = nextNodeId();
+			this.id = Flock.nextNodeId();
 		}
 
-		public Node(CfgNodeId id) {
+		public Node(TermId id) {
 			this.id = id;
 		}
 
-		public Node(CfgNodeId id, IStrategoTerm t) {
+		public Node(TermId id, ITerm t) {
 			this.id = id;
-			this.term = t;
+			this.virtualTerm = t;
 		}
 
 		public void addProperty(String name, FlockLattice lat) {
@@ -71,14 +71,8 @@ public class Graph {
 			return this.id.equals(((Node) other).id);
 		}
 
-		public CfgNodeId getId() {
+		public TermId getId() {
 			return id;
-		}
-
-		public static CfgNodeId nextNodeId() {
-			CfgNodeId next = Node.nextId;
-			Node.nextId = new CfgNodeId(next.getId() + 1);
-			return next;
 		}
 	}
 
@@ -111,7 +105,7 @@ public class Graph {
 
 	private HashMap<Node, Set<Node>> children = new HashMap<>();
 	private HashMap<Node, Set<Node>> parents = new HashMap<>();
-	private HashMap<CfgNodeId, Node> nodes = new HashMap<>();
+	private HashMap<TermId, Node> nodes = new HashMap<>();
 	private Set<Node> roots = new HashSet<>();
 	public Set<Node> leaves = new HashSet<>();
 
@@ -123,21 +117,21 @@ public class Graph {
 		 */
 	}
 
-	public Graph(Node root, IStrategoTerm term) {
-		root.term = term;
+	public Graph(Node root, ITerm termNode) {
+		root.virtualTerm = termNode;
 		this.roots.add(root);
 		this.leaves.add(root);
 		this.nodes.put(root.getId(), root);
 		this.children.put(root, new HashSet<>());
 		this.parents.put(root, new HashSet<>());
-		this.nodeTerm.put(root, term);
+		this.nodeTerm.put(root, termNode);
 	}
 
 	/*
 	 * Getters
 	 */
 
-	public Node getNode(CfgNodeId n) {
+	public Node getNode(TermId n) {
 		return this.nodes.get(n);
 	}
 
@@ -254,6 +248,9 @@ public class Graph {
 	 * Graph Mutation
 	 */
 
+	/*
+	 * Creates a non-ghost node without id, term, etc. Only use for tests.
+	 */
 	public Node createNode() {
 		Node n = new Node();
 		n.isGhost = false;
@@ -315,10 +312,9 @@ public class Graph {
 	}
 
 	/*
-	 * Removes node n from the graph, removing all edges with it.
-	 * In contrast to removeNode(Node) this will not create edges between
-	 * children and parents of n.
-	 * This will also not create new roots and leaves.
+	 * Removes node n from the graph, removing all edges with it. In contrast to
+	 * removeNode(Node) this will not create edges between children and parents of
+	 * n. This will also not create new roots and leaves.
 	 */
 	private void removeNodeAndEdges(Node n) {
 		this.unroot(n);
@@ -365,7 +361,7 @@ public class Graph {
 		}
 		this.mergeGraph(oldParents, oldChildren, subGraph);
 		this.updateIntervals(subGraph.nodes.values(), oldParents, oldChildren);
-		//this.validate();
+		// this.validate();
 		Flock.endTime("Graph@replaceNodes");
 	}
 
@@ -382,9 +378,9 @@ public class Graph {
 	 * Terms
 	 */
 
-	private HashMap<Node, IStrategoTerm> nodeTerm = new HashMap<>();
+	private HashMap<Node, ITerm> nodeTerm = new HashMap<>();
 
-	public IStrategoTerm termOf(Node n) {
+	public ITerm termOf(Node n) {
 		return this.nodeTerm.get(n);
 	}
 
@@ -397,7 +393,7 @@ public class Graph {
 	public Float intervalOf(Node n) {
 		return this.nodeInterval.get(n);
 	}
-	
+
 	private static final float VERY_LARGE_FLOAT = 999.f;
 
 	private void updateIntervals(Collection<Node> newNodes, Set<Node> oldParents, Set<Node> oldChildren) {
@@ -571,7 +567,7 @@ public class Graph {
 				"digraph G { graph[rankdir=LR, center=true, margin=0.2, nodesep=0.1, ranksep=0.3]; node[shape=record];");
 		for (Node node : this.nodes.values()) {
 
-			String termString = node.term != null ? removeAnnotations(escapeString(node.term.toString(1))) : "";
+			String termString = node.virtualTerm != null ? removeAnnotations(escapeString(node.virtualTerm.toString(1))) : "";
 
 			String rootString = this.roots.contains(node) ? "r" : "";
 			String leafString = this.leaves.contains(node) ? "l" : "";
