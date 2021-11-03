@@ -28,7 +28,6 @@ public class FlockIterative extends Flock {
 	public void createControlFlowGraph(Context context, IStrategoTerm current) {
 		this.io = context.getIOAgent();
 		this.graph = GraphFactory.createCfgRecursive(current);
-		Flock.printDebug(this.graph.toGraphviz());
 		this.graph.removeGhostNodes();
 		this.graph.computeIntervals();
 		this.graph.validate();

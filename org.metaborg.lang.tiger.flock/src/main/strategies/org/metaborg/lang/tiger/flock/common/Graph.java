@@ -1,21 +1,17 @@
 package org.metaborg.lang.tiger.flock.common;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import org.apache.commons.text.StringEscapeUtils;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
-import org.spoofax.interpreter.terms.IStrategoInt;
-import org.spoofax.interpreter.terms.IStrategoList;
-import org.spoofax.interpreter.terms.IStrategoTerm;
-import org.spoofax.terms.util.M;
-import org.spoofax.terms.util.TermUtils;
 
 public class Graph {
 	public static class Node {
@@ -77,12 +73,15 @@ public class Graph {
 	}
 
 	public void validate() {
+		if (!DEBUG)
+			return;
+
 		for (Node n : this.nodes.values()) {
 			if (!this.nodeInterval.containsKey(n)) {
 				throw new RuntimeException("Missing interval for node " + n.toString());
 			}
-			if (!n.isGhost && !this.nodeTerm.containsKey(n)) {
-				throw new RuntimeException("Missing term for node " + n.toString());
+			if (n.interval != this.intervalOf(n)) {
+				throw new RuntimeException("Outdated interval for node " + n.toString());
 			}
 			if (!this.children.containsKey(n)) {
 				throw new RuntimeException("Missing children for node " + n.toString());
@@ -108,6 +107,7 @@ public class Graph {
 	private HashMap<TermId, Node> nodes = new HashMap<>();
 	private Set<Node> roots = new HashSet<>();
 	public Set<Node> leaves = new HashSet<>();
+	private static boolean DEBUG = false;
 
 	public Graph() {
 		/*
@@ -124,7 +124,6 @@ public class Graph {
 		this.nodes.put(root.getId(), root);
 		this.children.put(root, new HashSet<>());
 		this.parents.put(root, new HashSet<>());
-		this.nodeTerm.put(root, termNode);
 	}
 
 	/*
@@ -163,6 +162,12 @@ public class Graph {
 	 * Multi-graph Mutation
 	 */
 
+	/**
+	 * Adds the given child relations to this graph, adding to existing collections
+	 * if exists.
+	 * 
+	 * @param other
+	 */
 	private void mergeChildren(HashMap<Node, Set<Node>> other) {
 		for (Entry<Node, Set<Node>> e : other.entrySet()) {
 			if (this.children.containsKey(e.getKey())) {
@@ -173,6 +178,12 @@ public class Graph {
 		}
 	}
 
+	/**
+	 * Adds the given parent relations to this graph, adding to existing collections
+	 * if exists.
+	 * 
+	 * @param other
+	 */
 	private void mergeParents(HashMap<Node, Set<Node>> other) {
 		for (Entry<Node, Set<Node>> e : other.entrySet()) {
 			if (this.parents.containsKey(e.getKey())) {
@@ -183,17 +194,35 @@ public class Graph {
 		}
 	}
 
+	/**
+	 * Places the graph <code>o</code> into this graph.
+	 * 
+	 * This adds the leaves and roots of <code>o</code> to those of this graph. Does
+	 * not create any other edges.
+	 * 
+	 * @param o
+	 */
 	public void mergeGraph(Graph o) {
 		this.nodes.putAll(o.nodes);
 		this.mergeChildren(o.children);
 		this.mergeParents(o.parents);
 		this.nodeInterval.putAll(o.nodeInterval);
-		this.nodeTerm.putAll(o.nodeTerm);
 		this.leaves.addAll(o.leaves());
 		this.roots.addAll(o.roots());
 	}
 
-	public void attachChildGraph(Collection<Node> parents, Graph o) {
+	/**
+	 * Places the graph <code>o</code> into this graph, with edges between the roots
+	 * of <code>o</code> and the given parents.
+	 * 
+	 * Does not change the roots and leaves of this graph, unless the parents
+	 * collection is empty, in which case the graphs are merged as if
+	 * mergeGraph(Graph) was called.
+	 *
+	 * @param parents
+	 * @param o
+	 */
+	public void mergeGraph(Collection<Node> parents, Graph o) {
 		if (o.size() == 0) {
 			return;
 		}
@@ -205,7 +234,6 @@ public class Graph {
 			this.mergeChildren(o.children);
 			this.mergeParents(o.parents);
 			this.nodeInterval.putAll(o.nodeInterval);
-			this.nodeTerm.putAll(o.nodeTerm);
 
 			for (Node n : parents) {
 				for (Node r : o.roots) {
@@ -215,6 +243,20 @@ public class Graph {
 		}
 	}
 
+	/**
+	 * Places the graph <code>o</code> into this graph, with edges between the roots
+	 * of <code>o</code> and the given parents, and edges between the leaves of
+	 * <code>o</code> and the given children.
+	 * 
+	 * Does not change the roots and leaves of this graph.
+	 * 
+	 * If <code>o</code> is empty, edges will be created between each parent and
+	 * child in the given collections.
+	 * 
+	 * @param parents
+	 * @param children
+	 * @param o
+	 */
 	public void mergeGraph(Collection<Node> parents, Collection<Node> children, Graph o) {
 		if (o.size() == 0) {
 			for (Node p : parents) {
@@ -229,7 +271,6 @@ public class Graph {
 		this.mergeChildren(o.children);
 		this.mergeParents(o.parents);
 		this.nodeInterval.putAll(o.nodeInterval);
-		this.nodeTerm.putAll(o.nodeTerm);
 
 		for (Node n : parents) {
 			for (Node r : o.roots) {
@@ -311,7 +352,7 @@ public class Graph {
 		return this.leaves.remove(n);
 	}
 
-	/*
+	/**
 	 * Removes node n from the graph, removing all edges with it. In contrast to
 	 * removeNode(Node) this will not create edges between children and parents of
 	 * n. This will also not create new roots and leaves.
@@ -375,16 +416,6 @@ public class Graph {
 	}
 
 	/*
-	 * Terms
-	 */
-
-	private HashMap<Node, ITerm> nodeTerm = new HashMap<>();
-
-	public ITerm termOf(Node n) {
-		return this.nodeTerm.get(n);
-	}
-
-	/*
 	 * Intervals
 	 */
 
@@ -394,7 +425,7 @@ public class Graph {
 		return this.nodeInterval.get(n);
 	}
 
-	private static final float VERY_LARGE_FLOAT = 999.f;
+	private static final float LARGE_FLOAT = 99999.f;
 
 	private void updateIntervals(Collection<Node> newNodes, Set<Node> oldParents, Set<Node> oldChildren) {
 		Flock.beginTime("Graph@updateIntervals");
@@ -403,7 +434,7 @@ public class Graph {
 		}
 
 		float parentMax = oldParents.stream().map(p -> this.intervalOf(p)).max(Float::compare).orElse(0.f);
-		float childMin = oldChildren.stream().map(p -> this.intervalOf(p)).min(Float::compare).orElse(VERY_LARGE_FLOAT);
+		float childMin = oldChildren.stream().map(p -> this.intervalOf(p)).min(Float::compare).orElse(LARGE_FLOAT);
 
 		// Check if matching, then all newNodes get the common interval
 		// If not, take the difference between min of parents and max of children, put
@@ -414,6 +445,7 @@ public class Graph {
 		if (parentMax == childMin) {
 			for (Node n : newNodes) {
 				this.nodeInterval.put(n, parentMax);
+				n.interval = parentMax;
 			}
 		} else {
 			float diff = childMin - parentMax;
@@ -440,7 +472,7 @@ public class Graph {
 		HashSet<Node> onStack = new HashSet<>();
 		HashMap<Node, Long> lowlink = new HashMap<>();
 		HashMap<Node, Long> index = new HashMap<>();
-		Set<Set<Node>> components = new HashSet<>();
+		List<Set<Node>> components = new ArrayList<>();
 		HashMap<Node, Set<Node>> nodeComponent = new HashMap<>();
 
 		for (Node n : this.roots) {
@@ -454,61 +486,53 @@ public class Graph {
 
 		// Setup the edges between the scc's
 		// Map from SCC to all successor SCC's
-		HashMap<Set<Node>, Set<Set<Node>>> successors = new HashMap<>();
-		HashMap<Set<Node>, Set<Set<Node>>> predecessors = new HashMap<>();
-		for (Set<Node> set : components) {
-			successors.put(set, new HashSet<>());
-			predecessors.put(set, new HashSet<>());
-		}
-
-		for (Node n : this.nodes.values()) {
-			for (Node c : this.childrenOf(n)) {
-				Set<Node> nComponent = nodeComponent.get(n);
-				Set<Node> cComponent = nodeComponent.get(c);
-				if (nComponent != cComponent) {
-					successors.get(nComponent).add(cComponent);
-					predecessors.get(cComponent).add(nComponent);
-				}
-			}
-		}
-
-		Set<Set<Node>> noOutgoing = new HashSet<>();
-
-		// Find component with no successors (i.e. no outgoing edge)
-		for (Set<Node> component : components) {
-			if (successors.get(component).isEmpty()) {
-				noOutgoing.add(component);
-			}
-		}
+		/*
+		 * HashMap<Set<Node>, Set<Set<Node>>> successors = new HashMap<>();
+		 * HashMap<Set<Node>, Set<Set<Node>>> predecessors = new HashMap<>(); for
+		 * (Set<Node> set : components) { successors.put(set, new HashSet<>());
+		 * predecessors.put(set, new HashSet<>()); }
+		 * 
+		 * for (Node n : this.nodes.values()) { for (Node c : this.childrenOf(n)) {
+		 * Set<Node> nComponent = nodeComponent.get(n); Set<Node> cComponent =
+		 * nodeComponent.get(c); if (nComponent != cComponent) {
+		 * successors.get(nComponent).add(cComponent);
+		 * predecessors.get(cComponent).add(nComponent); } } }
+		 * 
+		 * Set<Set<Node>> noOutgoing = new HashSet<>();
+		 * 
+		 * // Find component with no successors (i.e. no outgoing edge) for (Set<Node>
+		 * component : components) { if (successors.get(component).isEmpty()) {
+		 * noOutgoing.add(component); } }
+		 */
 
 		long currIndex = components.size() + 1;
-		while (!components.isEmpty()) {
-			Set<Node> c = noOutgoing.iterator().next();
-			noOutgoing.remove(c);
-
-			// Remove component and set interval of its nodes
-			components.remove(c);
-			for (Set<Node> p : predecessors.get(c)) {
-				successors.get(p).remove(c);
-				if (successors.get(p).size() == 0)
-					noOutgoing.add(p);
-			}
-
-			successors.remove(c);
-			predecessors.remove(c);
-
-			for (Node n : c) {
+		for (Set<Node> component : components) {
+			for (Node n : component) {
 				this.nodeInterval.put(n, (float) currIndex);
 				n.interval = (float) currIndex;
 			}
 			currIndex--;
 		}
+
+		/*
+		 * while (!components.isEmpty()) { Set<Node> c = noOutgoing.iterator().next();
+		 * noOutgoing.remove(c);
+		 * 
+		 * // Remove component and set interval of its nodes components.remove(c); for
+		 * (Set<Node> p : predecessors.get(c)) { successors.get(p).remove(c); if
+		 * (successors.get(p).size() == 0) noOutgoing.add(p); }
+		 * 
+		 * successors.remove(c); predecessors.remove(c);
+		 * 
+		 * for (Node n : c) { this.nodeInterval.put(n, (float) currIndex); n.interval =
+		 * (float) currIndex; } currIndex--; }
+		 */
 		Flock.endTime("Graph@computeIntervals");
 	}
 
 	// Tarjans
 	private void strongConnect(Node v, AtomicLong next_index, Stack<Node> S, HashSet<Node> onStack,
-			HashMap<Node, Long> lowlink, HashMap<Node, Long> index, Set<Set<Node>> components,
+			HashMap<Node, Long> lowlink, HashMap<Node, Long> index, List<Set<Node>> components,
 			HashMap<Node, Set<Node>> nodeComponent) {
 		index.put(v, next_index.longValue());
 		lowlink.put(v, next_index.longValue());
@@ -529,7 +553,7 @@ public class Graph {
 				}
 			}
 		}
-		if (lowlink.get(v) == index.get(v)) {
+		if (lowlink.get(v).equals(index.get(v))) {
 			Node w;
 			HashSet<Node> component = new HashSet<>();
 			do {
@@ -567,7 +591,8 @@ public class Graph {
 				"digraph G { graph[rankdir=LR, center=true, margin=0.2, nodesep=0.1, ranksep=0.3]; node[shape=record];");
 		for (Node node : this.nodes.values()) {
 
-			String termString = node.virtualTerm != null ? removeAnnotations(escapeString(node.virtualTerm.toString(1))) : "";
+			String termString = node.virtualTerm != null ? removeAnnotations(escapeString(node.virtualTerm.toString(1)))
+					: "";
 
 			String rootString = this.roots.contains(node) ? "r" : "";
 			String leafString = this.leaves.contains(node) ? "l" : "";

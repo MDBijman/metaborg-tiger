@@ -25,7 +25,7 @@ public abstract class AnalysisWithDependencies extends Analysis {
 	}
 	
 	@Override
-	public Set<Node> getTermDependencies(Graph g, Node n)
+	public Set<Node> getNodesBefore(Graph g, Node n)
 	{
 		throw new RuntimeException("Not yet implemented");
 	}

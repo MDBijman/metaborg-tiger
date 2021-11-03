@@ -1,0 +1,9 @@
+module Hole
+
+sorts Hole
+
+context-free syntax
+
+  Dec.DecHole = Hole
+  
+  Hole.Hole = "_"

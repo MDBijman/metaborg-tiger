@@ -26,7 +26,7 @@ public class AvailableExpressionsStrategies {
 			TermId id = new TermId(((IStrategoInt) current).intValue());
 			Node node = Flock.instance.getNode(id);
 			if (node == null) {
-				Flock.printDebug("CfgNode is null with id " + id.getId());
+				//Flock.printDebug("CfgNode is null with id " + id.getId());
 				return current;
 			}
 			Flock.instance.analysisWithName("expressions").updateResultUntilBoundary(Flock.instance.graph, node);

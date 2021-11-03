@@ -37,7 +37,7 @@ public abstract class Flock {
 	public Set<Node> getTermDependencies(Graph g, Node n) {
 		HashSet<Node> deps = new HashSet<>();
 		for (Analysis a : analyses) {
-			deps.addAll(a.getTermDependencies(g, n));
+			deps.addAll(a.getNodesBefore(g, n));
 		}
 		return deps;
 	}
@@ -121,7 +121,8 @@ public abstract class Flock {
 		System.out.println(t);
 	}
 
-	private static String[] enabled = { "time", "count", "debug",
+	private static String[] enabled = { "time", "count",
+			// "debug",
 			// "incremental",
 			// "validation",
 			"api",
@@ -129,6 +130,10 @@ public abstract class Flock {
 			// "graphviz"
 	};
 	private static HashSet<String> enabledTags = new HashSet<>(Arrays.asList(enabled));
+
+	public static void disableLogs() {
+		Flock.enabledTags = new HashSet<>();
+	}
 
 	public static boolean isLogEnabled(String tag) {
 		return enabledTags.contains(tag);

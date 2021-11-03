@@ -63,8 +63,10 @@ public class GraphFactory {
 			list = list.tail();
 			while (!list.isEmpty()) {
 				Graph new_result = createCfg_inner(tree, list.head());
-				result_graph.attachChildGraph(result_graph.leaves, new_result);
-				result_graph.leaves = new_result.leaves;
+				result_graph.mergeGraph(result_graph.leaves, new_result);
+				if (new_result.size() > 0) {
+					result_graph.leaves = new_result.leaves;
+				}
 				list = list.tail();
 			}
 		} else if (TermUtils.isAppl(term)
@@ -90,7 +92,7 @@ public class GraphFactory {
 			Graph e_nr = createCfg_inner(tree, e);
 			Graph _VarDec_nb = new Graph(Helpers.getTermNode(_VarDec), tree.nodeById(Helpers.getTermId(_VarDec)));
 			result_graph.mergeGraph(e_nr);
-			result_graph.attachChildGraph(e_nr.leaves, _VarDec_nb);
+			result_graph.mergeGraph(e_nr.leaves, _VarDec_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_VarDec_nb.leaves);
 		} else if (TermUtils.isAppl(term)
@@ -102,7 +104,7 @@ public class GraphFactory {
 			Graph _VarDecNoType_nb = new Graph(Helpers.getTermNode(_VarDecNoType),
 					tree.nodeById(Helpers.getTermId(_VarDecNoType)));
 			result_graph.mergeGraph(e_nr);
-			result_graph.attachChildGraph(e_nr.leaves, _VarDecNoType_nb);
+			result_graph.mergeGraph(e_nr.leaves, _VarDecNoType_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_VarDecNoType_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("UMinus") && term.getSubtermCount() == 1)) {
@@ -111,7 +113,7 @@ public class GraphFactory {
 			Graph exp_nr = createCfg_inner(tree, exp);
 			Graph _UMinus_nb = new Graph(Helpers.getTermNode(_UMinus), tree.nodeById(Helpers.getTermId(_UMinus)));
 			result_graph.mergeGraph(exp_nr);
-			result_graph.attachChildGraph(exp_nr.leaves, _UMinus_nb);
+			result_graph.mergeGraph(exp_nr.leaves, _UMinus_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_UMinus_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Minus") && term.getSubtermCount() == 2)) {
@@ -122,8 +124,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Minus_nb = new Graph(Helpers.getTermNode(_Minus), tree.nodeById(Helpers.getTermId(_Minus)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Minus_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Minus_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Minus_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Plus") && term.getSubtermCount() == 2)) {
@@ -134,8 +136,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Plus_nb = new Graph(Helpers.getTermNode(_Plus), tree.nodeById(Helpers.getTermId(_Plus)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Plus_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Plus_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Plus_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Times") && term.getSubtermCount() == 2)) {
@@ -146,8 +148,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Times_nb = new Graph(Helpers.getTermNode(_Times), tree.nodeById(Helpers.getTermId(_Times)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Times_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Times_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Times_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Divide") && term.getSubtermCount() == 2)) {
@@ -158,8 +160,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Divide_nb = new Graph(Helpers.getTermNode(_Divide), tree.nodeById(Helpers.getTermId(_Divide)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Divide_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Divide_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Divide_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Lt") && term.getSubtermCount() == 2)) {
@@ -170,8 +172,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Lt_nb = new Graph(Helpers.getTermNode(_Lt), tree.nodeById(Helpers.getTermId(_Lt)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Lt_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Lt_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Lt_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Eq") && term.getSubtermCount() == 2)) {
@@ -182,8 +184,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Eq_nb = new Graph(Helpers.getTermNode(_Eq), tree.nodeById(Helpers.getTermId(_Eq)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Eq_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Eq_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Eq_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Geq") && term.getSubtermCount() == 2)) {
@@ -194,8 +196,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Geq_nb = new Graph(Helpers.getTermNode(_Geq), tree.nodeById(Helpers.getTermId(_Geq)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Geq_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Geq_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Geq_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Leq") && term.getSubtermCount() == 2)) {
@@ -206,8 +208,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Leq_nb = new Graph(Helpers.getTermNode(_Leq), tree.nodeById(Helpers.getTermId(_Leq)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Leq_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Leq_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Leq_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Neq") && term.getSubtermCount() == 2)) {
@@ -218,8 +220,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Neq_nb = new Graph(Helpers.getTermNode(_Neq), tree.nodeById(Helpers.getTermId(_Neq)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Neq_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Neq_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Neq_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("And") && term.getSubtermCount() == 2)) {
@@ -230,8 +232,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _And_nb = new Graph(Helpers.getTermNode(_And), tree.nodeById(Helpers.getTermId(_And)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _And_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _And_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_And_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Or") && term.getSubtermCount() == 2)) {
@@ -242,8 +244,8 @@ public class GraphFactory {
 			Graph rhs_nr = createCfg_inner(tree, rhs);
 			Graph _Or_nb = new Graph(Helpers.getTermNode(_Or), tree.nodeById(Helpers.getTermId(_Or)));
 			result_graph.mergeGraph(lhs_nr);
-			result_graph.attachChildGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.attachChildGraph(rhs_nr.leaves, _Or_nb);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Or_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Or_nb.leaves);
 		} else if (TermUtils.isAppl(term)
@@ -256,8 +258,8 @@ public class GraphFactory {
 			Graph _Subscript_nb = new Graph(Helpers.getTermNode(_Subscript),
 					tree.nodeById(Helpers.getTermId(_Subscript)));
 			result_graph.mergeGraph(idx_nr);
-			result_graph.attachChildGraph(idx_nr.leaves, lval_nr);
-			result_graph.attachChildGraph(lval_nr.leaves, _Subscript_nb);
+			result_graph.mergeGraph(idx_nr.leaves, lval_nr);
+			result_graph.mergeGraph(lval_nr.leaves, _Subscript_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Subscript_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Call") && term.getSubtermCount() == 2)) {
@@ -266,7 +268,7 @@ public class GraphFactory {
 			Graph args_nr = createCfg_inner(tree, args);
 			Graph _Call_nb = new Graph(Helpers.getTermNode(_Call), tree.nodeById(Helpers.getTermId(_Call)));
 			result_graph.mergeGraph(args_nr);
-			result_graph.attachChildGraph(args_nr.leaves, _Call_nb);
+			result_graph.mergeGraph(args_nr.leaves, _Call_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Call_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("If") && term.getSubtermCount() == 3)) {
@@ -278,8 +280,8 @@ public class GraphFactory {
 			Graph t_nr = createCfg_inner(tree, t);
 			Graph e_nr = createCfg_inner(tree, e);
 			result_graph.mergeGraph(c_nr);
-			result_graph.attachChildGraph(c_nr.leaves, t_nr);
-			result_graph.attachChildGraph(c_nr.leaves, e_nr);
+			result_graph.mergeGraph(c_nr.leaves, t_nr);
+			result_graph.mergeGraph(c_nr.leaves, e_nr);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(t_nr.leaves);
 			result_graph.leaves.addAll(e_nr.leaves);
@@ -290,7 +292,7 @@ public class GraphFactory {
 			Graph c_nr = createCfg_inner(tree, c);
 			Graph t_nr = createCfg_inner(tree, t);
 			result_graph.mergeGraph(c_nr);
-			result_graph.attachChildGraph(c_nr.leaves, t_nr);
+			result_graph.mergeGraph(c_nr.leaves, t_nr);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(t_nr.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Assign") && term.getSubtermCount() == 2)) {
@@ -300,7 +302,7 @@ public class GraphFactory {
 			Graph expr_nr = createCfg_inner(tree, expr);
 			Graph _Assign_nb = new Graph(Helpers.getTermNode(_Assign), tree.nodeById(Helpers.getTermId(_Assign)));
 			result_graph.mergeGraph(expr_nr);
-			result_graph.attachChildGraph(expr_nr.leaves, _Assign_nb);
+			result_graph.mergeGraph(expr_nr.leaves, _Assign_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Assign_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Seq") && term.getSubtermCount() == 1)) {
@@ -317,10 +319,10 @@ public class GraphFactory {
 			Graph binding_nr = createCfg_inner(tree, binding);
 			Graph body_nr = createCfg_inner(tree, body);
 			result_graph.mergeGraph(binding_nr);
-			result_graph.attachChildGraph(binding_nr.leaves, body_nr);
-			result_graph.attachChildGraph(body_nr.leaves, binding_nr);
+			result_graph.mergeGraph(binding_nr.leaves, body_nr);
+			result_graph.mergeGraph(body_nr.leaves, binding_nr);
 			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(body_nr.leaves);
+			result_graph.leaves.addAll(binding_nr.leaves);
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("LoopBinding") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _LoopBinding = term;
@@ -339,7 +341,7 @@ public class GraphFactory {
 			Graph decs_nr = createCfg_inner(tree, decs);
 			Graph exps_nr = createCfg_inner(tree, exps);
 			result_graph.mergeGraph(decs_nr);
-			result_graph.attachChildGraph(decs_nr.leaves, exps_nr);
+			result_graph.mergeGraph(decs_nr.leaves, exps_nr);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(exps_nr.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Array") && term.getSubtermCount() == 3)) {
@@ -350,10 +352,13 @@ public class GraphFactory {
 			Graph init_nr = createCfg_inner(tree, init);
 			Graph _Array_nb = new Graph(Helpers.getTermNode(_Array), tree.nodeById(Helpers.getTermId(_Array)));
 			result_graph.mergeGraph(len_nr);
-			result_graph.attachChildGraph(len_nr.leaves, init_nr);
-			result_graph.attachChildGraph(init_nr.leaves, _Array_nb);
+			result_graph.mergeGraph(len_nr.leaves, init_nr);
+			result_graph.mergeGraph(init_nr.leaves, _Array_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Array_nb.leaves);
+		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Hole") && term.getSubtermCount() == 0)) {
+			IStrategoTerm _Hole = term;
+			result_graph.leaves = new HashSet<>();
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Var") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _Var = term;
 			Graph _Var_nb = new Graph(Helpers.getTermNode(_Var), tree.nodeById(Helpers.getTermId(_Var)));

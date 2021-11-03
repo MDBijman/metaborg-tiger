@@ -68,7 +68,7 @@ public class TermTree {
 		public IStrategoTerm toTerm() {
 			return tree.nodeToStrategoTerm(this);
 		}
-		
+
 		public IStrategoTerm toTermWithoutAnnotations() {
 			return tree.nodeToStrategoTermWithoutAnnotations(this);
 		}
@@ -216,6 +216,7 @@ public class TermTree {
 	private HashMap<ITerm, ITerm> parents = new HashMap<>();
 	private HashMap<TermId, ITerm> nodes = new HashMap<>();
 	private ITerm root;
+	private static boolean DEBUG = false;
 
 	public TermTree(IStrategoTerm term) {
 		root = this.createTermInTree(term);
@@ -276,6 +277,9 @@ public class TermTree {
 	}
 
 	public void validate() {
+		if (!DEBUG)
+			return;
+
 		if (this.root == null) {
 			throw new RuntimeException("Null root");
 		}
@@ -377,7 +381,7 @@ public class TermTree {
 		if (!this.nodes.containsKey(n.id)) {
 			throw new RuntimeException("Term does not exist in tree");
 		}
-		
+
 		if (n instanceof StringTerm) {
 			return new StrategoString(((StringTerm) n).stringValue, idAsList(n));
 		} else if (n instanceof IntTerm) {
@@ -406,12 +410,12 @@ public class TermTree {
 			throw new RuntimeException("Unsupported node type: " + n.toString());
 		}
 	}
-	
+
 	public IStrategoTerm nodeToStrategoTermWithoutAnnotations(ITerm n) {
 		if (!this.nodes.containsKey(n.id)) {
 			throw new RuntimeException("Term does not exist in tree");
 		}
-		
+
 		if (n instanceof StringTerm) {
 			return new StrategoString(((StringTerm) n).stringValue, null);
 		} else if (n instanceof IntTerm) {

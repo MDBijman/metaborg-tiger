@@ -11,23 +11,21 @@ import org.spoofax.terms.ParseError;
 import org.spoofax.terms.StrategoConstructor;
 import org.spoofax.terms.StrategoInt;
 
-public class flock_analyse_program_0_0 extends Strategy {
+public class flock_initialize_impl_0_0 extends Strategy {
 	
-	public static flock_analyse_program_0_0 instance = new flock_analyse_program_0_0();
+	public static flock_initialize_impl_0_0 instance = new flock_initialize_impl_0_0();
 		
 	@Override 
 	public IStrategoTerm invoke(Context context, IStrategoTerm current) {
         ITermFactory factory = context.getFactory();
 		
 		try {
-			context.getIOAgent().printError("Start Analysis");
-			context.getIOAgent().printError("Creating CFG");
 			Flock.resetTimers();
 			Flock.beginTime("api@analyse");
 			Flock.instance.createTermGraph(current);
 			Flock.instance.createControlFlowGraph(context, current);
 			Flock.log("graphviz", Flock.instance.graph.toGraphviz());
-			Flock.log("api", "analyse_program");
+			Flock.log("api", "initialize");
 			Flock.instance.init(current);
 			Flock.endTime("api@analyse");
 

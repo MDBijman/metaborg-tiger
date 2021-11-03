@@ -12,6 +12,7 @@ import org.metaborg.lang.tiger.flock.common.Analysis;
 import org.metaborg.lang.tiger.flock.common.Flock;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockValueLattice;
+import org.metaborg.lang.tiger.flock.common.FlockLattice.MaySet;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.SimpleMap;
 import org.metaborg.lang.tiger.flock.common.FlockValue;
 import org.metaborg.lang.tiger.flock.common.Graph;
@@ -84,12 +85,19 @@ public class FlowAnalysis extends Analysis {
 			}
 		}
 	}
+	
+	@Override
+	protected abstract void initNewNodes() {
+		
+	}	
 
 	@Override
 	public void performDataAnalysis(Graph g, Collection<Node> roots, Collection<Node> nodeset, Collection<Node> dirty,
 			float intervalBoundary) {
+		Flock.beginTime("FlowAnalysis@performDataAnalysis");
 		Queue<Node> worklist = new LinkedBlockingQueue<>();
 		HashSet<Node> inWorklist = new HashSet<>();
+		Flock.beginTime("FlowAnalysis@nodeset_loop");
 		for (Node node : nodeset) {
 			if (node.interval > intervalBoundary)
 				continue;
@@ -98,6 +106,8 @@ public class FlowAnalysis extends Analysis {
 			initNodeValue(node);
 			initNodeTransferFunction(node);
 		}
+		Flock.endTime("FlowAnalysis@nodeset_loop");
+		Flock.beginTime("FlowAnalysis@dirty_loop");
 		for (Node node : dirty) {
 			if (node.interval > intervalBoundary)
 				continue;
@@ -105,11 +115,15 @@ public class FlowAnalysis extends Analysis {
 			inWorklist.add(node);
 			initNodeTransferFunction(node);
 		}
+		Flock.endTime("FlowAnalysis@dirty_loop");
+		Flock.beginTime("FlowAnalysis@root_loop");
 		for (Node root : roots) {
 			if (root.interval > intervalBoundary)
 				continue;
 			root.getProperty("values").lattice = root.getProperty("values").init.eval(root);
 		}
+		Flock.endTime("FlowAnalysis@root_loop");
+		Flock.beginTime("FlowAnalysis@init_loop");
 		for (Node node : nodeset) {
 			if (node.interval > intervalBoundary)
 				continue;
@@ -122,13 +136,19 @@ public class FlowAnalysis extends Analysis {
 				node.getProperty("values").lattice = init;
 			}
 		}
+		Flock.endTime("FlowAnalysis@init_loop");
 		HashSet<Node> keepDirty = new HashSet<>();
+		Flock.beginTime("FlowAnalysis@workloop");
+		Flock.printDebug("Worklist size: " + worklist.size());
 		while (!worklist.isEmpty()) {
+			Flock.increment("FlowAnalysis@workloop");
 			Node node = worklist.poll();
 			inWorklist.remove(node);
 			if (node.interval > intervalBoundary)
 				continue;
+			Flock.beginTime("FlowAnalysis@workloop:eval");
 			FlockLattice values_n = node.getProperty("values").transfer.eval(node);
+			Flock.endTime("FlowAnalysis@workloop:eval");
 			for (Node successor : g.childrenOf(node)) {
 				if (successor.interval > intervalBoundary) {
 					keepDirty.add(node);
@@ -136,20 +156,27 @@ public class FlowAnalysis extends Analysis {
 				}
 				boolean changed = false;
 				FlockLattice values_o = successor.getProperty("values").lattice;
-				if (values_n.nleq(values_o)) {
-					successor.getProperty("values").lattice = values_o.lub(values_n);
+				FlockLattice lub = values_n.lub(values_o);
+				Flock.beginTime("FlowAnalysis@childupdate");
+				if (!lub.equals(values_o)) {
+					successor.getProperty("values").lattice = lub;
 					changed = true;
 				}
+				Flock.endTime("FlowAnalysis@childupdate");
 				if (changed && !inWorklist.contains(successor)) {
 					worklist.add(successor);
 					inWorklist.add(successor);
 				}
 			}
 		}
+		Flock.endTime("FlowAnalysis@workloop");
 
 		// Remove the updated nodes from the dirty/new collections
+		Flock.beginTime("FlowAnalysis@epilogue");
 		this.dirtyNodes.removeIf(n -> !keepDirty.contains(n) && this.withinBoundary(g.intervalOf(n), intervalBoundary));
 		this.newNodes.removeIf(n -> this.withinBoundary(g.intervalOf(n), intervalBoundary));
+		Flock.endTime("FlowAnalysis@epilogue");
+		Flock.endTime("FlowAnalysis@performDataAnalysis");
 	}
 }
 
@@ -184,6 +211,18 @@ class Value implements FlockValueLattice {
 		ConstProp tmp11 = (ConstProp) new ConstProp(
 				new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
 		return new Value(tmp11);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other == null)
+			return false;
+		if (other == this)
+			return true;
+		if (other.getClass() != this.getClass())
+			return false;
+		Value rhs = (Value) other;
+		return this.value.equals(rhs.value);
 	}
 
 	@Override

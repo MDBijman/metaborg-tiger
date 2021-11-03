@@ -45,7 +45,7 @@ public class FlockIncremental extends Flock {
 		Flock.increment("replaceNode");
 		Flock.beginTime("FlockIncremental@replaceNode");
 
-		Flock.beginTime("FlockIncremental@replaceNode - a");
+		Flock.beginTime("FlockIncremental@replaceNode:termTree");
 		Set<Node> removedNodes = getAllNodes(current);
 		{
 			Node currentNode = Helpers.getTermNode(current);
@@ -56,9 +56,9 @@ public class FlockIncremental extends Flock {
 
 			this.termTree.replace(Helpers.getTermId(current), replacement);
 		}
-		Flock.endTime("FlockIncremental@replaceNode - a");
+		Flock.endTime("FlockIncremental@replaceNode:termTree");
 
-		Flock.beginTime("FlockIncremental@replaceNode - b");
+		Flock.beginTime("FlockIncremental@replaceNode:cfg");
 		{
 			// Patch the graph, removing old nodes and placing new nodes
 			Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
@@ -77,8 +77,9 @@ public class FlockIncremental extends Flock {
 					throw new RuntimeException("Null node in cfg");
 				}
 			}
+			this.graph.validate();
 		}
-		Flock.endTime("FlockIncremental@replaceNode - b");
+		Flock.endTime("FlockIncremental@replaceNode:cfg");
 		Flock.endTime("FlockIncremental@replaceNode");
 	}
 

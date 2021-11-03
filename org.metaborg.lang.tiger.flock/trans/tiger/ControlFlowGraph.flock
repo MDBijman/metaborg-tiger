@@ -18,6 +18,7 @@ signature
 	Var
 	Int
 	LValue
+	Hole
 	
   constructors
     Mod : Exp -> Exp
@@ -31,6 +32,8 @@ signature
     Type : TypeId -> Type
     Occ : Id -> Occ 
     Tid : Occ -> TypeId
+    DecHole : Hole -> Dec
+    Hole : Hole
     
     UMinus : Exp -> Exp
     Minus : Exp * Exp -> Exp
@@ -94,11 +97,12 @@ control-flow rules
   IfThen(c, t) = entry -> c -> t -> exit
   Assign(lval, expr) = entry -> expr -> this -> exit
   Seq(stmts) = entry -> stmts -> exit
-  For(binding, body) = entry -> binding -> body -> exit,
-  	body -> binding
+  For(binding, body) = entry -> binding -> body -> binding,
+  	binding -> exit
   LoopBinding(var, from, to) = entry -> this -> exit
   Let(decs, exps) = entry -> decs -> exps -> exit
   Array(_, len, init) = entry -> len -> init -> this -> exit
+  Hole() = entry -> exit
   
   node Var(_)
   node Int(_)

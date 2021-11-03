@@ -65,7 +65,7 @@ public class FlowAnalysisStrategies {
                                                                                                        return null;
                                                                                                      }
                                                                                     Flock.instance. analysisWithName("values"). updateResultUntilBoundary(Flock.instance.graph, node);
-                                                                                    IStrategoList result = factory. makeList(((Map<IStrategoTerm, IStrategoTerm> ) node. getProperty("values").lattice. value( )). entrySet( ). stream( ). map(n -> factory. makeList(Helpers. toTerm(n. getKey( )), Helpers. toTerm(n. getValue( )))). collect(Collectors. toList( )));
+                                                                                    IStrategoList result = factory. makeList(((Map<IStrategoTerm, IStrategoTerm> ) node. getProperty("values").lattice. value( )). entrySet( ). stream( ). map(n -> factory. makeTuple(Helpers. toTerm(n. getKey( )), Helpers. toTerm(n. getValue( )))). collect(Collectors. toList( )));
                                                                                     return result;
                                                                                   }
   }

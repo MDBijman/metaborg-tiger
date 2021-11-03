@@ -15,10 +15,15 @@ strategies
   external flock-disable-incremental(|)
   external flock-enable-incremental(|)
 
+  external flock-begin-timer(|)
+  external flock-end-timer(|)
+  flock-time-as(s|key) = where(<flock-begin-timer> key); restore-always(s, where(<flock-end-timer> key))
+
   external flock-debug-graph(|)
   external flock-debug-graph(|prop-name)
 
-  external flock-analyse-program(|)
+  flock-initialize = flock-add-id; where(flock-initialize-impl)
+  external flock-initialize-impl(|)
 
   external flock-remove-node(|)
   external flock-make-id(|)
@@ -41,8 +46,10 @@ strategies
   flock-is-live: (name, loc) -> <get-live; !(name, <id>); strip-annos; elem> loc
   external get-live(|)
   
-  flock-get-value: node {FlockNodeId(n)} -> <get-values; strip-annos> n
+  flock-get-values: node {FlockNodeId(n)} -> <get-values> n
   external get-values(|)
+  flock-get-value(|key):  node {FlockNodeId(n)} -> <get-value(|key)> n
+  external get-value(|key)
 
   flock-get-ae: node {FlockNodeId(n)} -> <get-expressions; strip-annos> n
   external get-expressions(|)

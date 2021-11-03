@@ -24,10 +24,9 @@ rules // Debugging
   debug-show-cfg:
     (p, _, _, path, project-path) -> (filename, result)
     with
-      p' := <flock-add-id> p
-    ; <flock-analyse-program> p'
+      p' := <flock-initialize> p
     ; filename := <guarantee-extension(|"cfg")> path
-    ; result := <flock-debug-graph(|"live")> ()
+    ; result := <flock-debug-graph> ()
 
 rules /// editor transformation actions
 
@@ -51,7 +50,6 @@ rules /// editor transformation actions
     (p, _, _, path, project-path) -> (filename, result)
     with
       p' := <pipeline> p
-    ; <flock-debug-graph(|"values")> ()
     ; filename := <guarantee-extension(|"opt.tig")> path
     ; result   := <pp-tiger-string> p'
 
@@ -59,52 +57,51 @@ rules // transformation actions
 
   analyze-const-prop: p -> with-ids
     with
-      with-ids := <flock-add-id> p
-    ; <flock-analyse-program> with-ids
-    ; <topdown(try(flock-get-value))> with-ids
+      with-ids := <flock-initialize> p
+    ; <topdown(try(flock-get-values))> with-ids
     ; <flock-debug-graph(|"values")> ()
   
   transform-const-prop: p -> p'
     with
-      with-ids := <flock-add-id> p
-    ; <flock-analyse-program> with-ids
+      with-ids := <flock-initialize> p
     ; p' := <topdown(try(propagate-constant))> with-ids
 
   transform-inline: p -> p'
     with
-      with-ids := <flock-add-id> p
-    ; <flock-analyse-program> with-ids
+      with-ids := <flock-initialize> p
     ; p' := <inline-in-module> with-ids
 
 rules // pipeline
 
   pipeline: p -> p'
   with
-    with-ids := <flock-add-id> p
-  ; <flock-analyse-program> with-ids
+    with-ids := <flock-initialize> p
+  ; <flock-begin-timer> "pipeline"
   ; p' := <
       inline-pass
   	; forward-pass
   > with-ids
-  ; <flock-debug-graph> ()
+  ; <flock-end-timer> "pipeline"
   ; <debug> <run-time>
-  //; <flock-debug-graph(|"values")> ()
+  ; <flock-debug-graph> ()
   
   inline-pass = flock-fixpoint(inline-in-module|15)
 
-  forward-pass = flock-fixpoint(forward-pass-single|140)
-  forward-pass-single: p -> p'
-    where
-      p' := <oncetd(propagate-constant + simplify-let + simplify-seq + fold-constant + remove-dead-branch)> p
-   //; <flock-debug-graph(|"values")> ()
+  forward-pass = flock-fixpoint(forward-pass-single|2)
+  forward-pass-single = 
+    bottomup(try(flock-time-as(remove-dead-vardec|"remove-dead-vardec") + flock-time-as(propagate-constant|"propagate-constant") + flock-time-as(fold-constant|"fold-constant")))
+    //bottomup(try(propagate-constant + simplify-let + simplify-seq + fold-constant + remove-dead-branch))
+    //oncetd(propagate-constant + simplify-let + simplify-seq + fold-constant + remove-dead-branch)
+    //bottomup(try(id))   
 
 strategies
   
   propagate-constant: v@Var(n) -> new-node
   where
-    n-no-annos := <strip-annos> n
-  ; [Const(new-value)] := <flock-get-value; filter(compare-names(|n-no-annos))> v
+   n-no-annos := <strip-annos> n
+  ; Const(new-value) := <flock-get-value(|n-no-annos)> v
   ; new-node := <flock-replace-node(|v)> Int(new-value)
+    
   compare-names(|other): (name, value) -> value where <equal(|name, other)> ()
   
   fold-constant: e@Plus(Int(v1), Int(v2)) -> new-node
@@ -146,9 +143,10 @@ strategies
   
 strategies
 
-  is-dead-vardec: a@VarDec(n, _, _) -> a
+  remove-dead-vardec: a@VarDec(n, _, _) -> new-node
   where
     <not(flock-is-live(|n))> a
+  ; new-node := <flock-replace-node(|a)> Hole()
   ; <concat-strings; flock-debug> ["dead variable ", n]
   
   get-vbe: n -> n where <flock-get-ae> n

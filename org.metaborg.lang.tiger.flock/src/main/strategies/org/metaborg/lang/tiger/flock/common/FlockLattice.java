@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.terms.StrategoList;
@@ -119,6 +120,18 @@ public interface FlockLattice {
 			}
 			return result;
 		}
+		
+		@Override
+		public boolean equals(Object other) {
+			if (other == null)
+				return false;
+			if (other == this)
+				return true;
+			if (other.getClass() != this.getClass())
+				return false;
+			MaySet rhs = (MaySet) other;
+			return this.value.equals(rhs.value);
+		}
 	}
 
 	public static class MaySet implements FlockCollectionLattice {
@@ -184,6 +197,18 @@ public interface FlockLattice {
 			}
 			return result;
 		}
+		
+		@Override
+		public boolean equals(Object other) {
+			if (other == null)
+				return false;
+			if (other == this)
+				return true;
+			if (other.getClass() != this.getClass())
+				return false;
+			MaySet rhs = (MaySet) other;
+			return this.value.equals(rhs.value);
+		}
 	}
 
 	public static class SimpleMap implements FlockCollectionLattice {
@@ -233,6 +258,23 @@ public interface FlockLattice {
 				result = new StrategoList(new StrategoTuple(kids, null), result, null);
 			}
 			return result;
+		}
+		
+		@Override
+		public String toString() {
+			return value.toString();
+		}
+		
+		@Override
+		public boolean equals(Object other) {
+			if (other == null)
+				return false;
+			if (other == this)
+				return true;
+			if (other.getClass() != this.getClass())
+				return false;
+			SimpleMap rhs = (SimpleMap) other;
+			return this.value.equals(rhs.value);
 		}
 	}
 }
