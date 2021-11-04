@@ -18,7 +18,7 @@ import org.spoofax.terms.util.NotImplementedException;
 
 public interface FlockLattice {
 	public abstract FlockLattice lub(FlockLattice o);
-
+	
 	public abstract Object value();
 	
 	public default boolean leq(FlockLattice r) {
@@ -227,7 +227,7 @@ public interface FlockLattice {
 		}
 
 		public static SimpleMap bottom() {
-			return new SimpleMap(new HashMap());
+			return new SimpleMap(new HashMap<>());
 		}
 		
 		public static SimpleMap top() {

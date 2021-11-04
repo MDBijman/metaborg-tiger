@@ -17,6 +17,14 @@ public class FlockIncremental extends Flock {
 
 	}
 
+	private void validate() {
+		this.termTree.validate();
+		this.graph.validate();
+		for (Analysis a : this.analyses) {
+			a.validate(this.graph);
+		}
+	}
+
 	@Override
 	public void init(IStrategoTerm program) {
 		this.clearAnalyses();
@@ -44,7 +52,7 @@ public class FlockIncremental extends Flock {
 	public void replaceNode(IStrategoTerm current, IStrategoTerm replacement) {
 		Flock.increment("replaceNode");
 		Flock.beginTime("FlockIncremental@replaceNode");
-
+		this.validate();
 		Flock.beginTime("FlockIncremental@replaceNode:termTree");
 		Set<Node> removedNodes = getAllNodes(current);
 		{
@@ -69,17 +77,9 @@ public class FlockIncremental extends Flock {
 			for (Node n : subGraph.nodes()) {
 				this.addToNew(n);
 			}
-
-			this.termTree.validate();
-
-			for (Node n : this.graph.nodes()) {
-				if (this.termTree.nodeById(n.getId()) == null) {
-					throw new RuntimeException("Null node in cfg");
-				}
-			}
-			this.graph.validate();
 		}
 		Flock.endTime("FlockIncremental@replaceNode:cfg");
+		this.validate();
 		Flock.endTime("FlockIncremental@replaceNode");
 	}
 
@@ -120,12 +120,11 @@ public class FlockIncremental extends Flock {
 			} else {
 				earliest = removedNodes.stream().map(n -> n.interval).max(Float::compareTo).get();
 			}
-
 			a.removeResultAfterBoundary(graph, earliest);
 		}
 
 		// Remove the replaced nodes in the analysis class
-		a.remove(graph, removedNodes);
+		a.remove(removedNodes);
 	}
 
 	@Override

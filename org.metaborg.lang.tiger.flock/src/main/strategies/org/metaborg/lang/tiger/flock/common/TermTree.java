@@ -428,7 +428,7 @@ public class TermTree {
 
 			// Counts down because we append to the front not the back
 			for (int i = children.size() - 1; i >= 0; i--) {
-				IStrategoTerm newHead = this.nodeToStrategoTerm(children.get(i));
+				IStrategoTerm newHead = this.nodeToStrategoTermWithoutAnnotations(children.get(i));
 				tail = new StrategoList(head, tail, null);
 				head = newHead;
 			}
@@ -436,7 +436,7 @@ public class TermTree {
 		} else if (n instanceof ApplTerm) {
 			List<ITerm> children = this.childrenOf(n);
 			StrategoConstructor ctor = new StrategoConstructor(((ApplTerm) n).constructor, children.size());
-			IStrategoTerm[] termChildren = children.stream().map(c -> this.nodeToStrategoTerm(c))
+			IStrategoTerm[] termChildren = children.stream().map(c -> this.nodeToStrategoTermWithoutAnnotations(c))
 					.toArray(IStrategoTerm[]::new);
 			StrategoAppl res = new StrategoAppl(ctor, termChildren, null);
 			return res;

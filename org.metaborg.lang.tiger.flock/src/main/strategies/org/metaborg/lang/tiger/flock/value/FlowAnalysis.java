@@ -1,26 +1,21 @@
 package org.metaborg.lang.tiger.flock.value;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.metaborg.lang.tiger.flock.common.Analysis;
-import org.metaborg.lang.tiger.flock.common.Flock;
+import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
+import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockLatticeInPlace;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockValueLattice;
-import org.metaborg.lang.tiger.flock.common.FlockLattice.MaySet;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.SimpleMap;
 import org.metaborg.lang.tiger.flock.common.FlockValue;
-import org.metaborg.lang.tiger.flock.common.Graph;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.Helpers;
 import org.metaborg.lang.tiger.flock.common.MapUtils;
-import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
+import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.metaborg.lang.tiger.flock.common.TransferFunction;
 import org.metaborg.lang.tiger.flock.value.FlowAnalysisProperties.ConstProp;
 import org.spoofax.interpreter.terms.IStrategoTerm;
@@ -35,40 +30,12 @@ public class FlowAnalysis extends Analysis {
 		super("values", Direction.FORWARD);
 	}
 
+	@Override
 	public void initNodeValue(Node node) {
 		node.addProperty("values", SimpleMap.bottom());
 	}
 
-	private boolean matchPattern0(Node node) {
-		return true;
-	}
-
-	private boolean matchPattern1(Node node) {
-		ITerm vnode = node.virtualTerm;
-		if (!(vnode.isAppl() && ((ApplTerm) vnode).getConstructor().equals("VarDec")
-				&& node.virtualTerm.childrenCount() == 3)) {
-			return false;
-		}
-		return true;
-	}
-
-	private boolean matchPattern2(Node node) {
-		ITerm vnode = node.virtualTerm;
-		if (!(vnode.isAppl() && ((ApplTerm) vnode).getConstructor().equals("VarDec") && vnode.childrenCount() == 3)) {
-			return false;
-		}
-		ITerm vnode_2 = vnode.childAt(2);
-		if (!(vnode_2.isAppl() && ((ApplTerm) vnode_2).getConstructor().equals("Int")
-				&& vnode_2.childrenCount() == 1)) {
-			return false;
-		}
-		return true;
-	}
-
-	private boolean matchPattern3(Node node) {
-		return true;
-	}
-
+	@Override
 	public void initNodeTransferFunction(Node node) {
 		{
 			if (matchPattern0(node)) {
@@ -85,98 +52,41 @@ public class FlowAnalysis extends Analysis {
 			}
 		}
 	}
-	
-	@Override
-	protected abstract void initNewNodes() {
-		
-	}	
 
-	@Override
-	public void performDataAnalysis(Graph g, Collection<Node> roots, Collection<Node> nodeset, Collection<Node> dirty,
-			float intervalBoundary) {
-		Flock.beginTime("FlowAnalysis@performDataAnalysis");
-		Queue<Node> worklist = new LinkedBlockingQueue<>();
-		HashSet<Node> inWorklist = new HashSet<>();
-		Flock.beginTime("FlowAnalysis@nodeset_loop");
-		for (Node node : nodeset) {
-			if (node.interval > intervalBoundary)
-				continue;
-			worklist.add(node);
-			inWorklist.add(node);
-			initNodeValue(node);
-			initNodeTransferFunction(node);
-		}
-		Flock.endTime("FlowAnalysis@nodeset_loop");
-		Flock.beginTime("FlowAnalysis@dirty_loop");
-		for (Node node : dirty) {
-			if (node.interval > intervalBoundary)
-				continue;
-			worklist.add(node);
-			inWorklist.add(node);
-			initNodeTransferFunction(node);
-		}
-		Flock.endTime("FlowAnalysis@dirty_loop");
-		Flock.beginTime("FlowAnalysis@root_loop");
-		for (Node root : roots) {
-			if (root.interval > intervalBoundary)
-				continue;
-			root.getProperty("values").lattice = root.getProperty("values").init.eval(root);
-		}
-		Flock.endTime("FlowAnalysis@root_loop");
-		Flock.beginTime("FlowAnalysis@init_loop");
-		for (Node node : nodeset) {
-			if (node.interval > intervalBoundary)
-				continue;
-			{
-				FlockLattice init = node.getProperty("values").lattice;
-				for (Node pred : g.parentsOf(node)) {
-					FlockLattice live_o = pred.getProperty("values").transfer.eval(pred);
-					init = init.lub(live_o);
-				}
-				node.getProperty("values").lattice = init;
-			}
-		}
-		Flock.endTime("FlowAnalysis@init_loop");
-		HashSet<Node> keepDirty = new HashSet<>();
-		Flock.beginTime("FlowAnalysis@workloop");
-		Flock.printDebug("Worklist size: " + worklist.size());
-		while (!worklist.isEmpty()) {
-			Flock.increment("FlowAnalysis@workloop");
-			Node node = worklist.poll();
-			inWorklist.remove(node);
-			if (node.interval > intervalBoundary)
-				continue;
-			Flock.beginTime("FlowAnalysis@workloop:eval");
-			FlockLattice values_n = node.getProperty("values").transfer.eval(node);
-			Flock.endTime("FlowAnalysis@workloop:eval");
-			for (Node successor : g.childrenOf(node)) {
-				if (successor.interval > intervalBoundary) {
-					keepDirty.add(node);
-					continue;
-				}
-				boolean changed = false;
-				FlockLattice values_o = successor.getProperty("values").lattice;
-				FlockLattice lub = values_n.lub(values_o);
-				Flock.beginTime("FlowAnalysis@childupdate");
-				if (!lub.equals(values_o)) {
-					successor.getProperty("values").lattice = lub;
-					changed = true;
-				}
-				Flock.endTime("FlowAnalysis@childupdate");
-				if (changed && !inWorklist.contains(successor)) {
-					worklist.add(successor);
-					inWorklist.add(successor);
-				}
-			}
-		}
-		Flock.endTime("FlowAnalysis@workloop");
+	private boolean matchPattern0(Node node) {
+		ITerm term = node.virtualTerm;
+		return true;
+	}
 
-		// Remove the updated nodes from the dirty/new collections
-		Flock.beginTime("FlowAnalysis@epilogue");
-		this.dirtyNodes.removeIf(n -> !keepDirty.contains(n) && this.withinBoundary(g.intervalOf(n), intervalBoundary));
-		this.newNodes.removeIf(n -> this.withinBoundary(g.intervalOf(n), intervalBoundary));
-		Flock.endTime("FlowAnalysis@epilogue");
-		Flock.endTime("FlowAnalysis@performDataAnalysis");
+	private boolean matchPattern1(Node node) {
+		ITerm term = node.virtualTerm;
+		if (!(term.isAppl() && ((ApplTerm) term).getConstructor().equals("VarDec") && term.childrenCount() == 3)) {
+			return false;
+		}
+		ITerm term_0 = term.childAt(0);
+		ITerm term_1 = term.childAt(1);
+		ITerm term_2 = term.childAt(2);
+		return true;
+	}
+
+	private boolean matchPattern2(Node node) {
+		ITerm term = node.virtualTerm;
+		if (!(term.isAppl() && ((ApplTerm) term).getConstructor().equals("VarDec") && term.childrenCount() == 3)) {
+			return false;
+		}
+		ITerm term_0 = term.childAt(0);
+		ITerm term_1 = term.childAt(1);
+		ITerm term_2 = term.childAt(2);
+		if (!(term_2.isAppl() && ((ApplTerm) term_2).getConstructor().equals("Int") && term_2.childrenCount() == 1)) {
+			return false;
+		}
+		ITerm term_2_0 = term_2.childAt(0);
+		return true;
+	}
+
+	private boolean matchPattern3(Node node) {
+		ITerm term = node.virtualTerm;
+		return true;
 	}
 }
 
@@ -197,23 +107,6 @@ class Value implements FlockValueLattice {
 	}
 
 	@Override
-	public String toString() {
-		return value.toString();
-	}
-
-	public static Value bottom() {
-		ConstProp tmp10 = (ConstProp) new ConstProp(
-				new StrategoAppl(new StrategoConstructor("Bottom", 0), new IStrategoTerm[] {}, null));
-		return new Value(tmp10);
-	}
-
-	public static Value top() {
-		ConstProp tmp11 = (ConstProp) new ConstProp(
-				new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
-		return new Value(tmp11);
-	}
-
-	@Override
 	public boolean equals(Object other) {
 		if (other == null)
 			return false;
@@ -226,49 +119,68 @@ class Value implements FlockValueLattice {
 	}
 
 	@Override
+	public String toString() {
+		return value.toString();
+	}
+
+	public static Value bottom() {
+		ConstProp tmp82 = (ConstProp) new ConstProp(
+				new StrategoAppl(new StrategoConstructor("Bottom", 0), new IStrategoTerm[] {}, null));
+		return new Value(tmp82);
+	}
+
+	public static Value top() {
+		ConstProp tmp83 = (ConstProp) new ConstProp(
+				new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
+		return new Value(tmp83);
+	}
+
+	@Override
 	public FlockLattice lub(FlockLattice other) {
 		ConstProp usrl = ((Value) this).value;
 		ConstProp usrr = ((Value) other).value;
-		IStrategoTerm term0 = Helpers
+		IStrategoTerm term3 = Helpers
 				.toTerm(new StrategoTuple(new IStrategoTerm[] { Helpers.toTerm(usrl), Helpers.toTerm(usrr) }, null));
-		Object result0 = null;
-		if (TermUtils.isTuple(term0)
-				&& (TermUtils.isAppl(Helpers.at(term0, 0)) && (M.appl(Helpers.at(term0, 0)).getName().equals("Top")
-						&& Helpers.at(term0, 0).getSubtermCount() == 0))) {
-			result0 = new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
+		Object result122 = null;
+		if (TermUtils.isTuple(term3)
+				&& (TermUtils.isAppl(Helpers.at(term3, 0)) && (M.appl(Helpers.at(term3, 0)).getName().equals("Top")
+						&& Helpers.at(term3, 0).getSubtermCount() == 0))) {
+			result122 = new ConstProp(
+					new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
 		}
-		if (TermUtils.isTuple(term0)
-				&& (TermUtils.isAppl(Helpers.at(term0, 1)) && (M.appl(Helpers.at(term0, 1)).getName().equals("Top")
-						&& Helpers.at(term0, 1).getSubtermCount() == 0))) {
-			result0 = new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
+		if (TermUtils.isTuple(term3)
+				&& (TermUtils.isAppl(Helpers.at(term3, 1)) && (M.appl(Helpers.at(term3, 1)).getName().equals("Top")
+						&& Helpers.at(term3, 1).getSubtermCount() == 0))) {
+			result122 = new ConstProp(
+					new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
 		}
-		if (TermUtils.isTuple(term0)
-				&& (TermUtils.isAppl(Helpers.at(term0, 0)) && (M.appl(Helpers.at(term0, 0)).getName().equals("Const")
-						&& (Helpers.at(term0, 0).getSubtermCount() == 1 && (TermUtils.isAppl(Helpers.at(term0, 1))
-								&& (M.appl(Helpers.at(term0, 1)).getName().equals("Const")
-										&& Helpers.at(term0, 1).getSubtermCount() == 1)))))) {
-			IStrategoTerm usri = Helpers.at(Helpers.at(term0, 0), 0);
-			IStrategoTerm usrj = Helpers.at(Helpers.at(term0, 1), 0);
-			result0 = (boolean) usri.equals(usrj)
+		if (TermUtils.isTuple(term3)
+				&& (TermUtils.isAppl(Helpers.at(term3, 0)) && (M.appl(Helpers.at(term3, 0)).getName().equals("Const")
+						&& (Helpers.at(term3, 0).getSubtermCount() == 1 && (TermUtils.isAppl(Helpers.at(term3, 1))
+								&& (M.appl(Helpers.at(term3, 1)).getName().equals("Const")
+										&& Helpers.at(term3, 1).getSubtermCount() == 1)))))) {
+			IStrategoTerm usri = Helpers.at(Helpers.at(term3, 0), 0);
+			IStrategoTerm usrj = Helpers.at(Helpers.at(term3, 1), 0);
+			result122 = (boolean) usri.equals(usrj)
 					? new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
 							new IStrategoTerm[] { Helpers.toTerm(usri) }, null))
 					: new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
 		}
-		if (TermUtils.isTuple(term0)
-				&& (TermUtils.isAppl(Helpers.at(term0, 1)) && (M.appl(Helpers.at(term0, 1)).getName().equals("Bottom")
-						&& Helpers.at(term0, 1).getSubtermCount() == 0))) {
-			result0 = usrl;
+		if (TermUtils.isTuple(term3)
+				&& (TermUtils.isAppl(Helpers.at(term3, 1)) && (M.appl(Helpers.at(term3, 1)).getName().equals("Bottom")
+						&& Helpers.at(term3, 1).getSubtermCount() == 0))) {
+			result122 = usrl;
 		}
-		if (TermUtils.isTuple(term0)
-				&& (TermUtils.isAppl(Helpers.at(term0, 0)) && (M.appl(Helpers.at(term0, 0)).getName().equals("Bottom")
-						&& Helpers.at(term0, 0).getSubtermCount() == 0))) {
-			result0 = usrr;
+		if (TermUtils.isTuple(term3)
+				&& (TermUtils.isAppl(Helpers.at(term3, 0)) && (M.appl(Helpers.at(term3, 0)).getName().equals("Bottom")
+						&& Helpers.at(term3, 0).getSubtermCount() == 0))) {
+			result122 = usrr;
 		}
-		if (result0 == null) {
+		if (result122 == null) {
 			throw new RuntimeException("Could not match term");
 		}
-		ConstProp tmp12 = (ConstProp) result0;
-		return new Value(tmp12);
+		ConstProp tmp84 = (ConstProp) result122;
+		return new Value(tmp84);
 	}
 }
 
@@ -282,69 +194,69 @@ class TransferFunctions {
 class TransferFunction0 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		ITerm term = node.virtualTerm;
+		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
-		SimpleMap tmp3 = (SimpleMap) UserFunctions.values_f(prev);
-		return tmp3;
+		SimpleMap tmp75 = (SimpleMap) UserFunctions.values_f(prev);
+		return tmp75;
 	}
 }
 
 class TransferFunction1 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		ITerm term = node.virtualTerm;
+		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
-		ITerm usrn = term.childAt(0);
-		Map result1 = new HashMap();
+		IStrategoTerm usrn = Helpers.at(term, 0);
+		Map result123 = new HashMap();
 		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
 			Entry entry = (Entry) o;
 			Object usrk = entry.getKey();
 			Object usrv = entry.getValue();
-			if (!usrk.equals(usrn.toTermWithoutAnnotations())) {
-				result1.put(usrk, usrv);
+			if (!usrk.equals(usrn)) {
+				result123.put(usrk, usrv);
 			}
 		}
-		Map tmp7 = (Map) result1;
-		Map tmp8 = (Map) MapUtils.create(usrn.toTermWithoutAnnotations(), new Value(
+		Map tmp79 = (Map) result123;
+		Map tmp80 = (Map) MapUtils.create(usrn, new Value(
 				new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null))));
-		Map tmp9 = (Map) new HashMap(MapUtils.union(tmp7, tmp8));
-		Map tmp2 = (Map) tmp9;
-		return new SimpleMap(tmp2);
+		Map tmp81 = (Map) new HashMap(MapUtils.union(tmp79, tmp80));
+		Map tmp74 = (Map) tmp81;
+		return new SimpleMap(tmp74);
 	}
 }
 
 class TransferFunction2 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		ITerm term = node.virtualTerm;
+		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
-		ITerm usrn = term.childAt(0);
-		ITerm usri = term.childAt(2).childAt(0);
-		Map result2 = new HashMap();
+		IStrategoTerm usrn = Helpers.at(term, 0);
+		IStrategoTerm usri = Helpers.at(Helpers.at(term, 2), 0);
+		Map result124 = new HashMap();
 		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
 			Entry entry = (Entry) o;
 			Object usrk = entry.getKey();
 			Object usrv = entry.getValue();
-			if (!usrk.equals(usrn.toTermWithoutAnnotations())) {
-				result2.put(usrk, usrv);
+			if (!usrk.equals(usrn)) {
+				result124.put(usrk, usrv);
 			}
 		}
-		Map tmp4 = (Map) result2;
-		Map tmp5 = (Map) MapUtils.create(usrn.toTermWithoutAnnotations(),
+		Map tmp76 = (Map) result124;
+		Map tmp77 = (Map) MapUtils.create(usrn,
 				new Value(new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
-						new IStrategoTerm[] { usri.toTermWithoutAnnotations() }, null))));
-		Map tmp6 = (Map) new HashMap(MapUtils.union(tmp4, tmp5));
-		Map tmp1 = (Map) tmp6;
-		return new SimpleMap(tmp1);
+						new IStrategoTerm[] { Helpers.toTerm(usri) }, null))));
+		Map tmp78 = (Map) new HashMap(MapUtils.union(tmp76, tmp77));
+		Map tmp73 = (Map) tmp78;
+		return new SimpleMap(tmp73);
 	}
 }
 
 class TransferFunction3 extends TransferFunction {
 	@Override
 	public FlockLattice eval(Node node) {
-		ITerm term = node.virtualTerm;
-		SimpleMap tmp0 = (SimpleMap) SimpleMap.bottom();
-		return tmp0;
+		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
+		SimpleMap tmp70 = (SimpleMap) SimpleMap.bottom();
+		return tmp70;
 	}
 }
 

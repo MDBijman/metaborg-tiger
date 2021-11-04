@@ -20,13 +20,11 @@ public class FlowAnalysisStrategies {
 
 		@Override
 		public IStrategoTerm invoke(Context context, IStrategoTerm current) {
-	        Flock.beginTime("api@get_values");
 			ITermFactory factory = context.getFactory();
 			TermId id = new TermId(((IStrategoInt) current).intValue());
 			Node node = Flock.instance.getNode(id);
 			if (node == null) {
-				//Flock.printDebug("CfgNode is null with id " + id.getId());
-		        Flock.endTime("api@get_values");
+				// Flock.printDebug("CfgNode is null with id " + id.getId());
 				return null;
 			}
 			Flock.instance.analysisWithName("values").updateResultUntilBoundary(Flock.instance.graph, node);
@@ -34,31 +32,37 @@ public class FlowAnalysisStrategies {
 					((Map<IStrategoTerm, IStrategoTerm>) node.getProperty("values").lattice.value()).entrySet().stream()
 							.map(n -> factory.makeTuple(Helpers.toTerm(n.getKey()), Helpers.toTerm(n.getValue())))
 							.collect(Collectors.toList()));
-	        Flock.endTime("api@get_values");
 			return result;
 		}
 	}
-	
+
 	public static class get_value_0_1 extends Strategy {
 		public static get_value_0_1 instance = new get_value_0_1();
 
 		@Override
 		public IStrategoTerm invoke(Context context, IStrategoTerm current, IStrategoTerm key) {
-	        Flock.beginTime("api@get_value");
 			ITermFactory factory = context.getFactory();
 			TermId id = new TermId(((IStrategoInt) current).intValue());
 			Node node = Flock.instance.getNode(id);
 			if (node == null) {
-				//Flock.printDebug("CfgNode is null with id " + id.getId());
-		        Flock.endTime("api@get_value");
+				// Flock.printDebug("CfgNode is null with id " + id.getId());
 				return null;
 			}
-			
+
 			Flock.instance.analysisWithName("values").updateResultUntilBoundary(Flock.instance.graph, node);
-			Map<IStrategoTerm, IStrategoTerm> values = (Map<IStrategoTerm, IStrategoTerm>) node.getProperty("values").lattice.value();
-			IStrategoTerm value = Helpers.toTerm(values.get(key));
-	        Flock.endTime("api@get_value");
-			return value;
+
+			Map<IStrategoTerm, Object> values = (Map<IStrategoTerm, Object>) node
+					.getProperty("values").lattice.value();
+
+			Object value = values.get(key);
+
+			if (value == null) {
+				return null;
+			}
+
+			IStrategoTerm asTerm = Helpers.toTerm(value);
+
+			return asTerm;
 		}
 	}
 }

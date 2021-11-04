@@ -11,6 +11,7 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 
 public class Graph {
@@ -110,11 +111,6 @@ public class Graph {
 	private static boolean DEBUG = false;
 
 	public Graph() {
-		/*
-		 * Node root = new Node(); this.roots.add(root); this.leaves.add(root);
-		 * this.nodes.put(root.getId(), root); this.children.put(root, new HashSet<>());
-		 * this.parents.put(root, new HashSet<>());
-		 */
 	}
 
 	public Graph(Node root, ITerm termNode) {
@@ -481,30 +477,8 @@ public class Graph {
 			}
 		}
 
-		// This can be optimized much better
-		// Kahn's algorithm applied to the scc's of the graph
-
 		// Setup the edges between the scc's
 		// Map from SCC to all successor SCC's
-		/*
-		 * HashMap<Set<Node>, Set<Set<Node>>> successors = new HashMap<>();
-		 * HashMap<Set<Node>, Set<Set<Node>>> predecessors = new HashMap<>(); for
-		 * (Set<Node> set : components) { successors.put(set, new HashSet<>());
-		 * predecessors.put(set, new HashSet<>()); }
-		 * 
-		 * for (Node n : this.nodes.values()) { for (Node c : this.childrenOf(n)) {
-		 * Set<Node> nComponent = nodeComponent.get(n); Set<Node> cComponent =
-		 * nodeComponent.get(c); if (nComponent != cComponent) {
-		 * successors.get(nComponent).add(cComponent);
-		 * predecessors.get(cComponent).add(nComponent); } } }
-		 * 
-		 * Set<Set<Node>> noOutgoing = new HashSet<>();
-		 * 
-		 * // Find component with no successors (i.e. no outgoing edge) for (Set<Node>
-		 * component : components) { if (successors.get(component).isEmpty()) {
-		 * noOutgoing.add(component); } }
-		 */
-
 		long currIndex = components.size() + 1;
 		for (Set<Node> component : components) {
 			for (Node n : component) {
@@ -514,19 +488,6 @@ public class Graph {
 			currIndex--;
 		}
 
-		/*
-		 * while (!components.isEmpty()) { Set<Node> c = noOutgoing.iterator().next();
-		 * noOutgoing.remove(c);
-		 * 
-		 * // Remove component and set interval of its nodes components.remove(c); for
-		 * (Set<Node> p : predecessors.get(c)) { successors.get(p).remove(c); if
-		 * (successors.get(p).size() == 0) noOutgoing.add(p); }
-		 * 
-		 * successors.remove(c); predecessors.remove(c);
-		 * 
-		 * for (Node n : c) { this.nodeInterval.put(n, (float) currIndex); n.interval =
-		 * (float) currIndex; } currIndex--; }
-		 */
 		Flock.endTime("Graph@computeIntervals");
 	}
 
@@ -566,6 +527,48 @@ public class Graph {
 		}
 	}
 
+	public Collection<Node> nodesWithinBoundary(float boundary, Direction direction) {
+		Collection<Node> result = new HashSet<>();
+		
+		if (direction == Direction.BACKWARD) {
+			for (Node l : this.leaves()) {
+				this.collectNodesAbove(result, boundary, l);
+			}
+		} else if (direction == Direction.FORWARD) {
+			for (Node r : this.roots()) {
+				this.collectNodesBelow(result, boundary, r);
+			}			
+		}
+		
+		return result;
+	}
+	
+	private void collectNodesAbove(Collection<Node> result, float boundary, Node n) {
+		if (n.interval >= boundary) {
+			result.add(n);
+		} else {
+			return;
+		}
+		
+		for (Node c : this.parentsOf(n)) {
+			if (!result.contains(c))
+				this.collectNodesAbove(result, boundary, c);
+		}
+	}
+	
+	private void collectNodesBelow(Collection<Node> result, float boundary, Node n) {
+		if (n.interval <= boundary) {
+			result.add(n);
+		} else {
+			return;
+		}
+		
+		for (Node c : this.childrenOf(n)) {
+			if (!result.contains(c))
+				this.collectNodesBelow(result, boundary, c);
+		}
+	}
+	
 	/*
 	 * Helpers
 	 */

@@ -29,7 +29,7 @@ public abstract class Flock {
 
 	public Flock() {
 		this.analyses = new ArrayList<Analysis>();
-		// this.analyses.add(new LiveVariables());
+		this.analyses.add(new LiveVariables());
 		this.analyses.add(new FlowAnalysis());
 		// this.analyses.add(new AvailableExpressions());
 	}
