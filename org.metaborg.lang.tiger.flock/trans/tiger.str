@@ -88,7 +88,7 @@ rules // pipeline
   
   inline-pass = flock-fixpoint(inline-in-module|15)
 
-  forward-pass = flock-fixpoint(forward-pass-single|2)
+  forward-pass = flock-fixpoint(forward-pass-single|20)
   forward-pass-single = 
     bottomup(try(propagate-constant + fold-constant + simplify-let + simplify-seq + remove-dead-branch))
     //bottomup(try(flock-time-as(propagate-constant|"propagate-constant") + flock-time-as(fold-constant|"fold-constant")))
@@ -140,6 +140,7 @@ strategies
 
   remove-dead-branch: e@If(Int("0"), then, else) -> <strip-annos; flock-replace-node(|e)> else
   remove-dead-branch: e@If(Int("1"), then, else) -> <strip-annos; flock-replace-node(|e)> then
+  remove-dead-branch: e@IfThen(Int("1"), then) -> <strip-annos; flock-replace-node(|e)> then
   simplify-let: e@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|e)> i 
   simplify-seq: e@Seq([inner]) -> <strip-annos; flock-replace-node(|e)> inner
   

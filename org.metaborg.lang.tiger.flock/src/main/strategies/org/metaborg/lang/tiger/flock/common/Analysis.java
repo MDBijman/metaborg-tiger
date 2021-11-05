@@ -1,23 +1,14 @@
 package org.metaborg.lang.tiger.flock.common;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
-import javax.management.RuntimeErrorException;
-
-import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockCollectionLattice;
-import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockLatticeInPlace;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
-import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
-import org.metaborg.lang.tiger.flock.value.FlowAnalysis;
 import org.spoofax.terms.util.NotImplementedException;
-import org.spoofax.terms.util.TermUtils;
 
 public abstract class Analysis {
 	public enum Direction {

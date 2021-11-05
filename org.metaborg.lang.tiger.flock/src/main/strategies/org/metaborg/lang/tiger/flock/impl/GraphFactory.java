@@ -176,6 +176,18 @@ public class GraphFactory {
 			result_graph.mergeGraph(rhs_nr.leaves, _Lt_nb);
 			result_graph.leaves = new HashSet<>();
 			result_graph.leaves.addAll(_Lt_nb.leaves);
+		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Gt") && term.getSubtermCount() == 2)) {
+			IStrategoTerm _Gt = term;
+			IStrategoTerm lhs = Helpers.at(term, 0);
+			IStrategoTerm rhs = Helpers.at(term, 1);
+			Graph lhs_nr = createCfg_inner(tree, lhs);
+			Graph rhs_nr = createCfg_inner(tree, rhs);
+			Graph _Gt_nb = new Graph(Helpers.getTermNode(_Gt), tree.nodeById(Helpers.getTermId(_Gt)));
+			result_graph.mergeGraph(lhs_nr);
+			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
+			result_graph.mergeGraph(rhs_nr.leaves, _Gt_nb);
+			result_graph.leaves = new HashSet<>();
+			result_graph.leaves.addAll(_Gt_nb.leaves);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Eq") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Eq = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);

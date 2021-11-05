@@ -41,6 +41,7 @@ signature
     Times : Exp * Exp -> Exp
     Divide : Exp * Exp -> Exp
     Lt : Exp * Exp -> Exp
+    Gt : Exp * Exp -> Exp
     Eq : Exp * Exp -> Exp
     Geq : Exp * Exp -> Exp
     Leq : Exp * Exp -> Exp
@@ -83,6 +84,7 @@ control-flow rules
   Times(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
   Divide(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
   Lt(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Gt(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
   Eq(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
   Geq(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
   Leq(lhs, rhs) = entry -> lhs -> rhs -> this -> exit

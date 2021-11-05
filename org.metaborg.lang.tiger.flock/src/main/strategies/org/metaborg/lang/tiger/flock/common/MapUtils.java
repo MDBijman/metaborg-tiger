@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockLatticeInPlace;
-
 public class MapUtils {
 	public static Map union(Object l, Object r) {
 		if (l instanceof FlockLattice && r instanceof FlockLattice) {
