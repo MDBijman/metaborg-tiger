@@ -1,0 +1,185 @@
+module cfg
+
+language tiger
+
+test dead variables [[
+let
+	var x: int := 10
+in
+     (print(x)
+    ; x := 11
+    ; x := 12
+    ; print(x))
+end
+]] run flock-test-show-cfg to [["digraph G { graph[rankdir=LR, center=true, margin=0.2, nodesep=0.1, ranksep=0.3]; node[shape=record];64[label="<f0>|<f1>64|<f2>7.0|<f3>Assign(Var(...),Int(...))"];64->72;50[label="<f0>|<f1>50|<f2>3.0|<f3>VarDec(\"x\",Tid(...),Int(...))"];50->62;67[label="<f0>|<f1>67|<f2>6.0|<f3>Int(\"11\")"];67->64;69[label="<f0>|<f1>69|<f2>9.0|<f3>Assign(Var(...),Int(...))"];69->77;54[label="<f0>r|<f1>54|<f2>2.0|<f3>Int(\"10\")"];54->50;72[label="<f0>|<f1>72|<f2>8.0|<f3>Int(\"12\")"];72->69;74[label="<f0>l|<f1>74|<f2>11.0|<f3>Call(\"print\",[...])"];59[label="<f0>|<f1>59|<f2>5.0|<f3>Call(\"print\",[...])"];59->67;77[label="<f0>|<f1>77|<f2>10.0|<f3>Var(\"x\")"];77->74;62[label="<f0>|<f1>62|<f2>4.0|<f3>Var(\"x\")"];62->59;}"]]
+
+test fact [[
+let
+    function nfactor(n: int): int =
+      if n = 0 then 1 else (n * nfactor(n-1))
+
+	var x: int := 10
+in
+    nfactor(x)
+end
+]] run flock-test-show-cfg to [["digraph G { graph[rankdir=LR, center=true, margin=0.2, nodesep=0.1, ranksep=0.3]; node[shape=record];33[label="<f0>|<f1>33|<f2>11.0|<f3>Int(\"1\")"];33->30;35[label="<f0>|<f1>35|<f2>3.0|<f3>VarDec(\"x\",Tid(...),Int(...))"];35->45;39[label="<f0>r|<f1>39|<f2>2.0|<f3>Int(\"10\")"];39->35;42[label="<f0>l|<f1>42|<f2>5.0|<f3>Call(\"nfactor\",[...])"];45[label="<f0>|<f1>45|<f2>4.0|<f3>Var(\"x\")"];45->42;15[label="<f0>|<f1>15|<f2>8.0|<f3>Eq(Var(...),Int(...))"];15->20;15->25;16[label="<f0>r|<f1>16|<f2>6.0|<f3>Var(\"n\")"];16->18;18[label="<f0>|<f1>18|<f2>7.0|<f3>Int(\"0\")"];18->15;20[label="<f0>l|<f1>20|<f2>15.0|<f3>Int(\"1\")"];24[label="<f0>l|<f1>24|<f2>14.0|<f3>Times(Var(...),Call(...))"];25[label="<f0>|<f1>25|<f2>9.0|<f3>Var(\"n\")"];25->31;27[label="<f0>|<f1>27|<f2>13.0|<f3>Call(\"nfactor\",[...])"];27->24;30[label="<f0>|<f1>30|<f2>12.0|<f3>Minus(Var(...),Int(...))"];30->27;31[label="<f0>|<f1>31|<f2>10.0|<f3>Var(\"n\")"];31->33;}"]]
+
+test fact inlined [[
+let
+  function nfactor(n : int) : int =
+    if n = 0 then
+      1
+    else
+      n * nfactor(n - 1)
+  var x : int := 10
+ in
+  let
+    var n : int := 10
+   in
+    if n = 0 then
+      1
+    else
+      n * let
+            var n : int := n - 1
+           in
+            if n = 0 then
+              1
+            else
+              n * let
+                    var n : int := n - 1
+                   in
+                    if n = 0 then
+                      1
+                    else
+                      n * let
+                            var n : int := n - 1
+                           in
+                            if n = 0 then
+                              1
+                            else
+                              n * let
+                                    var n : int := n - 1
+                                   in
+                                    if n = 0 then
+                                      1
+                                    else
+                                      n * let
+                                            var n : int := n - 1
+                                           in
+                                            if n = 0 then
+                                              1
+                                            else
+                                              n * let
+                                                    var n : int := n - 1
+                                                   in
+                                                    if n = 0 then
+                                                      1
+                                                    else
+                                                      n * let
+                                                            var n : int := n - 1
+                                                           in
+                                                            if n = 0 then
+                                                              1
+                                                            else
+                                                              n * let
+                                                                    var n : int := n - 1
+                                                                   in
+                                                                    if n = 0 then
+                                                                      1
+                                                                    else
+                                                                      n * let
+                                                                            var n : int := n - 1
+                                                                           in
+                                                                            if n = 0 then
+                                                                              1
+                                                                            else
+                                                                              n * let
+                                                                                    var n : int := n - 1
+                                                                                   in
+                                                                                    if n = 0 then
+                                                                                      1
+                                                                                    else
+                                                                                      n * let
+                                                                                            var n : int := n - 1
+                                                                                           in
+                                                                                            if n = 0 then
+                                                                                              1
+                                                                                            else
+                                                                                              n * let
+                                                                                                    var n : int := n - 1
+                                                                                                   in
+                                                                                                    if n = 0 then
+                                                                                                      1
+                                                                                                    else
+                                                                                                      n * let
+                                                                                                            var n : int := n - 1
+                                                                                                           in
+                                                                                                            if n = 0 then
+                                                                                                              1
+                                                                                                            else
+                                                                                                              n * let
+                                                                                                                    var n : int := n - 1
+                                                                                                                   in
+                                                                                                                    if n = 0 then
+                                                                                                                      1
+                                                                                                                    else
+                                                                                                                      n * nfactor(n - 1)
+                                                                                                                  end
+                                                                                                          end
+                                                                                                  end
+                                                                                          end
+                                                                                  end
+                                                                          end
+                                                                  end
+                                                          end
+                                                  end
+                                          end
+                                  end
+                          end
+                  end
+          end
+  end
+end
+]] run flock-test-show-cfg to [["digraph G { graph[rankdir=LR, center=true, margin=0.2, nodesep=0.1, ranksep=0.3]; node[shape=record];33[label="<f0>|<f1>33|<f2>11.0|<f3>Int(\"1\")"];33->30;35[label="<f0>|<f1>35|<f2>3.0|<f3>VarDec(\"x\",Tid(...),Int(...))"];35->45;39[label="<f0>r|<f1>39|<f2>2.0|<f3>Int(\"10\")"];39->35;42[label="<f0>l|<f1>42|<f2>5.0|<f3>Call(\"nfactor\",[...])"];45[label="<f0>|<f1>45|<f2>4.0|<f3>Var(\"x\")"];45->42;15[label="<f0>|<f1>15|<f2>8.0|<f3>Eq(Var(...),Int(...))"];15->20;15->25;16[label="<f0>r|<f1>16|<f2>6.0|<f3>Var(\"n\")"];16->18;18[label="<f0>|<f1>18|<f2>7.0|<f3>Int(\"0\")"];18->15;20[label="<f0>l|<f1>20|<f2>15.0|<f3>Int(\"1\")"];24[label="<f0>l|<f1>24|<f2>14.0|<f3>Times(Var(...),Call(...))"];25[label="<f0>|<f1>25|<f2>9.0|<f3>Var(\"n\")"];25->31;27[label="<f0>|<f1>27|<f2>13.0|<f3>Call(\"nfactor\",[...])"];27->24;30[label="<f0>|<f1>30|<f2>12.0|<f3>Minus(Var(...),Int(...))"];30->27;31[label="<f0>|<f1>31|<f2>10.0|<f3>Var(\"n\")"];31->33;}"]]
+
+test nqueens [[
+
+let
+    var N := 8
+
+    type intArray = array of int
+
+    var row := intArray [ N ] of 0
+    var col := intArray [ N ] of 0
+    var diag1 := intArray [N+N-1] of 0
+    var diag2 := intArray [N+N-1] of 0
+    var debug := 0
+
+    function printboard() =
+        (for i := 0 to N - 1
+    do (for j := 0 to N - 1 
+        do print(if col[i] = j then " O" else " .");
+        print("\n"));
+          print("\n"))
+
+    function try(c: int) = 
+      (if debug = 0 then
+        (for i := 0 to c do print(".")
+      ; print("\n")
+      ; flush())
+    ; if c = N then
+        printboard()
+      else 
+        for r := 0 to N - 1 do 
+          if row[r] = 0 & diag1[r + c] = 0 & diag2[r + 7 - c] = 0 then 
+              (row[r] := 1
+            ;  diag1[r + c] := 1
+            ;  diag2[r + 7 - c] := 1
+            ;  col[c] := r
+            ;  try(c + 1)
+            ;  row[r] := 0
+            ;  diag1[r + c] := 0
+            ;  diag2[r + 7 - c] := 0))
+  in try(0)
+end
+]] run flock-test-show-cfg to [["digraph G { graph[rankdir=LR, center=true, margin=0.2, nodesep=0.1, ranksep=0.3]; node[shape=record];256[label="<f0>|<f1>256|<f2>45.0|<f3>And(And(...),Eq(...))"];256->299;257[label="<f0>|<f1>257|<f2>45.0|<f3>And(Eq(...),Eq(...))"];257->283;258[label="<f0>|<f1>258|<f2>45.0|<f3>Eq(Subscript(...),Int(...))"];258->271;259[label="<f0>|<f1>259|<f2>45.0|<f3>Subscript(Var(...),Var(...))"];259->264;260[label="<f0>|<f1>260|<f2>45.0|<f3>Var(\"row\")"];260->259;262[label="<f0>|<f1>262|<f2>45.0|<f3>Var(\"r\")"];262->260;264[label="<f0>|<f1>264|<f2>45.0|<f3>Int(\"0\")"];264->258;266[label="<f0>|<f1>266|<f2>45.0|<f3>Eq(Subscript(...),Int(...))"];266->257;267[label="<f0>|<f1>267|<f2>45.0|<f3>Subscript(Var(...),Plus(...))"];267->275;268[label="<f0>|<f1>268|<f2>45.0|<f3>Var(\"diag1\")"];268->267;270[label="<f0>|<f1>270|<f2>45.0|<f3>Plus(Var(...),Var(...))"];270->268;271[label="<f0>|<f1>271|<f2>45.0|<f3>Var(\"r\")"];271->273;273[label="<f0>|<f1>273|<f2>45.0|<f3>Var(\"c\")"];273->270;275[label="<f0>|<f1>275|<f2>45.0|<f3>Int(\"0\")"];275->266;277[label="<f0>|<f1>277|<f2>45.0|<f3>Eq(Subscript(...),Int(...))"];277->256;278[label="<f0>|<f1>278|<f2>45.0|<f3>Subscript(Var(...),Minus(...))"];278->289;279[label="<f0>|<f1>279|<f2>45.0|<f3>Var(\"diag2\")"];279->278;281[label="<f0>|<f1>281|<f2>45.0|<f3>Minus(Plus(...),Var(...))"];281->279;282[label="<f0>|<f1>282|<f2>45.0|<f3>Plus(Var(...),Int(...))"];282->287;283[label="<f0>|<f1>283|<f2>45.0|<f3>Var(\"r\")"];283->285;285[label="<f0>|<f1>285|<f2>45.0|<f3>Int(\"7\")"];285->282;287[label="<f0>|<f1>287|<f2>45.0|<f3>Var(\"c\")"];287->281;289[label="<f0>|<f1>289|<f2>45.0|<f3>Int(\"0\")"];289->277;293[label="<f0>|<f1>293|<f2>45.0|<f3>Assign(Subscript(...),Int(...))"];293->310;299[label="<f0>|<f1>299|<f2>45.0|<f3>Int(\"1\")"];299->293;301[label="<f0>|<f1>301|<f2>45.0|<f3>Assign(Subscript(...),Int(...))"];301->324;310[label="<f0>|<f1>310|<f2>45.0|<f3>Int(\"1\")"];310->301;312[label="<f0>|<f1>312|<f2>45.0|<f3>Assign(Subscript(...),Int(...))"];312->332;324[label="<f0>|<f1>324|<f2>45.0|<f3>Int(\"1\")"];324->312;326[label="<f0>|<f1>326|<f2>45.0|<f3>Assign(Subscript(...),Var(...))"];326->338;332[label="<f0>|<f1>332|<f2>45.0|<f3>Var(\"r\")"];332->326;334[label="<f0>|<f1>334|<f2>45.0|<f3>Call(\"try\",[...])"];334->348;337[label="<f0>|<f1>337|<f2>45.0|<f3>Plus(Var(...),Int(...))"];337->334;338[label="<f0>|<f1>338|<f2>45.0|<f3>Var(\"c\")"];338->340;82[label="<f0>|<f1>82|<f2>3.0|<f3>VarDecNoType(\"N\",Int(...))"];82->96;340[label="<f0>|<f1>340|<f2>45.0|<f3>Int(\"1\")"];340->337;84[label="<f0>r|<f1>84|<f2>2.0|<f3>Int(\"8\")"];84->82;342[label="<f0>|<f1>342|<f2>45.0|<f3>Assign(Subscript(...),Int(...))"];342->359;348[label="<f0>|<f1>348|<f2>45.0|<f3>Int(\"0\")"];348->342;92[label="<f0>|<f1>92|<f2>7.0|<f3>VarDecNoType(\"row\",Array(...))"];92->104;350[label="<f0>|<f1>350|<f2>45.0|<f3>Assign(Subscript(...),Int(...))"];350->373;94[label="<f0>|<f1>94|<f2>6.0|<f3>Array(\"intArray\",Var(...),Int(...))"];94->92;96[label="<f0>|<f1>96|<f2>4.0|<f3>Var(\"N\")"];96->98;98[label="<f0>|<f1>98|<f2>5.0|<f3>Int(\"0\")"];98->94;100[label="<f0>|<f1>100|<f2>11.0|<f3>VarDecNoType(\"col\",Array(...))"];100->114;102[label="<f0>|<f1>102|<f2>10.0|<f3>Array(\"intArray\",Var(...),Int(...))"];102->100;359[label="<f0>|<f1>359|<f2>45.0|<f3>Int(\"0\")"];359->350;104[label="<f0>|<f1>104|<f2>8.0|<f3>Var(\"N\")"];104->106;361[label="<f0>|<f1>361|<f2>45.0|<f3>Assign(Subscript(...),Int(...))"];361->245;106[label="<f0>|<f1>106|<f2>9.0|<f3>Int(\"0\")"];106->102;108[label="<f0>|<f1>108|<f2>19.0|<f3>VarDecNoType(\"diag1\",Array(...))"];108->128;110[label="<f0>|<f1>110|<f2>18.0|<f3>Array(\"intArray\",Minus(...),Int(...))"];110->108;112[label="<f0>|<f1>112|<f2>16.0|<f3>Minus(Plus(...),Int(...))"];112->120;113[label="<f0>|<f1>113|<f2>14.0|<f3>Plus(Var(...),Var(...))"];113->118;114[label="<f0>|<f1>114|<f2>12.0|<f3>Var(\"N\")"];114->116;116[label="<f0>|<f1>116|<f2>13.0|<f3>Var(\"N\")"];116->113;373[label="<f0>|<f1>373|<f2>45.0|<f3>Int(\"0\")"];373->361;118[label="<f0>|<f1>118|<f2>15.0|<f3>Int(\"1\")"];118->112;120[label="<f0>|<f1>120|<f2>17.0|<f3>Int(\"0\")"];120->110;376[label="<f0>l|<f1>376|<f2>31.0|<f3>Call(\"try\",[...])"];122[label="<f0>|<f1>122|<f2>27.0|<f3>VarDecNoType(\"diag2\",Array(...))"];122->138;379[label="<f0>|<f1>379|<f2>30.0|<f3>Int(\"0\")"];379->376;124[label="<f0>|<f1>124|<f2>26.0|<f3>Array(\"intArray\",Minus(...),Int(...))"];124->122;126[label="<f0>|<f1>126|<f2>24.0|<f3>Minus(Plus(...),Int(...))"];126->134;127[label="<f0>|<f1>127|<f2>22.0|<f3>Plus(Var(...),Var(...))"];127->132;128[label="<f0>|<f1>128|<f2>20.0|<f3>Var(\"N\")"];128->130;130[label="<f0>|<f1>130|<f2>21.0|<f3>Var(\"N\")"];130->127;132[label="<f0>|<f1>132|<f2>23.0|<f3>Int(\"1\")"];132->126;134[label="<f0>|<f1>134|<f2>25.0|<f3>Int(\"0\")"];134->124;136[label="<f0>|<f1>136|<f2>29.0|<f3>VarDecNoType(\"debug\",Int(...))"];136->379;138[label="<f0>|<f1>138|<f2>28.0|<f3>Int(\"0\")"];138->136;148[label="<f0>r|<f1>148|<f2>32.0|<f3>LoopBinding(Var(...),Int(...),Minus(...))"];148->161;148->195;161[label="<f0>|<f1>161|<f2>32.0|<f3>LoopBinding(Var(...),Int(...),Minus(...))"];161->179;161->190;171[label="<f0>|<f1>171|<f2>32.0|<f3>Call(\"print\",[...])"];171->161;175[label="<f0>|<f1>175|<f2>32.0|<f3>Eq(Subscript(...),Var(...))"];175->183;175->185;176[label="<f0>|<f1>176|<f2>32.0|<f3>Subscript(Var(...),Var(...))"];176->181;177[label="<f0>|<f1>177|<f2>32.0|<f3>Var(\"col\")"];177->176;179[label="<f0>|<f1>179|<f2>32.0|<f3>Var(\"i\")"];179->177;181[label="<f0>|<f1>181|<f2>32.0|<f3>Var(\"j\")"];181->175;183[label="<f0>|<f1>183|<f2>32.0|<f3>String(\"\\\" O\\\"\")"];183->171;185[label="<f0>|<f1>185|<f2>32.0|<f3>String(\"\\\" .\\\"\")"];185->171;187[label="<f0>|<f1>187|<f2>32.0|<f3>Call(\"print\",[...])"];187->148;190[label="<f0>|<f1>190|<f2>32.0|<f3>String(\"\\\"\\\\n\\\"\")"];190->187;192[label="<f0>l|<f1>192|<f2>34.0|<f3>Call(\"print\",[...])"];195[label="<f0>|<f1>195|<f2>33.0|<f3>String(\"\\\"\\\\n\\\"\")"];195->192;207[label="<f0>|<f1>207|<f2>37.0|<f3>Eq(Var(...),Int(...))"];207->215;208[label="<f0>r|<f1>208|<f2>35.0|<f3>Var(\"debug\")"];208->210;210[label="<f0>|<f1>210|<f2>36.0|<f3>Int(\"0\")"];210->207;215[label="<f0>|<f1>215|<f2>38.0|<f3>LoopBinding(Var(...),Int(...),Var(...))"];215->225;215->230;222[label="<f0>|<f1>222|<f2>38.0|<f3>Call(\"print\",[...])"];222->215;225[label="<f0>|<f1>225|<f2>38.0|<f3>String(\"\\\".\\\"\")"];225->222;227[label="<f0>|<f1>227|<f2>40.0|<f3>Call(\"print\",[...])"];227->232;230[label="<f0>|<f1>230|<f2>39.0|<f3>String(\"\\\"\\\\n\\\"\")"];230->227;232[label="<f0>|<f1>232|<f2>41.0|<f3>Call(\"flush\",[])"];232->237;236[label="<f0>|<f1>236|<f2>44.0|<f3>Eq(Var(...),Var(...))"];236->241;236->245;237[label="<f0>|<f1>237|<f2>42.0|<f3>Var(\"c\")"];237->239;239[label="<f0>|<f1>239|<f2>43.0|<f3>Var(\"N\")"];239->236;241[label="<f0>l|<f1>241|<f2>46.0|<f3>Call(\"printboard\",[])"];245[label="<f0>l|<f1>245|<f2>45.0|<f3>LoopBinding(Var(...),Int(...),Minus(...))"];245->262;}"]]

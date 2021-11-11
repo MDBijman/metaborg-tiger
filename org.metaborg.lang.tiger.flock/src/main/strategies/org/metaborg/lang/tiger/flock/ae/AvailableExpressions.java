@@ -21,9 +21,6 @@ import org.metaborg.lang.tiger.flock.common.SetUtils;
 import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.metaborg.lang.tiger.flock.common.TransferFunction;
-import org.spoofax.interpreter.terms.IStrategoTerm;
-import org.spoofax.terms.util.M;
-import org.spoofax.terms.util.TermUtils;
 
 public class AvailableExpressions extends Analysis {
 	public AvailableExpressions() {

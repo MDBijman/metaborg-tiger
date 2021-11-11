@@ -4,14 +4,16 @@ signature
   constructors
     FlockNodeId : Int -> FlockNodeId
 
-strategies
+
+strategies // API
 
   flock-add-id = topdown(flock-add-id-single)
   flock-add-id-single: t -> t { FlockNodeId(<flock-make-id>) }
   flock-debug: t -> t where <debug> t
 
-strategies
-
+  external flock-disable-logging(|)
+  external flock-enable-logging(|)
+  
   external flock-disable-incremental(|)
   external flock-enable-incremental(|)
 
@@ -40,7 +42,11 @@ strategies
   flock-fixpoint(s|bound): p -> <s < (flock-fixpoint(s | <dec> bound)) + id> p
   where <not(equal(|0))> bound
 
-strategies
+strategies // Testing API
+
+  flock-test-show-cfg = flock-initialize; flock-debug-graph
+
+strategies // Analysis API
       
   flock-is-live(|name): node {FlockNodeId(n)} -> <flock-is-live> (name, n)
   flock-is-live: (name, loc) -> <get-live; !(name, <id>); strip-annos; elem> loc

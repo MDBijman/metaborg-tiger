@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 import org.metaborg.lang.tiger.flock.common.Analysis;
 import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
-import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockLatticeInPlace;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockValueLattice;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.SimpleMap;
 import org.metaborg.lang.tiger.flock.common.FlockValue;

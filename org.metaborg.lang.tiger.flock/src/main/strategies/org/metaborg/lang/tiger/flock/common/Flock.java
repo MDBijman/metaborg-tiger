@@ -135,6 +135,10 @@ public abstract class Flock {
 		Flock.enabledTags = new HashSet<>();
 	}
 
+	public static void enableLogs() {
+		Flock.enabledTags = new HashSet<>(Arrays.asList(enabled));
+	}
+
 	public static boolean isLogEnabled(String tag) {
 		return enabledTags.contains(tag);
 	}

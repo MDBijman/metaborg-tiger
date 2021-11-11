@@ -103,25 +103,13 @@ public class FlockIncremental extends Flock {
 	}
 
 	private void lowerAnalysisResults(Analysis a, Set<Node> removedNodes, Node currentNode) {
-		if (a instanceof AnalysisWithDependencies) {
-			Set<Node> dependents = new HashSet<>();
-			dependents.addAll(removedNodes);
-			if (currentNode != null && this.graph.getNode(currentNode.getId()) != null) {
-				dependents.addAll(getTermDependencies(this.graph, currentNode));
-			}
-
-			for (Node n : dependents) {
-				((AnalysisWithDependencies) a).removeFacts(graph, n.getId());
-			}
+		float earliest = 0;
+		if (a.direction == Direction.FORWARD) {
+			earliest = removedNodes.stream().map(n -> n.interval).min(Float::compareTo).get();
 		} else {
-			float earliest = 0;
-			if (a.direction == Direction.FORWARD) {
-				earliest = removedNodes.stream().map(n -> n.interval).min(Float::compareTo).get();
-			} else {
-				earliest = removedNodes.stream().map(n -> n.interval).max(Float::compareTo).get();
-			}
-			a.removeResultAfterBoundary(graph, earliest);
+			earliest = removedNodes.stream().map(n -> n.interval).max(Float::compareTo).get();
 		}
+		a.removeResultAfterBoundary(graph, earliest);
 
 		// Remove the replaced nodes in the analysis class
 		a.remove(removedNodes);

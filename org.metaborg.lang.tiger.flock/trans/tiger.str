@@ -73,6 +73,8 @@ rules // transformation actions
 
 rules // pipeline
 
+  disable-logs = flock-disable-logging
+
   pipeline: p -> p'
   with
     with-ids := <flock-initialize> p
