@@ -1,4 +1,4 @@
-package org.metaborg.lang.tiger.flock.common;
+ package org.metaborg.lang.tiger.flock.common;
 
 import java.util.ArrayList;
 import java.util.HashMap;
