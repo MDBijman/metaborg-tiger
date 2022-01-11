@@ -63,6 +63,7 @@ public class FlockIncremental extends Flock {
 			}
 
 			this.termTree.replace(Helpers.getTermId(current), replacement);
+			this.termTree.validate();
 		}
 		Flock.endTime("FlockIncremental@replaceNode:termTree");
 

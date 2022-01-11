@@ -202,6 +202,10 @@ public abstract class Flock {
 		Flock.nextId = new TermId(next.getId() + 1);
 		return next;
 	}
+	
+	public static void resetNodeId() {
+		Flock.nextId = new TermId(0);
+	}
 
 }
 

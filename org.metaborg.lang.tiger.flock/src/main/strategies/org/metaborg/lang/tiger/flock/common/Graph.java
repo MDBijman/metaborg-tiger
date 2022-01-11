@@ -653,6 +653,78 @@ public class Graph {
 		return result.toString();
 	}
 
+	public String escapeStringSPT(String input) {
+		return input.replace("\"", "\\\"");
+	}
+	
+	// This does escaping slightly differently so the output can be used in spt tests
+	public String toGraphvizSPT(String propertyName, boolean includeNodeType, boolean includeIntervals,
+			boolean includeIds) {
+		Flock.beginTime("graph@toGraphviz");
+		StringBuilder result = new StringBuilder();
+		result.append(
+				"digraph G { graph[rankdir=LR, center=true, margin=0.2, nodesep=0.1, ranksep=0.3]; node[shape=record];");
+		for (Node node : this.nodes.values()) {
+
+			String termString = node.virtualTerm != null ? removeAnnotations(escapeStringSPT(escapeString(node.virtualTerm.toString(1))))
+					: "";
+
+			String rootString = this.roots.contains(node) ? "r" : "";
+			String leafString = this.leaves.contains(node) ? "l" : "";
+			String intervalString = this.nodeInterval.containsKey(node) ? this.intervalOf(node).toString() : "";
+
+			result.append(node.getId().getId() + "[label=\\\"");
+
+			if (includeNodeType) {
+				result.append("<f0>" + rootString + leafString);
+			}
+
+			// We need this to determine if we have to prepend '|'
+			boolean printedAField = includeNodeType;
+
+			if (includeIds) {
+				if (printedAField) {
+					result.append("|");
+				}
+				result.append("<f1>" + node.getId().getId());
+				printedAField = true;
+			}
+
+			if (includeIntervals) {
+				if (printedAField) {
+					result.append("|");
+				}
+				result.append("<f2>" + intervalString);
+				printedAField = true;
+			}
+
+			if (printedAField) {
+				result.append("|");
+			}
+			printedAField = true;
+			result.append("<f3>" + termString);
+
+			if (propertyName != null) {
+				Property h = node.properties.get(propertyName);
+				if (h != null && h.lattice.value() != null) {
+					if (printedAField) {
+						result.append("|");
+					}
+					result.append("<f4>" + escapeBrackets(escapeString(h.lattice.value().toString())));
+				}
+			}
+
+			result.append("\\\"];");
+
+			for (Node child : this.childrenOf(node)) {
+				result.append(node.getId().getId() + "->" + child.getId().getId() + ";");
+			}
+		}
+		result.append("} ");
+		Flock.endTime("graph@toGraphviz");
+		return result.toString();
+	}
+	
 	public String toGraphviz(String name) {
 		return toGraphviz(name, true, true, true);
 	}

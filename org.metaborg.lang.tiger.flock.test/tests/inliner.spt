@@ -1,0 +1,184 @@
+module inliner
+
+language tiger
+
+test cannot-inline [[
+let
+  var c : int := 10
+  function a(n : int) : int =
+    c + n
+ in
+  let
+    var c : int := 11
+   in
+    a(10)
+  end
+end
+]] run flock-test-run-inline to [[
+let
+  var c : int := 10
+  function a(n : int) : int =
+    c + n
+ in
+  let
+    var c : int := 11
+   in
+    a(10)
+  end
+end
+]]
+
+test fact [[
+let
+    function nfactor(n: int): int =
+      if n = 0 then 1 else (n * nfactor(n-1))
+
+	var x: int := 10
+in
+    nfactor(x)
+end
+]] run flock-test-run-inline to [[
+let
+  function nfactor(n : int) : int =
+    if n = 0 then
+      1
+    else
+      (
+        n * nfactor(n - 1)
+      )
+  var x : int := 10
+ in
+  let
+    var n : int := x
+   in
+    if n = 0 then
+      1
+    else
+      (
+        n * nfactor(n - 1)
+      )
+  end
+end
+]]
+
+test inline_one [[
+let
+    function a(n: int): int =
+      n + 10
+in
+   	a(10)
+end
+]] run flock-test-run-inline to [[
+let
+  function a(n : int) : int =
+    n + 10
+ in
+  let
+    var n : int := 10
+   in
+    n + 10
+  end
+end
+]]
+
+test inline_nqueens [[
+let
+  var N := 8
+  type intArray = array of int
+  var row := intArray[N] of 0
+  var col := intArray[N] of 0
+  var diag1 := intArray[N + N - 1] of 0
+  var diag2 := intArray[N + N - 1] of 0
+  var debug := 0
+  function printboard( ) =
+    (
+      for i := 0 to N - 1 do
+        (
+          for j := 0 to N - 1 do
+            print(if col[i] = j then
+              " O"
+            else
+              " .")  ;
+          print("\n")
+        )  ;
+      print("\n")
+    )
+  function try(c : int) =
+    (
+      if debug = 0 then
+        (
+          for i := 0 to c do
+            print(".")  ;
+          print("\n");
+          flush( )
+        )  ;
+      if c = N then
+        printboard( )
+      else
+        for r := 0 to N - 1 do
+          if row[r] = 0 & diag1[r + c] = 0 & diag2[r + 7 - c] = 0 then
+            (
+              row[r] := 1;
+              diag1[r + c] := 1;
+              diag2[r + 7 - c] := 1;
+              col[c] := r;
+              try(c + 1);
+              row[r] := 0;
+              diag1[r + c] := 0;
+              diag2[r + 7 - c] := 0
+            )
+    )
+ in
+  try(0)
+end
+]] run flock-test-run-inline to [[
+let
+  var N := 8
+  type intArray = array of int
+  var row := intArray[N] of 0
+  var col := intArray[N] of 0
+  var diag1 := intArray[N + N - 1] of 0
+  var diag2 := intArray[N + N - 1] of 0
+  var debug := 0
+  function printboard( ) =
+    (
+      for i := 0 to N - 1 do
+        (
+          for j := 0 to N - 1 do
+            print(if col[i] = j then
+              " O"
+            else
+              " .")  ;
+          print("\n")
+        )  ;
+      print("\n")
+    )
+  function try(c : int) =
+    (
+      if debug = 0 then
+        (
+          for i := 0 to c do
+            print(".")  ;
+          print("\n");
+          flush( )
+        )  ;
+      if c = N then
+        printboard( )
+      else
+        for r := 0 to N - 1 do
+          if row[r] = 0 & diag1[r + c] = 0 & diag2[r + 7 - c] = 0 then
+            (
+              row[r] := 1;
+              diag1[r + c] := 1;
+              diag2[r + 7 - c] := 1;
+              col[c] := r;
+              try(c + 1);
+              row[r] := 0;
+              diag1[r + c] := 0;
+              diag2[r + 7 - c] := 0
+            )
+    )
+ in
+  try(0)
+end
+]]

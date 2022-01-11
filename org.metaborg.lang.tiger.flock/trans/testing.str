@@ -1,0 +1,24 @@
+module testing
+
+imports
+
+	api
+	tiger
+
+strategies
+
+  flock-test-show-cfg = flock-initialize; flock-debug-graph
+  
+  flock-test-show-termgraph = flock-initialize; flock-debug-termgraph
+  external flock-debug-termgraph(|)
+  flock-test-run-pipeline: p -> p'
+  with
+    with-ids := <flock-initialize> p
+  ; p' := <
+      inline-pass
+  	; forward-pass
+  	; topdown(try(remove-all(?Hole())))
+  > with-ids
+  
+  flock-test-run-inline = flock-initialize; transform-inline
+  

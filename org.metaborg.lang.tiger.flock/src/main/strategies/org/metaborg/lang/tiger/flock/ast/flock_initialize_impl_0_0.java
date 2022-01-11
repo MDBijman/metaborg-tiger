@@ -6,7 +6,7 @@ import org.strategoxt.lang.Context;
 import org.strategoxt.lang.Strategy;
 import org.metaborg.lang.tiger.flock.common.Flock;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
-
+import org.metaborg.lang.tiger.flock.common.TermId;
 import org.spoofax.terms.ParseError;
 import org.spoofax.terms.StrategoConstructor;
 import org.spoofax.terms.StrategoInt;

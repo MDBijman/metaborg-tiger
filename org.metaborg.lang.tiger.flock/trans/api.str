@@ -23,9 +23,11 @@ strategies // API
 
   external flock-debug-graph(|)
   external flock-debug-graph(|prop-name)
+  external flock-debug-graph-spt(|)
 
-  flock-initialize = flock-add-id; where(flock-initialize-impl)
+  flock-initialize = flock-reset-id-counter; flock-add-id; where(flock-initialize-impl)
   external flock-initialize-impl(|)
+  external flock-reset-id-counter(|)
 
   external flock-remove-node(|)
   external flock-make-id(|)
@@ -41,10 +43,6 @@ strategies // API
   flock-fixpoint(s|0) = id
   flock-fixpoint(s|bound): p -> <s < (flock-fixpoint(s | <dec> bound)) + id> p
   where <not(equal(|0))> bound
-
-strategies // Testing API
-
-  flock-test-show-cfg = flock-initialize; flock-debug-graph
 
 strategies // Analysis API
       

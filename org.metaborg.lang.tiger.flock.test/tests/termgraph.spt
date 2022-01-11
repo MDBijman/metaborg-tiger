@@ -1,0 +1,23 @@
+module termgraph
+
+language tiger
+
+test fact [[
+let
+    function nfactor(n: int): int =
+      if n = 0 then 1 else (n * nfactor(n-1))
+
+	var x: int := 10
+in
+    nfactor(x)
+end
+]]
+run flock-test-show-termgraph to "Mod(Let([FunDecs([FunDec(\"nfactor\"{FlockNodeId(6)},[FArg(\"n\"{FlockNodeId(9)},Tid(\"int\"{FlockNodeId(11)}){FlockNodeId(10)}){FlockNodeId(8)}]{FlockNodeId(7)},Tid(\"int\"{FlockNodeId(13)}){FlockNodeId(12)},If(Eq(Var(\"n\"{FlockNodeId(17)}){FlockNodeId(16)},Int(\"0\"{FlockNodeId(19)}){FlockNodeId(18)}){FlockNodeId(15)},Int(\"1\"{FlockNodeId(21)}){FlockNodeId(20)},Seq([Times(Var(\"n\"{FlockNodeId(26)}){FlockNodeId(25)},Call(\"nfactor\"{FlockNodeId(28)},[Minus(Var(\"n\"{FlockNodeId(32)}){FlockNodeId(31)},Int(\"1\"{FlockNodeId(34)}){FlockNodeId(33)}){FlockNodeId(30)}]{FlockNodeId(29)}){FlockNodeId(27)}){FlockNodeId(24)}]{FlockNodeId(23)}){FlockNodeId(22)}){FlockNodeId(14)}){FlockNodeId(5)}]{FlockNodeId(4)}){FlockNodeId(3)},VarDec(\"x\"{FlockNodeId(36)},Tid(\"int\"{FlockNodeId(38)}){FlockNodeId(37)},Int(\"10\"{FlockNodeId(40)}){FlockNodeId(39)}){FlockNodeId(35)}]{FlockNodeId(2)},[Call(\"nfactor\"{FlockNodeId(43)},[Var(\"x\"{FlockNodeId(46)}){FlockNodeId(45)}]{FlockNodeId(44)}){FlockNodeId(42)}]{FlockNodeId(41)}){FlockNodeId(1)}){FlockNodeId(0)}"
+
+test simple [[
+let 
+	var x: int := 10
+in
+	x
+end
+]] run flock-test-show-termgraph to "Mod(Let([VarDec(\"x\"{FlockNodeId(4)},Tid(\"int\"{FlockNodeId(6)}){FlockNodeId(5)},Int(\"10\"{FlockNodeId(8)}){FlockNodeId(7)}){FlockNodeId(3)}]{FlockNodeId(2)},[Var(\"x\"{FlockNodeId(11)}){FlockNodeId(10)}]{FlockNodeId(9)}){FlockNodeId(1)}){FlockNodeId(0)}"

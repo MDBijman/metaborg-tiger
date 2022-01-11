@@ -3,6 +3,8 @@ module tiger
 imports
 
   api
+  analysis
+  testing
   libstratego-lib
   signatures/tiger-sig
   pp
@@ -27,6 +29,14 @@ rules // Debugging
       p' := <flock-initialize> p
     ; filename := <guarantee-extension(|"cfg")> path
     ; result := <flock-debug-graph> ()
+
+  debug-show-cfg-spt:
+    (p, _, _, path, project-path) -> (filename, result)
+    with
+      p' := <flock-initialize> p
+    ; filename := <guarantee-extension(|"cfg")> path
+    ; result := <flock-debug-graph-spt> ()
+
 
 rules /// editor transformation actions
 
@@ -223,4 +233,4 @@ strategies
   create-inlining-decs = zip; map(create-inlining-dec)
   
   create-inlining-dec: (FArg(occ, ty), arg) -> VarDec(occ, ty, arg)
-  
+

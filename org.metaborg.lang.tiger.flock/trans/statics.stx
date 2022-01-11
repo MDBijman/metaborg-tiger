@@ -1,0 +1,28 @@
+module statics
+
+// see README.md for details on how to switch to multi-file analysis
+
+rules // single-file entry point
+
+  programOk : Module
+
+  programOk(Mod(d)).
+
+rules // multi-file entry point
+
+  projectOk : scope
+
+  projectOk(s).
+
+  fileOk : scope * Module
+
+  fileOk(s, Mod(d)).
+
+signature
+
+  sorts
+  	Module
+  	Exp
+  
+  constructors
+    Mod : Exp -> Module
