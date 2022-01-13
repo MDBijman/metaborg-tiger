@@ -94,20 +94,12 @@ public abstract class Analysis {
 		}
 	}
 
-	public void removeResultAfterBoundary(Graph graph, float boundary) {
-		Flock.beginTime("Analysis@removeResultAfterBoundary");
-		Set<Node> nodes = this.dirtyNodes.stream().filter(n -> !this.withinBoundary(n.interval, boundary))
-				.collect(Collectors.toSet());
+	public void removeResultsOf(Graph graph, Set<Node> nodes) {
+		Flock.beginTime("Analysis@removeResultsOf");
 		for (Node n : nodes) {
 			this.addToNew(n);
 		}
-
-		nodes = this.cleanNodes.stream().filter(n -> !this.withinBoundary(n.interval, boundary))
-				.collect(Collectors.toSet());
-		for (Node n : nodes) {
-			this.addToNew(n);
-		}
-		Flock.endTime("Analysis@removeResultAfterBoundary");
+		Flock.endTime("Analysis@removeResultsOf");
 	}
 
 	public void updateResultUntilBoundary(Graph graph, Node node) {
@@ -173,7 +165,7 @@ public abstract class Analysis {
 
 		Collection<Node> boundaryFilteredNodeset = nodeset.stream()
 				.filter(n -> this.withinBoundary(n.interval, intervalBoundary)).collect(Collectors.toSet());
-		
+
 		Flock.beginTime("analysis@loop1");
 		for (Node node : dirty) {
 			if (!this.withinBoundary(node.interval, intervalBoundary))
@@ -215,7 +207,7 @@ public abstract class Analysis {
 
 		Flock.beginTime("analysis@worklist");
 		while (!worklist.isEmpty()) {
-			
+
 			Node node = worklist.poll();
 
 			Flock.increment("worklist-iteration");
@@ -230,19 +222,19 @@ public abstract class Analysis {
 				}
 
 				FlockLattice values_o = successor.getProperty(this.propertyName).lattice;
-				
+
 				Flock.beginTime("analysis@lub");
-				
+
 				FlockLattice lub = values_o.lub(values_n);
 				boolean changed = !lub.equals(values_o);
 				successor.getProperty(this.propertyName).lattice = lub;
-				
+
 				Flock.endTime("analysis@lub");
-				
+
 				if (changed) {
 					worklist.add(successor);
 				}
-				
+
 				Flock.increment("worklist-iteration-lub");
 			}
 		}

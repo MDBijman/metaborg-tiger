@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 
@@ -59,16 +60,6 @@ public class SCCs {
 		Flock.endTime("SCCs@computeIntervals");
 	}
 
-	/*
-	 * 
-	 * This gives a nullpointer exception Because The subgraph is already merged
-	 * into the full graph Which mutates some of the data in the subgraph Such that
-	 * the subgraph by itself is not valid anymore
-	 * 
-	 * Either fix this so that graph merging leaves the old fully valid (and
-	 * independent) Or work around it
-	 */
-
 	public void replaceNodes(Graph graph, Set<Node> replaced, Set<Node> oldPredecessors, Set<Node> oldSuccessors,
 			Graph subgraph) {
 
@@ -90,6 +81,12 @@ public class SCCs {
 				commonComponent.nodes.add(n);
 				this.nodeComponent.put(n, commonComponent);
 			}
+
+			// Remove information of replaced nodes
+			for (Node n : replaced) {
+				this.nodeComponent.get(n).nodes.remove(n);
+				this.nodeComponent.remove(n);
+			}
 		}
 		// Case 1.5: Multiple SCCs found, this should not happen
 		else if (commonSCCs.size() > 1) {
@@ -99,7 +96,6 @@ public class SCCs {
 		// So we compute the SCCs that make up the subgraph and merge them into the
 		// larger SCCs
 		else {
-
 			SCCs subgraphSCCs = new SCCs(subgraph);
 
 			this.mergeSCCs(subgraphSCCs);
@@ -126,19 +122,25 @@ public class SCCs {
 				}
 			}
 
+			// Remove the SCCs that were replaced by the program edit
+			// This relies on the assumption that all components containing any of these nodes are fully removed
+			// Intuitively this should be true because we cannot replace part of a SCC when these are only created
+			// from a single program node (e.g. for-loop). But this does not generalize to more complex CFGs.
+			Set<Component> removedComponents = replaced.stream().map(this.nodeComponent::get)
+					.collect(Collectors.toSet());
+			for (Component c : removedComponents) {
+				this.removeComponent(c);
+			}
 		}
 
-		for (Node n : replaced) {
-			this.removeComponent(this.nodeComponent.get(n));
-		}
 	}
-	
+
 	public Set<Component> predecessors(Component a) {
 		HashSet<Component> res = new HashSet<>();
 		this.predecessors(a, res);
 		return res;
 	}
-	
+
 	private void predecessors(Component a, Set<Component> result) {
 		result.addAll(this.revNeighbours.get(a));
 		for (Component p : this.revNeighbours.get(a)) {
@@ -168,7 +170,7 @@ public class SCCs {
 		for (Component neighbour : this.neighbours.get(c)) {
 			this.revNeighbours.get(neighbour).remove(c);
 		}
-		
+
 		this.components.remove(c);
 		this.neighbours.remove(c);
 		this.revNeighbours.remove(c);
@@ -217,7 +219,7 @@ public class SCCs {
 
 		for (Node n : g.nodes()) {
 			if (this.nodeComponent.get(n) == null) {
-				throw new RuntimeException("Node component entry missing");
+				throw new RuntimeException("Node component entry missing for " + n.toString());
 			}
 		}
 

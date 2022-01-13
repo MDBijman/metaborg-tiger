@@ -51,59 +51,62 @@ public class FlockIncremental extends Flock {
 
 	@Override
 	public void replaceNode(IStrategoTerm current, IStrategoTerm replacement) {
-		Flock.increment("replaceNode");
-		Flock.beginTime("FlockIncremental@replaceNode");
-		this.validate();
-		Flock.beginTime("FlockIncremental@replaceNode:termTree");
-		Set<Node> removedNodes = getAllNodes(current);
-		{
-			Node currentNode = Helpers.getTermNode(current);
+		try {
+			Flock.increment("replaceNode");
+			Flock.beginTime("FlockIncremental@replaceNode");
+			this.validate();
+			Flock.beginTime("FlockIncremental@replaceNode:termTree");
+			Set<Node> removedNodes = getAllNodes(current);
+			{
+				Node currentNode = Helpers.getTermNode(current);
 
-			for (Analysis a : this.analyses) {
-				this.lowerAnalysisResults(a, removedNodes, currentNode);
+				for (Analysis a : this.analyses) {
+					this.lowerAnalysisResults(a, removedNodes, currentNode);
+				}
+
+				this.termTree.replace(Helpers.getTermId(current), replacement);
+				this.termTree.validate();
 			}
+			Flock.endTime("FlockIncremental@replaceNode:termTree");
 
-			this.termTree.replace(Helpers.getTermId(current), replacement);
-			this.termTree.validate();
+			Flock.beginTime("FlockIncremental@replaceNode:cfg");
+			{
+				// Patch the graph, removing old nodes and placing new nodes
+				Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
+				subGraph.removeGhostNodes();
+				subGraph.computeIntervals();
+
+				Set<Node> predecessors = new HashSet<>();
+				Set<Node> successors = new HashSet<>();
+				for (Node n : removedNodes) {
+					predecessors.addAll(this.graph.parentsOf(n));
+					successors.addAll(this.graph.childrenOf(n));
+				}
+				predecessors.removeAll(removedNodes);
+				successors.removeAll(removedNodes);
+
+				this.graph.replaceNodes(removedNodes, predecessors, successors, subGraph);
+				this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph);
+				this.graph_scss.validate(this.graph);
+
+				// This is some useful validation logic when looking for bugs in SCC creation
+
+				// SCCs new_scss = new SCCs(this.graph);
+				// if (new_scss.components.size() != this.graph_scss.components.size()) {
+				// throw new RuntimeException("Inc. vs from-scratch SCCs don't match");
+				// }
+
+				for (Node n : subGraph.nodes()) {
+					this.addToNew(n);
+				}
+			}
+			Flock.endTime("FlockIncremental@replaceNode:cfg");
+			this.validate();
+			Flock.endTime("FlockIncremental@replaceNode");
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
 		}
-		Flock.endTime("FlockIncremental@replaceNode:termTree");
-
-		Flock.beginTime("FlockIncremental@replaceNode:cfg");
-		{
-			// Patch the graph, removing old nodes and placing new nodes
-			Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
-			subGraph.removeGhostNodes();
-			subGraph.computeIntervals();
-			
-			Set<Node> predecessors = new HashSet<>();
-			Set<Node> successors = new HashSet<>();
-			for (Node n : removedNodes) {
-				predecessors.addAll(this.graph.parentsOf(n));
-				successors.addAll(this.graph.childrenOf(n));
-			}
-			predecessors.removeAll(removedNodes);
-			successors.removeAll(removedNodes);
-			
-
-			this.graph.replaceNodes(removedNodes, predecessors, successors, subGraph);
-			this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph);
-			this.graph_scss.validate(this.graph);
-
-			
-			// This is some useful validation logic when looking for bugs in SCC creation
-						
-			// SCCs new_scss = new SCCs(this.graph);
-			// if (new_scss.components.size() != this.graph_scss.components.size()) {
-			//   throw new RuntimeException("Inc. vs from-scratch SCCs don't match");
-			// }
-			
-			for (Node n : subGraph.nodes()) {
-				this.addToNew(n);
-			}
-		}
-		Flock.endTime("FlockIncremental@replaceNode:cfg");
-		this.validate();
-		Flock.endTime("FlockIncremental@replaceNode");
 	}
 
 	@Override
@@ -126,13 +129,21 @@ public class FlockIncremental extends Flock {
 	}
 
 	private void lowerAnalysisResults(Analysis a, Set<Node> removedNodes, Node currentNode) {
-		float earliest = 0;
+		float earliest_ = 0;
 		if (a.direction == Direction.FORWARD) {
-			earliest = removedNodes.stream().map(n -> n.interval).min(Float::compareTo).get();
+			earliest_ = removedNodes.stream().map(n -> n.interval).min(Float::compareTo).get();
 		} else {
-			earliest = removedNodes.stream().map(n -> n.interval).max(Float::compareTo).get();
+			earliest_ = removedNodes.stream().map(n -> n.interval).max(Float::compareTo).get();
 		}
-		a.removeResultAfterBoundary(graph, earliest);
+		final float earliest = earliest_;
+
+		Set<Node> toReset = new HashSet<>();
+		Set<Node> nodes = a.dirtyNodes.stream().filter(n -> !a.withinBoundary(n.interval, earliest))
+				.collect(Collectors.toSet());
+		toReset.addAll(nodes);
+		nodes = a.cleanNodes.stream().filter(n -> !a.withinBoundary(n.interval, earliest)).collect(Collectors.toSet());
+		toReset.addAll(nodes);
+		a.removeResultsOf(graph, toReset);
 
 		// Remove the replaced nodes in the analysis class
 		a.remove(removedNodes);
