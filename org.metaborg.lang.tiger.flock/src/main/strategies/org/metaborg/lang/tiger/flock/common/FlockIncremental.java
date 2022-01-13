@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.metaborg.lang.tiger.flock.impl.GraphFactory;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
@@ -21,7 +22,7 @@ public class FlockIncremental extends Flock {
 		this.termTree.validate();
 		this.graph.validate();
 		for (Analysis a : this.analyses) {
-			a.validate(this.graph);
+			a.validate(this.graph, this.graph_scss);
 		}
 	}
 
@@ -30,6 +31,9 @@ public class FlockIncremental extends Flock {
 		this.clearAnalyses();
 		for (Node n : this.graph.nodes()) {
 			this.addToNew(n);
+		}
+		for (Component c : this.graph_scss.components) {
+			this.addToDirty(c);
 		}
 	}
 
@@ -43,7 +47,6 @@ public class FlockIncremental extends Flock {
 		this.io = context.getIOAgent();
 		this.graph = GraphFactory.createCfgRecursive(this.termTree, current);
 		this.graph.removeGhostNodes();
-		this.graph.computeIntervals();
 		this.graph.validate();
 		initPosition(graph, context.getFactory());
 		this.graph_scss = new SCCs(this.graph);
@@ -58,23 +61,20 @@ public class FlockIncremental extends Flock {
 			Flock.beginTime("FlockIncremental@replaceNode:termTree");
 			Set<Node> removedNodes = getAllNodes(current);
 			{
-				Node currentNode = Helpers.getTermNode(current);
-
-				for (Analysis a : this.analyses) {
-					this.lowerAnalysisResults(a, removedNodes, currentNode);
-				}
-
 				this.termTree.replace(Helpers.getTermId(current), replacement);
 				this.termTree.validate();
 			}
 			Flock.endTime("FlockIncremental@replaceNode:termTree");
-
+			{
+				for (Analysis a : this.analyses) {
+					this.removeAnalysisResultsAfter(a, removedNodes);
+				}
+			}
 			Flock.beginTime("FlockIncremental@replaceNode:cfg");
 			{
 				// Patch the graph, removing old nodes and placing new nodes
 				Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
 				subGraph.removeGhostNodes();
-				subGraph.computeIntervals();
 
 				Set<Node> predecessors = new HashSet<>();
 				Set<Node> successors = new HashSet<>();
@@ -100,6 +100,7 @@ public class FlockIncremental extends Flock {
 					this.addToNew(n);
 				}
 			}
+
 			Flock.endTime("FlockIncremental@replaceNode:cfg");
 			this.validate();
 			Flock.endTime("FlockIncremental@replaceNode");
@@ -115,11 +116,10 @@ public class FlockIncremental extends Flock {
 		Flock.beginTime("FlockIncremental@removeNode");
 		Flock.log("api", "removing node " + node.toString());
 
-		Node currentNode = Helpers.getTermNode(node);
 		Set<Node> removedNodes = getAllNodes(node);
 
 		for (Analysis a : this.analyses) {
-			this.lowerAnalysisResults(a, removedNodes, currentNode);
+			this.removeAnalysisResultsAfter(a, removedNodes);
 		}
 
 		// Go through graph and remove facts with origin in removed id's
@@ -128,25 +128,50 @@ public class FlockIncremental extends Flock {
 		Flock.endTime("FlockIncremental@removeNode");
 	}
 
-	private void lowerAnalysisResults(Analysis a, Set<Node> removedNodes, Node currentNode) {
-		float earliest_ = 0;
-		if (a.direction == Direction.FORWARD) {
-			earliest_ = removedNodes.stream().map(n -> n.interval).min(Float::compareTo).get();
-		} else {
-			earliest_ = removedNodes.stream().map(n -> n.interval).max(Float::compareTo).get();
-		}
-		final float earliest = earliest_;
-
-		Set<Node> toReset = new HashSet<>();
-		Set<Node> nodes = a.dirtyNodes.stream().filter(n -> !a.withinBoundary(n.interval, earliest))
+	private void removeAnalysisResultsAfter(Analysis a, Set<Node> removedNodes) {
+		Set<Component> outdatedComponents = removedNodes.stream().map(this.graph_scss.nodeComponent::get)
 				.collect(Collectors.toSet());
-		toReset.addAll(nodes);
-		nodes = a.cleanNodes.stream().filter(n -> !a.withinBoundary(n.interval, earliest)).collect(Collectors.toSet());
-		toReset.addAll(nodes);
-		a.removeResultsOf(graph, toReset);
+		Set<Component> allOutdatedComponents = new HashSet<>(outdatedComponents);
 
-		// Remove the replaced nodes in the analysis class
-		a.remove(removedNodes);
+		if (a.direction == Direction.FORWARD) {
+			for (Component c : outdatedComponents) {
+				this.collectSuccessors(c, allOutdatedComponents);
+			}
+		} else {
+			for (Component c : outdatedComponents) {
+				this.collectPredecessors(c, allOutdatedComponents);
+			}		
+		}
+		
+		for (Component c : allOutdatedComponents) {
+			this.removeAnalysisResultsIn(a, c);
+		}
+
+		for (Node n : removedNodes) {
+			a.remove(n);
+		}
+	}
+
+	private void removeAnalysisResultsIn(Analysis a, Component c) {
+		a.removeNodeResults(this.graph_scss, c.nodes);
+	}
+
+	private void collectPredecessors(Component c, Set<Component> result) {
+		for (Component neighbour : this.graph_scss.revNeighbours.get(c)) {
+			if (!result.contains(neighbour)) {
+				result.add(neighbour);
+				collectPredecessors(neighbour, result);
+			}
+		}
+	}
+
+	private void collectSuccessors(Component c, Set<Component> result) {
+		for (Component neighbour : this.graph_scss.neighbours.get(c)) {
+			if (!result.contains(neighbour)) {
+				result.add(neighbour);
+				collectSuccessors(neighbour, result);
+			}
+		}
 	}
 
 	@Override

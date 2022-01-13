@@ -29,7 +29,7 @@ public class AvailableExpressionsStrategies {
 				//Flock.printDebug("CfgNode is null with id " + id.getId());
 				return current;
 			}
-			Flock.instance.analysisWithName("expressions").updateResultUntilBoundary(Flock.instance.graph, node);
+			Flock.instance.analysisWithName("expressions").performDataAnalysis(Flock.instance.graph, Flock.instance.graph_scss, node);
 			IStrategoList result = factory
 					.makeList(((Map<IStrategoTerm, IStrategoTerm>) node.getProperty("expressions").lattice.value())
 							.entrySet().stream().map(e -> factory.makeList(Helpers.toTerm(e.getKey()), Helpers.toTerm(e.getValue())))

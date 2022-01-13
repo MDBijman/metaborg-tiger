@@ -5,12 +5,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
+import java.util.Set;
 
-import org.metaborg.lang.tiger.flock.ae.AvailableExpressions;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.metaborg.lang.tiger.flock.impl.LiveVariables;
 import org.metaborg.lang.tiger.flock.value.FlowAnalysis;
 import org.spoofax.interpreter.library.IOAgent;
@@ -85,15 +84,15 @@ public abstract class Flock {
 	 * Helpers for mutating graph analyses
 	 */
 
-	protected void addToDirty(Node n) {
-		for (Analysis ga : analyses) {
-			ga.addToDirty(n);
-		}
-	}
-
 	protected void addToNew(Node n) {
 		for (Analysis ga : analyses) {
-			ga.addToNew(n);
+			ga.addToNew(this.graph_scss, n);
+		}
+	}
+	
+	protected void addToDirty(Component c) {
+		for (Analysis ga : analyses) {
+			ga.addToDirty(c);
 		}
 	}
 

@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.spoofax.terms.util.NotImplementedException;
 
 public abstract class Analysis {
@@ -18,11 +19,16 @@ public abstract class Analysis {
 	public final String name;
 	public final String propertyName;
 	public final Direction direction;
-	public HashSet<Node> cleanNodes = new HashSet<>();
-	public HashSet<Node> dirtyNodes = new HashSet<>();
+//	public HashSet<Node> cleanNodes = new HashSet<>();
+//	public HashSet<Node> dirtyNodes = new HashSet<>();
+//	public HashSet<Node> newNodes = new HashSet<>();
+
+	public HashSet<Component> cleanComponents = new HashSet<>();
+	public HashSet<Component> dirtyComponents = new HashSet<>();
 	public HashSet<Node> newNodes = new HashSet<>();
+
 	private boolean hasRunOnce = false;
-	private boolean debug = false;
+	private boolean debug = true;
 
 	public Analysis(String name, Direction dir) {
 		this.name = name;
@@ -30,56 +36,60 @@ public abstract class Analysis {
 		this.direction = dir;
 	}
 
-	public void addToDirty(Node n) {
-		this.dirtyNodes.add(n);
-		this.cleanNodes.remove(n);
-		this.newNodes.remove(n);
-	}
-
-	public void addToNew(Node n) {
+	public void addToNew(SCCs sccs, Node n) {
 		this.newNodes.add(n);
-		this.cleanNodes.remove(n);
-		this.dirtyNodes.remove(n);
+		this.addToDirty(sccs.nodeComponent.get(n));
 	}
 
-	public void addToClean(Node n) {
-		this.cleanNodes.add(n);
+	public void addToDirty(Component c) {
+		this.cleanComponents.remove(c);
+		this.dirtyComponents.add(c);
+	}
+
+	public void addToClean(Component c) {
+		this.cleanComponents.add(c);
+		this.dirtyComponents.remove(c);
+		for (Node n : c.nodes) {
+			this.newNodes.remove(n);
+		}
+	}
+
+	public void remove(Component c) {
+		this.cleanComponents.remove(c);
+		this.dirtyComponents.remove(c);
+		for (Node n : c.nodes) {
+			this.newNodes.remove(n);
+		}
+	}
+
+	public void remove(Node n) {
 		this.newNodes.remove(n);
-		this.dirtyNodes.remove(n);
-	}
-
-	public void remove(Set<Node> nodes) {
-		this.dirtyNodes.removeAll(nodes);
-		this.newNodes.removeAll(nodes);
-		this.cleanNodes.removeAll(nodes);
 	}
 
 	public void clear() {
 		this.newNodes.clear();
-		this.dirtyNodes.clear();
-		this.cleanNodes.clear();
+		this.cleanComponents.clear();
+		this.dirtyComponents.clear();
 	}
 
-	public void validate(Graph g) {
+	public void validate(Graph g, SCCs sccs) {
 		if (!debug)
 			return;
 
-		for (Node n : this.cleanNodes) {
-			if (this.dirtyNodes.contains(n)) {
-				throw new RuntimeException("Clean node also in dirty list");
+		for (Component c : this.cleanComponents) {
+			if (this.dirtyComponents.contains(c)) {
+				throw new RuntimeException("Clean component also in dirty list");
 			}
-			if (this.newNodes.contains(n)) {
-				throw new RuntimeException("Clean node also in new list");
-			}
-		}
-		for (Node n : this.dirtyNodes) {
-			if (this.newNodes.contains(n)) {
-				throw new RuntimeException("Dirty node also in new list");
+			for (Node n : c.nodes) {
+				if (this.newNodes.contains(n)) {
+					throw new RuntimeException("New node in clean component");
+				}
 			}
 		}
-		for (Node n : g.nodes()) {
-			if (!this.cleanNodes.contains(n) && !this.dirtyNodes.contains(n) && !this.newNodes.contains(n)) {
-				throw new RuntimeException("Node is neither dirty, clean, or new");
+
+		for (Component c : sccs.components) {
+			if (!this.cleanComponents.contains(c) && !this.dirtyComponents.contains(c)) {
+				throw new RuntimeException("Component is neither dirty nor clean");
 			}
 		}
 	}
@@ -88,41 +98,9 @@ public abstract class Analysis {
 	 * Analysis Logic
 	 */
 
-	public void removeNodeResults(Set<Node> nodes) {
+	public void removeNodeResults(SCCs sccs, Set<Node> nodes) {
 		for (Node n : nodes) {
-			this.addToNew(n);
-		}
-	}
-
-	public void removeResultsOf(Graph graph, Set<Node> nodes) {
-		Flock.beginTime("Analysis@removeResultsOf");
-		for (Node n : nodes) {
-			this.addToNew(n);
-		}
-		Flock.endTime("Analysis@removeResultsOf");
-	}
-
-	public void updateResultUntilBoundary(Graph graph, Node node) {
-		Flock.beginTime("Analysis@updateResultUntilBoundary");
-		float boundary = graph.intervalOf(node);
-
-		if (!this.hasRunOnce) {
-			this.performDataAnalysis(graph, graph.roots(), this.newNodes, this.dirtyNodes, boundary);
-			this.hasRunOnce = true;
-		} else {
-			this.updateDataAnalysis(graph, this.newNodes, this.dirtyNodes, boundary);
-		}
-
-		Flock.endTime("Analysis@updateResultUntilBoundary");
-	}
-
-	protected boolean withinBoundary(float interval, float boundary) {
-		if (this.direction == Direction.FORWARD) {
-			return interval <= boundary;
-		} else if (this.direction == Direction.BACKWARD) {
-			return interval >= boundary;
-		} else {
-			throw new NotImplementedException();
+			this.addToNew(sccs, n);
 		}
 	}
 
@@ -134,44 +112,44 @@ public abstract class Analysis {
 
 	public abstract void initNodeTransferFunction(Node node);
 
-	public void performDataAnalysis(Graph g) {
-		performDataAnalysis(g, g.roots(), g.nodes(), new HashSet<Node>());
-	}
-
-	public void performDataAnalysis(Graph g, Collection<Node> roots, Collection<Node> nodeset, Collection<Node> dirty) {
-		if (this.direction == Direction.BACKWARD) {
-			performDataAnalysis(g, roots, nodeset, dirty, -Float.MAX_VALUE);
-		} else if (this.direction == Direction.FORWARD) {
-			performDataAnalysis(g, roots, nodeset, dirty, Float.MAX_VALUE);
-		}
-	}
-
-	public void updateDataAnalysis(Graph g, Collection<Node> newNodes, Collection<Node> dirty, float intervalBoundary) {
-		performDataAnalysis(g, new HashSet<Node>(), newNodes, dirty, intervalBoundary);
+	public void performDataAnalysis(Graph g, SCCs sccs, Node n) {
+		this.performDataAnalysis(g, sccs, sccs.nodeComponent.get(n));
 	}
 
 	/**
 	 * 
 	 * 
-	 * @param cfg              The CFG
-	 * @param roots            Roots of the CFG
-	 * @param nodeset          New nodes
-	 * @param dirty            Dirty nodes
-	 * @param intervalBoundary Boundary within which nodes must fall to be updated
+	 * @param cfg    The CFG
+	 * @param sccs   Strongly Connected Components of cfg
+	 * @param target Component containing the node which we are querying
 	 */
-	public void performDataAnalysis(Graph cfg, Collection<Node> roots, Collection<Node> nodeset, Collection<Node> dirty,
-			float intervalBoundary) {
-		Queue<Node> worklist = new LinkedBlockingQueue<>();
+	public void performDataAnalysis(Graph cfg, SCCs sccs, Component target) {
+		if (this.direction == Direction.FORWARD) {
+			for (Component pred : sccs.revNeighbours.get(target)) {
+				if (this.dirtyComponents.contains(pred)) {
+					this.performDataAnalysis(cfg, sccs, pred);
+				}
+			}
+		} else {
+			for (Component succ : sccs.neighbours.get(target)) {
+				if (this.dirtyComponents.contains(succ)) {
+					this.performDataAnalysis(cfg, sccs, succ);
+				}
+			}
+		}
 
-		Collection<Node> boundaryFilteredNodeset = nodeset.stream()
-				.filter(n -> this.withinBoundary(n.interval, intervalBoundary)).collect(Collectors.toSet());
+		performDataAnalysisSingleComponent(cfg, sccs, target);
+	}
+
+	private void performDataAnalysisSingleComponent(Graph cfg, SCCs sccs, Component target) {
+		Collection<Node> componentNodes = target.nodes;
+		Collection<Node> newNodes = componentNodes.stream().filter(this.newNodes::contains).collect(Collectors.toSet());
+
+		Queue<Node> worklist = new LinkedBlockingQueue<>(componentNodes);
 
 		Flock.beginTime("analysis@loop1");
-		for (Node node : dirty) {
-			if (!this.withinBoundary(node.interval, intervalBoundary))
-				continue;
-
-			worklist.add(node);
+		for (Node node : componentNodes) {
+			initNodeValue(node);
 			initNodeTransferFunction(node);
 		}
 		Flock.endTime("analysis@loop1");
@@ -179,14 +157,11 @@ public abstract class Analysis {
 		/*
 		 * We loop over the nodeset twice because we need to init each node before we
 		 * can evaluate the transfer function for the first time, since we might visit
-		 * successors of an unitialized node before visiting the node itself.
+		 * successors of an uninitialized node before visiting the node itself.
 		 */
 		Flock.beginTime("analysis@loop2");
-		for (Node node : boundaryFilteredNodeset) {
-			initNodeValue(node);
-			initNodeTransferFunction(node);
-
-			if (roots.contains(node)) {
+		for (Node node : newNodes) {
+			if (cfg.roots().contains(node)) {
 				node.getProperty(this.propertyName).lattice = node.getProperty(this.propertyName).init.eval(node);
 			}
 
@@ -195,7 +170,7 @@ public abstract class Analysis {
 		Flock.endTime("analysis@loop2");
 
 		Flock.beginTime("analysis@loop3");
-		for (Node node : boundaryFilteredNodeset) {
+		for (Node node : newNodes) {
 			FlockLattice init = node.getProperty(this.propertyName).lattice;
 			for (Node pred : this.getPredecessors(cfg, node)) {
 				FlockLattice eval_lat = pred.getProperty(this.propertyName).transfer.eval(pred);
@@ -217,9 +192,8 @@ public abstract class Analysis {
 			Set<Node> successors = this.getSuccessors(cfg, node);
 
 			for (Node successor : successors) {
-				if (!this.withinBoundary(successor.interval, intervalBoundary)) {
+				if (!target.nodes.contains(successor))
 					continue;
-				}
 
 				FlockLattice values_o = successor.getProperty(this.propertyName).lattice;
 
@@ -240,21 +214,7 @@ public abstract class Analysis {
 		}
 		Flock.endTime("analysis@worklist");
 
-		// Remove the updated nodes from the dirty/new collections
-		// And add them to the clean nodes
-		Flock.beginTime("analysis@update-nodes");
-		Set<Node> nodes = this.dirtyNodes.stream().filter(n -> this.withinBoundary(n.interval, intervalBoundary))
-				.collect(Collectors.toSet());
-		for (Node n : nodes) {
-			this.addToClean(n);
-		}
-
-		nodes = this.newNodes.stream().filter(n -> this.withinBoundary(n.interval, intervalBoundary))
-				.collect(Collectors.toSet());
-		for (Node n : nodes) {
-			this.addToClean(n);
-		}
-		Flock.endTime("analysis@update-nodes");
+		this.addToClean(target);
 	}
 
 	private Set<Node> getPredecessors(Graph g, Node n) {

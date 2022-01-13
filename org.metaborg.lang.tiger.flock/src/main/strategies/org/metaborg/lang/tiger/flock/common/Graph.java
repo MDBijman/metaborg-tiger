@@ -78,9 +78,6 @@ public class Graph {
 			return;
 
 		for (Node n : this.nodes.values()) {
-			if (!this.nodeInterval.containsKey(n)) {
-				throw new RuntimeException("Missing interval for node " + n.toString());
-			}
 			if (!this.children.containsKey(n)) {
 				throw new RuntimeException("Missing children for node " + n.toString());
 			}
@@ -99,7 +96,7 @@ public class Graph {
 	private HashMap<TermId, Node> nodes = new HashMap<>();
 	private Set<Node> roots = new HashSet<>();
 	public Set<Node> leaves = new HashSet<>();
-	private static boolean DEBUG = false;
+	private static boolean DEBUG = true;
 
 	public Graph() {
 	}
@@ -187,7 +184,6 @@ public class Graph {
 		this.nodes.putAll(o.nodes);
 		this.mergeChildren(o.children);
 		this.mergeParents(o.parents);
-		this.nodeInterval.putAll(o.nodeInterval);
 		this.leaves.addAll(o.leaves());
 		this.roots.addAll(o.roots());
 	}
@@ -214,7 +210,6 @@ public class Graph {
 			this.nodes.putAll(o.nodes);
 			this.mergeChildren(o.children);
 			this.mergeParents(o.parents);
-			this.nodeInterval.putAll(o.nodeInterval);
 
 			for (Node n : parents) {
 				for (Node r : o.roots) {
@@ -251,7 +246,6 @@ public class Graph {
 		this.nodes.putAll(o.nodes);
 		this.mergeChildren(o.children);
 		this.mergeParents(o.parents);
-		this.nodeInterval.putAll(o.nodeInterval);
 
 		for (Node n : parents) {
 			for (Node r : o.roots) {
@@ -374,8 +368,7 @@ public class Graph {
 		}
 		
 		this.mergeGraph(predecessors, successors, subGraph);
-		this.updateIntervals(subGraph.nodes.values(), predecessors, successors);
-		// this.validate();
+		this.validate();
 		
 		Flock.endTime("Graph@replaceNodes");
 	}
@@ -387,122 +380,6 @@ public class Graph {
 			this.removeNode(n);
 		}
 		Flock.endTime("Graph@removeGhostNodes");
-	}
-
-	/*
-	 * Intervals
-	 */
-
-	private HashMap<Node, Float> nodeInterval = new HashMap<>();
-
-	public Float intervalOf(Node n) {
-		return this.nodeInterval.get(n);
-	}
-
-	private static final float LARGE_FLOAT = 99999.f;
-
-	private void updateIntervals(Collection<Node> newNodes, Set<Node> oldParents, Set<Node> oldChildren) {
-		Flock.beginTime("Graph@updateIntervals");
-		if (newNodes.size() == 0) {
-			return;
-		}
-
-		float parentMax = oldParents.stream().map(p -> this.intervalOf(p)).max(Float::compare).orElse(0.f);
-		float childMin = oldChildren.stream().map(p -> this.intervalOf(p)).min(Float::compare).orElse(LARGE_FLOAT);
-
-		// Check if matching, then all newNodes get the common interval
-		// If not, take the difference between min of parents and max of children, put
-		// newNodes intervals in between as floats
-
-		assert parentMax <= childMin;
-
-		if (parentMax == childMin) {
-			for (Node n : newNodes) {
-				this.nodeInterval.put(n, parentMax);
-				n.interval = parentMax;
-			}
-		} else {
-			float diff = childMin - parentMax;
-
-			float newMax = newNodes.stream().map(p -> this.intervalOf(p)).max(Float::compare).get();
-
-			for (Node n : newNodes) {
-				float currentInterval = this.intervalOf(n);
-				float newInterval = parentMax + (currentInterval / (newMax + 1)) * diff;
-				this.nodeInterval.put(n, newInterval);
-				n.interval = newInterval;
-			}
-		}
-		Flock.endTime("Graph@updateIntervals");
-	}
-
-	public void computeIntervals() {
-		Flock.beginTime("Graph@computeIntervals");
-		this.nodeInterval.clear();
-
-		// Using AtomicLong to pass mutable reference
-		AtomicLong next_index = new AtomicLong(1);
-		Stack<Node> S = new Stack<>();
-		HashSet<Node> onStack = new HashSet<>();
-		HashMap<Node, Long> lowlink = new HashMap<>();
-		HashMap<Node, Long> index = new HashMap<>();
-		List<Set<Node>> components = new ArrayList<>();
-		HashMap<Node, Set<Node>> nodeComponent = new HashMap<>();
-
-		for (Node n : this.roots) {
-			if (index.get(n) == null) {
-				strongConnect(n, next_index, S, onStack, lowlink, index, components, nodeComponent);
-			}
-		}
-
-		// Setup the edges between the scc's
-		// Map from SCC to all successor SCC's
-		long currIndex = components.size() + 1;
-		for (Set<Node> component : components) {
-			for (Node n : component) {
-				this.nodeInterval.put(n, (float) currIndex);
-				n.interval = (float) currIndex;
-			}
-			currIndex--;
-		}
-
-		Flock.endTime("Graph@computeIntervals");
-	}
-
-	// Tarjans
-	private void strongConnect(Node v, AtomicLong next_index, Stack<Node> S, HashSet<Node> onStack,
-			HashMap<Node, Long> lowlink, HashMap<Node, Long> index, List<Set<Node>> components,
-			HashMap<Node, Set<Node>> nodeComponent) {
-		index.put(v, next_index.longValue());
-		lowlink.put(v, next_index.longValue());
-		next_index.addAndGet(1);
-		S.push(v);
-		onStack.add(v);
-		for (Node w : this.childrenOf(v)) {
-			if (index.get(w) == null) {
-				strongConnect(w, next_index, S, onStack, lowlink, index, components, nodeComponent);
-				if (lowlink.get(w) < lowlink.get(v)) {
-					lowlink.put(v, lowlink.get(w));
-				}
-			} else {
-				if (onStack.contains(w)) {
-					if (index.get(w) < lowlink.get(v)) {
-						lowlink.put(v, index.get(w));
-					}
-				}
-			}
-		}
-		if (lowlink.get(v).equals(index.get(v))) {
-			Node w;
-			HashSet<Node> component = new HashSet<>();
-			do {
-				w = S.pop();
-				onStack.remove(w);
-				nodeComponent.put(w, component);
-				component.add(w);
-			} while (w != v);
-			components.add(component);
-		}
 	}
 
 	/*
@@ -535,7 +412,6 @@ public class Graph {
 
 			String rootString = this.roots.contains(node) ? "r" : "";
 			String leafString = this.leaves.contains(node) ? "l" : "";
-			String intervalString = this.nodeInterval.containsKey(node) ? this.intervalOf(node).toString() : "";
 
 			result.append(node.getId().getId() + "[label=\"");
 
@@ -554,19 +430,11 @@ public class Graph {
 				printedAField = true;
 			}
 
-			if (includeIntervals) {
-				if (printedAField) {
-					result.append("|");
-				}
-				result.append("<f2>" + intervalString);
-				printedAField = true;
-			}
-
 			if (printedAField) {
 				result.append("|");
 			}
 			printedAField = true;
-			result.append("<f3>" + termString);
+			result.append("<f2>" + termString);
 
 			if (propertyName != null) {
 				Property h = node.properties.get(propertyName);
@@ -574,7 +442,7 @@ public class Graph {
 					if (printedAField) {
 						result.append("|");
 					}
-					result.append("<f4>" + escapeBrackets(escapeString(h.lattice.value().toString())));
+					result.append("<f3>" + escapeBrackets(escapeString(h.lattice.value().toString())));
 				}
 			}
 
@@ -609,7 +477,6 @@ public class Graph {
 
 			String rootString = this.roots.contains(node) ? "r" : "";
 			String leafString = this.leaves.contains(node) ? "l" : "";
-			String intervalString = this.nodeInterval.containsKey(node) ? this.intervalOf(node).toString() : "";
 
 			result.append(node.getId().getId() + "[label=\\\"");
 
@@ -628,19 +495,11 @@ public class Graph {
 				printedAField = true;
 			}
 
-			if (includeIntervals) {
-				if (printedAField) {
-					result.append("|");
-				}
-				result.append("<f2>" + intervalString);
-				printedAField = true;
-			}
-
 			if (printedAField) {
 				result.append("|");
 			}
 			printedAField = true;
-			result.append("<f3>" + termString);
+			result.append("<f2>" + termString);
 
 			if (propertyName != null) {
 				Property h = node.properties.get(propertyName);
@@ -648,7 +507,7 @@ public class Graph {
 					if (printedAField) {
 						result.append("|");
 					}
-					result.append("<f4>" + escapeBrackets(escapeString(h.lattice.value().toString())));
+					result.append("<f3>" + escapeBrackets(escapeString(h.lattice.value().toString())));
 				}
 			}
 

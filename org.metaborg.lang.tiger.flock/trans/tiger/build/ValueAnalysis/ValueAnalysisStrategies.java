@@ -54,19 +54,24 @@ import flock.subject.common.TransferFunction;
 import flock.subject.common.UniversalSet;
 
 public class FlowAnalysisStrategies {
-  public static class get_values_0_0 extends Strategy {
-    public static get_values_0_0 instance = new get_values_0_0 ( );
-    @Override public IStrategoTerm invoke(Context context, IStrategoTerm current) {
-                                                                                    ITermFactory factory = context. getFactory( );
-                                                                                    CfgNodeId id = new CfgNodeId (((IStrategoInt ) current). intValue( ));
-                                                                                    Node node = Flock.instance. getNode(id);
-                                                                                    if(node == null) {
-                                                                                                       Flock. printDebug("CfgNode is null with id " + id. getId( ));
-                                                                                                       return null;
-                                                                                                     }
-                                                                                    Flock.instance. analysisWithName("values"). updateResultUntilBoundary(Flock.instance.graph, node);
-                                                                                    IStrategoList result = factory. makeList(((Map<IStrategoTerm, IStrategoTerm> ) node. getProperty("values").lattice. value( )). entrySet( ). stream( ). map(n -> factory. makeTuple(Helpers. toTerm(n. getKey( )), Helpers. toTerm(n. getValue( )))). collect(Collectors. toList( )));
-                                                                                    return result;
-                                                                                  }
-  }
+	public static class get_values_0_0 extends Strategy {
+		public static get_values_0_0 instance = new get_values_0_0();
+
+		@Override
+		public IStrategoTerm invoke(Context context, IStrategoTerm current) {
+			ITermFactory factory = context.getFactory();
+			CfgNodeId id = new CfgNodeId(((IStrategoInt) current).intValue());
+			Node node = Flock.instance.getNode(id);
+			if (node == null) {
+				Flock.printDebug("CfgNode is null with id " + id.getId());
+				return null;
+			}
+			Flock.instance.analysisWithName("values").updateResultUntilBoundary(Flock.instance.graph, node);
+			IStrategoList result = factory.makeList(
+					((Map<IStrategoTerm, IStrategoTerm>) node.getProperty("values").lattice.value()).entrySet().stream()
+							.map(n -> factory.makeTuple(Helpers.toTerm(n.getKey()), Helpers.toTerm(n.getValue())))
+							.collect(Collectors.toList()));
+			return result;
+		}
+	}
 }

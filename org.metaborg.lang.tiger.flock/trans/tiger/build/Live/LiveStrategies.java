@@ -1,6 +1,7 @@
 package org.spoofax;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.metaborg.lang.tiger.flock.common.Flock;
 import org.strategoxt.lang.Context;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.IStrategoAppl;
@@ -66,7 +67,7 @@ public class FlowAnalysisStrategies {
 				Flock.printDebug("CfgNode is null with id " + id.getId());
 				return null;
 			}
-			Flock.instance.analysisWithName("live").updateResultUntilBoundary(Flock.instance.graph, node);
+			Flock.instance.analysisWithName("live").updateResultUntilBoundary(Flock.instance.graph, Flock.instance.graph_scss, node);
 			IStrategoList result = factory
 					.makeList(((Collection<? extends IStrategoTerm>) node.getProperty("live").lattice.value()).stream()
 							.map(n -> Helpers.toTerm(n)).collect(Collectors.toList()));

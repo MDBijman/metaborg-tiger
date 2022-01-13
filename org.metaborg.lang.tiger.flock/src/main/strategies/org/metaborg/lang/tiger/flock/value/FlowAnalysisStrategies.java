@@ -27,7 +27,7 @@ public class FlowAnalysisStrategies {
 				// Flock.printDebug("CfgNode is null with id " + id.getId());
 				return null;
 			}
-			Flock.instance.analysisWithName("values").updateResultUntilBoundary(Flock.instance.graph, node);
+			Flock.instance.analysisWithName("values").performDataAnalysis(Flock.instance.graph, Flock.instance.graph_scss, node);
 			IStrategoList result = factory.makeList(
 					((Map<IStrategoTerm, IStrategoTerm>) node.getProperty("values").lattice.value()).entrySet().stream()
 							.map(n -> factory.makeTuple(Helpers.toTerm(n.getKey()), Helpers.toTerm(n.getValue())))
@@ -49,7 +49,13 @@ public class FlowAnalysisStrategies {
 				return null;
 			}
 
-			Flock.instance.analysisWithName("values").updateResultUntilBoundary(Flock.instance.graph, node);
+			try {
+				
+				Flock.instance.analysisWithName("values").performDataAnalysis(Flock.instance.graph, Flock.instance.graph_scss, node);
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw e;
+			}
 
 			Map<IStrategoTerm, Object> values = (Map<IStrategoTerm, Object>) node
 					.getProperty("values").lattice.value();

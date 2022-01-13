@@ -17,6 +17,7 @@ import org.metaborg.lang.tiger.flock.common.Graph;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.Helpers;
 import org.metaborg.lang.tiger.flock.common.MapUtils;
+import org.metaborg.lang.tiger.flock.common.SCCs;
 import org.metaborg.lang.tiger.flock.common.SetUtils;
 import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
@@ -59,75 +60,6 @@ public class AvailableExpressions extends Analysis {
 			}
 			if (matchPattern2(node)) {
 				node.getProperty("expressions").init = TransferFunctions.TransferFunction2;
-			}
-		}
-	}
-
-	@Override
-	public void performDataAnalysis(Graph g, Collection<Node> roots, Collection<Node> nodeset, Collection<Node> dirty,
-			float intervalBoundary) {
-		Queue<Node> worklist = new LinkedBlockingQueue<>();
-		HashSet<Node> inWorklist = new HashSet<>();
-		for (Node node : nodeset) {
-			if (node.interval > intervalBoundary)
-				continue;
-			worklist.add(node);
-			inWorklist.add(node);
-			initNodeValue(node);
-			initNodeTransferFunction(node);
-		}
-		for (Node node : dirty) {
-			if (node.interval > intervalBoundary)
-				continue;
-			worklist.add(node);
-			inWorklist.add(node);
-			initNodeTransferFunction(node);
-		}
-		for (Node root : roots) {
-			if (root.interval > intervalBoundary)
-				continue;
-			root.getProperty("expressions").lattice = root.getProperty("expressions").init.eval(root);
-		}
-		for (Node node : nodeset) {
-			if (node.interval > intervalBoundary)
-				continue;
-			{
-				FlockLattice init = node.getProperty("expressions").lattice;
-				for (Node pred : g.parentsOf(node)) {
-					FlockLattice live_o = pred.getProperty("expressions").transfer.eval(pred);
-					init = init.lub(live_o);
-				}
-				node.getProperty("expressions").lattice = init;
-			}
-		}
-		while (!worklist.isEmpty()) {
-			Node node = worklist.poll();
-			inWorklist.remove(node);
-			if (node.interval > intervalBoundary)
-				continue;
-			FlockLattice expressions_n = node.getProperty("expressions").transfer.eval(node);
-			for (Node successor : g.childrenOf(node)) {
-				if (successor.interval > intervalBoundary)
-					continue;
-				boolean changed = false;
-				FlockLattice expressions_o = successor.getProperty("expressions").lattice;
-				if (expressions_n.nleq(expressions_o)) {
-					successor.getProperty("expressions").lattice = expressions_o.lub(expressions_n);
-					changed = true;
-				}
-				if (changed && !inWorklist.contains(successor)) {
-					worklist.add(successor);
-					inWorklist.add(successor);
-				}
-			}
-			for (Node successor : g.parentsOf(node)) {
-				boolean changed = false;
-				if (successor.interval > intervalBoundary)
-					continue;
-				if (changed && !inWorklist.contains(successor)) {
-					worklist.add(successor);
-					inWorklist.add(successor);
-				}
 			}
 		}
 	}

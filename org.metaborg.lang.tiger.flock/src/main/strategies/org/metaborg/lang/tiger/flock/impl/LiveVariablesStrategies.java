@@ -27,7 +27,7 @@ public class LiveVariablesStrategies {
 				Flock.printDebug("CfgNode is null with id " + id.getId());
 				return null;
 			}
-			Flock.instance.analysisWithName("live").updateResultUntilBoundary(Flock.instance.graph, node);
+			Flock.instance.analysisWithName("live").performDataAnalysis(Flock.instance.graph, Flock.instance.graph_scss, node);
 			IStrategoList result = factory
 					.makeList(((Collection<? extends IStrategoTerm>) node.getProperty("live").lattice.value()).stream()
 							.map(n -> Helpers.toTerm(n)).collect(Collectors.toList()));
