@@ -20,7 +20,7 @@ public class SCCs {
 	HashMap<Component, Set<Component>> neighbours = new HashMap<>();
 	HashMap<Component, Set<Component>> revNeighbours = new HashMap<>();
 	HashMap<Node, Component> nodeComponent = new HashMap<>();
-	boolean DEBUG = true;
+	boolean DEBUG = false;
 
 	public SCCs(Graph g) {
 		Flock.beginTime("SCCs@computeIntervals");

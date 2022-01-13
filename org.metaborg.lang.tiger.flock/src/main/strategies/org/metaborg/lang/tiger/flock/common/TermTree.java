@@ -216,7 +216,7 @@ public class TermTree {
 	private HashMap<ITerm, ITerm> parents = new HashMap<>();
 	private HashMap<TermId, ITerm> nodes = new HashMap<>();
 	private ITerm root;
-	private static boolean DEBUG = true;
+	private static boolean DEBUG = false;
 
 	public TermTree(IStrategoTerm term) {
 		root = this.createTermInTree(term);

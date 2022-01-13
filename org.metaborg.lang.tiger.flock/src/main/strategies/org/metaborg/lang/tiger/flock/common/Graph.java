@@ -96,7 +96,7 @@ public class Graph {
 	private HashMap<TermId, Node> nodes = new HashMap<>();
 	private Set<Node> roots = new HashSet<>();
 	public Set<Node> leaves = new HashSet<>();
-	private static boolean DEBUG = true;
+	private static boolean DEBUG = false;
 
 	public Graph() {
 	}

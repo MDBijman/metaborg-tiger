@@ -28,7 +28,7 @@ public abstract class Analysis {
 	public HashSet<Node> newNodes = new HashSet<>();
 
 	private boolean hasRunOnce = false;
-	private boolean debug = true;
+	private boolean debug = false;
 
 	public Analysis(String name, Direction dir) {
 		this.name = name;
