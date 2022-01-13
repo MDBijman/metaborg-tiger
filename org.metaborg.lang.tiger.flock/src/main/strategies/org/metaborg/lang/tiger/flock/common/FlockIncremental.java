@@ -46,6 +46,7 @@ public class FlockIncremental extends Flock {
 		this.graph.computeIntervals();
 		this.graph.validate();
 		initPosition(graph, context.getFactory());
+		this.graph_scss = new SCCs(this.graph);
 	}
 
 	@Override
@@ -73,8 +74,29 @@ public class FlockIncremental extends Flock {
 			Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
 			subGraph.removeGhostNodes();
 			subGraph.computeIntervals();
-			this.graph.replaceNodes(removedNodes, subGraph);
+			
+			Set<Node> predecessors = new HashSet<>();
+			Set<Node> successors = new HashSet<>();
+			for (Node n : removedNodes) {
+				predecessors.addAll(this.graph.parentsOf(n));
+				successors.addAll(this.graph.childrenOf(n));
+			}
+			predecessors.removeAll(removedNodes);
+			successors.removeAll(removedNodes);
+			
 
+			this.graph.replaceNodes(removedNodes, predecessors, successors, subGraph);
+			this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph);
+			this.graph_scss.validate(this.graph);
+
+			
+			// This is some useful validation logic when looking for bugs in SCC creation
+						
+			// SCCs new_scss = new SCCs(this.graph);
+			// if (new_scss.components.size() != this.graph_scss.components.size()) {
+			//   throw new RuntimeException("Inc. vs from-scratch SCCs don't match");
+			// }
+			
 			for (Node n : subGraph.nodes()) {
 				this.addToNew(n);
 			}

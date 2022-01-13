@@ -81,20 +81,11 @@ public class Graph {
 			if (!this.nodeInterval.containsKey(n)) {
 				throw new RuntimeException("Missing interval for node " + n.toString());
 			}
-			if (n.interval != this.intervalOf(n)) {
-				throw new RuntimeException("Outdated interval for node " + n.toString());
-			}
 			if (!this.children.containsKey(n)) {
 				throw new RuntimeException("Missing children for node " + n.toString());
 			}
 			if (!this.parents.containsKey(n)) {
 				throw new RuntimeException("Missing parents for node " + n.toString());
-			}
-			for (Node c : this.children.get(n)) {
-				if (c.interval < n.interval) {
-					throw new RuntimeException("child interval smaller than parent interval " + n.toString()
-							+ n.interval + " - " + c.toString() + c.interval);
-				}
 			}
 		}
 	}
@@ -166,11 +157,8 @@ public class Graph {
 	 */
 	private void mergeChildren(HashMap<Node, Set<Node>> other) {
 		for (Entry<Node, Set<Node>> e : other.entrySet()) {
-			if (this.children.containsKey(e.getKey())) {
-				this.children.get(e.getKey()).addAll(e.getValue());
-			} else {
-				this.children.put(e.getKey(), e.getValue());
-			}
+			this.children.putIfAbsent(e.getKey(), new HashSet<>());
+			this.children.get(e.getKey()).addAll(e.getValue());
 		}
 	}
 
@@ -182,11 +170,8 @@ public class Graph {
 	 */
 	private void mergeParents(HashMap<Node, Set<Node>> other) {
 		for (Entry<Node, Set<Node>> e : other.entrySet()) {
-			if (this.parents.containsKey(e.getKey())) {
-				this.parents.get(e.getKey()).addAll(e.getValue());
-			} else {
-				this.parents.put(e.getKey(), e.getValue());
-			}
+			this.parents.putIfAbsent(e.getKey(), new HashSet<>());
+			this.parents.get(e.getKey()).addAll(e.getValue());
 		}
 	}
 
@@ -369,36 +354,29 @@ public class Graph {
 		this.nodes.remove(n.getId());
 	}
 
-	public void replaceNodes(Set<Node> n, Graph subGraph) {
+	public void replaceNodes(Set<Node> nodes, Set<Node> predecessors, Set<Node> successors, Graph subGraph) {
 		Flock.beginTime("Graph@replaceNodes");
-		Set<Node> oldParents = new HashSet<>();
-		Set<Node> oldChildren = new HashSet<>();
+		boolean containedRoot = nodes.stream().anyMatch(node -> this.roots.contains(node));
+		boolean containedLeaf = nodes.stream().anyMatch(node -> this.leaves.contains(node));
 
-		boolean containedRoot = n.stream().anyMatch(node -> this.roots.contains(node));
-		boolean containedLeaf = n.stream().anyMatch(node -> this.leaves.contains(node));
-
-		// Remove the nodes, and remember the nodes that were connected to the removed
-		// set
-		for (Node remove : n) {
-			oldParents.remove(remove);
-			oldChildren.remove(remove);
-			oldParents.addAll(this.parentsOf(remove));
-			oldChildren.addAll(this.childrenOf(remove));
-
+		for (Node remove : nodes) {
 			this.removeNodeAndEdges(remove);
 		}
-
+		
 		// If root was replaced, then sub graph roots are also roots
 		if (containedRoot) {
 			this.roots.addAll(subGraph.roots);
 		}
+		
 		// If leaf was replaced, then sub graph leaves are also leaves
 		if (containedLeaf) {
 			this.leaves.addAll(subGraph.leaves);
 		}
-		this.mergeGraph(oldParents, oldChildren, subGraph);
-		this.updateIntervals(subGraph.nodes.values(), oldParents, oldChildren);
+		
+		this.mergeGraph(predecessors, successors, subGraph);
+		this.updateIntervals(subGraph.nodes.values(), predecessors, successors);
 		// this.validate();
+		
 		Flock.endTime("Graph@replaceNodes");
 	}
 
@@ -527,48 +505,6 @@ public class Graph {
 		}
 	}
 
-	public Collection<Node> nodesWithinBoundary(float boundary, Direction direction) {
-		Collection<Node> result = new HashSet<>();
-		
-		if (direction == Direction.BACKWARD) {
-			for (Node l : this.leaves()) {
-				this.collectNodesAbove(result, boundary, l);
-			}
-		} else if (direction == Direction.FORWARD) {
-			for (Node r : this.roots()) {
-				this.collectNodesBelow(result, boundary, r);
-			}			
-		}
-		
-		return result;
-	}
-	
-	private void collectNodesAbove(Collection<Node> result, float boundary, Node n) {
-		if (n.interval >= boundary) {
-			result.add(n);
-		} else {
-			return;
-		}
-		
-		for (Node c : this.parentsOf(n)) {
-			if (!result.contains(c))
-				this.collectNodesAbove(result, boundary, c);
-		}
-	}
-	
-	private void collectNodesBelow(Collection<Node> result, float boundary, Node n) {
-		if (n.interval <= boundary) {
-			result.add(n);
-		} else {
-			return;
-		}
-		
-		for (Node c : this.childrenOf(n)) {
-			if (!result.contains(c))
-				this.collectNodesBelow(result, boundary, c);
-		}
-	}
-	
 	/*
 	 * Helpers
 	 */
@@ -656,8 +592,9 @@ public class Graph {
 	public String escapeStringSPT(String input) {
 		return input.replace("\"", "\\\"");
 	}
-	
-	// This does escaping slightly differently so the output can be used in spt tests
+
+	// This does escaping slightly differently so the output can be used in spt
+	// tests
 	public String toGraphvizSPT(String propertyName, boolean includeNodeType, boolean includeIntervals,
 			boolean includeIds) {
 		Flock.beginTime("graph@toGraphviz");
@@ -666,7 +603,8 @@ public class Graph {
 				"digraph G { graph[rankdir=LR, center=true, margin=0.2, nodesep=0.1, ranksep=0.3]; node[shape=record];");
 		for (Node node : this.nodes.values()) {
 
-			String termString = node.virtualTerm != null ? removeAnnotations(escapeStringSPT(escapeString(node.virtualTerm.toString(1))))
+			String termString = node.virtualTerm != null
+					? removeAnnotations(escapeStringSPT(escapeString(node.virtualTerm.toString(1))))
 					: "";
 
 			String rootString = this.roots.contains(node) ? "r" : "";
@@ -724,7 +662,7 @@ public class Graph {
 		Flock.endTime("graph@toGraphviz");
 		return result.toString();
 	}
-	
+
 	public String toGraphviz(String name) {
 		return toGraphviz(name, true, true, true);
 	}

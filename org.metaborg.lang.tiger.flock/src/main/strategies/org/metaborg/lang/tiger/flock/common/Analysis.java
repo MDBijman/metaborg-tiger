@@ -124,65 +124,6 @@ public abstract class Analysis {
 		Flock.endTime("Analysis@updateResultUntilBoundary");
 	}
 
-	/**
-	 * Returns all nodes in g that have an interval before each node in nodes.
-	 */
-	private Set<Node> getAllPredecessors(Graph g, Set<Node> nodes) {
-		Set<Node> res = new HashSet<>();
-		if (nodes.size() == 0) {
-			return res;
-		}
-
-		float farthest = getFarthest(nodes);
-		for (Node w : g.nodes()) {
-			if (this.withinBoundary(w.interval, farthest)) {
-				res.add(w);
-			}
-		}
-		return res;
-	}
-
-	/**
-	 * Returns all nodes in g that have an interval after each node in nodes.
-	 */
-	private Set<Node> getAllSuccessors(Graph g, Set<Node> nodes) {
-		Set<Node> res = new HashSet<>();
-		if (nodes.size() == 0) {
-			return res;
-		}
-
-		float farthest = getFarthest(nodes);
-		for (Node w : g.nodes()) {
-			if (!this.withinBoundary(w.interval, farthest)) {
-				res.add(w);
-			}
-		}
-		return res;
-	}
-
-	/**
-	 * Returns the farthest interval in the given set of nodes. If the analysis is
-	 * forward, then the interval is the highest float found. If the analysis is
-	 * backward, then the interval is the lowest float found.
-	 */
-	private float getFarthest(Set<Node> nodes) {
-		float farthest = -1.0f;
-		for (Node n : this.dirtyNodes) {
-			if (farthest == -1.0f) {
-				farthest = n.interval;
-			} else if (!this.withinBoundary(n.interval, farthest)) {
-				farthest = n.interval;
-			}
-		}
-
-		return farthest;
-	}
-
-	public Set<Node> getNodesBefore(Graph g, Node n) {
-		// Return set of nodes after n in g
-		return g.nodes().stream().filter(o -> this.withinBoundary(n.interval, o.interval)).collect(Collectors.toSet());
-	}
-
 	protected boolean withinBoundary(float interval, float boundary) {
 		if (this.direction == Direction.FORWARD) {
 			return interval <= boundary;

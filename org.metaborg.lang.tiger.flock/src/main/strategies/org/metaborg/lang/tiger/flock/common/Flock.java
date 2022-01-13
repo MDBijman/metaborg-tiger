@@ -24,6 +24,7 @@ public abstract class Flock {
 
 	public IOAgent io;
 	public Graph graph;
+	public SCCs graph_scss;
 	public TermTree termTree;
 	public List<Analysis> analyses;
 
@@ -32,14 +33,6 @@ public abstract class Flock {
 		this.analyses.add(new LiveVariables());
 		this.analyses.add(new FlowAnalysis());
 		// this.analyses.add(new AvailableExpressions());
-	}
-
-	public Set<Node> getTermDependencies(Graph g, Node n) {
-		HashSet<Node> deps = new HashSet<>();
-		for (Analysis a : analyses) {
-			deps.addAll(a.getNodesBefore(g, n));
-		}
-		return deps;
 	}
 
 	protected void applyGhostMask(Set<Node> mask) {
