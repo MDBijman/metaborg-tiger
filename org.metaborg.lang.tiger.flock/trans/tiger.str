@@ -89,7 +89,7 @@ rules // pipeline
   pipeline: p -> p'
   with
     with-ids := <flock-initialize> p
-  ; <disable-logs> ()
+  //; <disable-logs> ()
   ; <flock-begin-timer> "pipeline"
   ; p' := <
       inline-pass(|3)
@@ -98,16 +98,12 @@ rules // pipeline
   > with-ids
   ; <flock-end-timer> "pipeline"
   ; <debug> <run-time>
-  ; <flock-debug-graph(|"values")> ()
+  ; <flock-debug-graph> ()
   
   inline-pass(|n) = flock-fixpoint(inline-in-module|n)
 
   forward-pass(|n) = flock-fixpoint(forward-pass-single|n)
   forward-pass-single = debug; opt-term
-	//bottomup(try(flock-time-as(propagate-constant|"propagate-constant") + flock-time-as(fold-constant|"fold-constant")))
-	//bottomup(try(flock-time-as(remove-dead-vardec|"remove-dead-vardec")))
-	//oncetd(propagate-constant + simplify-let + simplify-seq + fold-constant + remove-dead-branch)
-	//bottomup(try(id))
 
   // Fail if the term nor any of its subterms can be optimized
   opt-term = 

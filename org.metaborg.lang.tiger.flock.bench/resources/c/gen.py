@@ -58,4 +58,4 @@ def gen_many_branch(n):
 #gen_many_loops()
 #gen_many_vars(3000)
 #gen_many_vars2(10)
-gen_many_branch(6000)
+gen_many_branch(5000)

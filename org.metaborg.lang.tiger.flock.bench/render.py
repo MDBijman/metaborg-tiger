@@ -1,5 +1,6 @@
 import csv
 import matplotlib.pyplot  as plt
+from datetime import datetime
 
 csv_file = open('results/result.csv')
 csv_reader = csv.reader(csv_file, delimiter=',')
@@ -13,7 +14,10 @@ for row in csv_iter:
     for (col, val) in zip(headers, row):
         data[col].append(val)
 
-#
+def make_datestring():
+    return str(datetime.today().strftime('%Y%m%d_%H%M%S'))
+
+today = make_datestring()
 
 def plot_benchmark(fig, ax, name, simple_name):
     a, b = [], []
@@ -37,4 +41,6 @@ def plot_benchmark(fig, ax, name, simple_name):
 fig, ax = plt.subplots()
 plot_benchmark(fig, ax, "org.example.BranchBenchmark.run", "branches")
 plot_benchmark(fig, ax, "org.example.VarsBenchmark.run", "variables")
-plt.savefig("benchmark.png")
+plt.savefig(f"results/benchmark_{today}.png")
+
+

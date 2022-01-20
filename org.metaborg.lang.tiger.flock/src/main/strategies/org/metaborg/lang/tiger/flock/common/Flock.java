@@ -113,11 +113,13 @@ public abstract class Flock {
 		System.out.println(t);
 	}
 
-	private static String[] enabled = { "time", "count",
-			"debug",
+	private static String[] enabled = {
+			"time",
+			"count",
+			// "debug",
 			// "incremental",
 			// "validation",
-			"api",
+			// "api",
 			// "dependencies",
 			// "graphviz"
 	};
@@ -146,7 +148,7 @@ public abstract class Flock {
 	private static HashMap<String, Long> cumulMap = new HashMap<>();
 
 	public static void beginTime(String tag) {
-		runningMap.put(tag, System.currentTimeMillis());
+		runningMap.put(tag, System.nanoTime());
 		cumulMap.putIfAbsent(tag, 0L);
 	}
 
@@ -154,9 +156,13 @@ public abstract class Flock {
 		runningMap.clear();
 		cumulMap.clear();
 	}
+	
+	public static void resetCounters() {
+		countMap.clear();
+	}
 
 	public static long endTime(String tag) {
-		long t = System.currentTimeMillis() - runningMap.get(tag);
+		long t = System.nanoTime() - runningMap.get(tag);
 		runningMap.remove(tag);
 		cumulMap.put(tag, cumulMap.get(tag) + t);
 		return t;
@@ -170,7 +176,7 @@ public abstract class Flock {
 		ArrayList<Entry<String, Long>> entries = new ArrayList<>(cumulMap.entrySet());
 		entries.sort((a, b) -> a.getKey().compareTo(b.getKey()));
 		for (Entry<String, Long> e : entries) {
-			Flock.log("time", e.getKey() + ": " + e.getValue());
+			Flock.log("time", e.getKey() + ": " + e.getValue()/1000000.0d);
 		}
 	}
 

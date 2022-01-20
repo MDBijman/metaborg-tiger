@@ -27,7 +27,6 @@ public abstract class Analysis {
 	public HashSet<Component> dirtyComponents = new HashSet<>();
 	public HashSet<Node> newNodes = new HashSet<>();
 
-	private boolean hasRunOnce = false;
 	private boolean debug = false;
 
 	public Analysis(String name, Direction dir) {
@@ -148,19 +147,20 @@ public abstract class Analysis {
 		Queue<Node> worklist = new LinkedBlockingQueue<>(componentNodes);
 		// Avoid initializing the worklist with all the nodes in the component -> fewer iterations?
 
-		Flock.beginTime("analysis@loop1");
+		Flock.beginTime("Analysis@" + this.name);
+		Flock.beginTime("Analysis@loop1");
 		for (Node node : componentNodes) {
 			initNodeValue(node);
 			initNodeTransferFunction(node);
 		}
-		Flock.endTime("analysis@loop1");
+		Flock.endTime("Analysis@loop1");
 
 		/*
 		 * We loop over the nodeset twice because we need to init each node before we
 		 * can evaluate the transfer function for the first time, since we might visit
 		 * successors of an uninitialized node before visiting the node itself.
 		 */
-		Flock.beginTime("analysis@loop2");
+		Flock.beginTime("Analysis@loop2");
 		for (Node node : newNodes) {
 			if (cfg.roots().contains(node)) {
 				node.getProperty(this.propertyName).lattice = node.getProperty(this.propertyName).init.eval(node);
@@ -168,9 +168,9 @@ public abstract class Analysis {
 
 			worklist.add(node);
 		}
-		Flock.endTime("analysis@loop2");
+		Flock.endTime("Analysis@loop2");
 
-		Flock.beginTime("analysis@loop3");
+		Flock.beginTime("Analysis@loop3");
 		for (Node node : newNodes) {
 			FlockLattice init = node.getProperty(this.propertyName).lattice;
 			for (Node pred : this.getPredecessors(cfg, node)) {
@@ -179,9 +179,9 @@ public abstract class Analysis {
 			}
 			node.getProperty(this.propertyName).lattice = init;
 		}
-		Flock.endTime("analysis@loop3");
+		Flock.endTime("Analysis@loop3");
 
-		Flock.beginTime("analysis@worklist");
+		Flock.beginTime("Analysis@worklist");
 		while (!worklist.isEmpty()) {
 			Node node = worklist.poll();
 
@@ -197,13 +197,13 @@ public abstract class Analysis {
 
 				FlockLattice values_o = successor.getProperty(this.propertyName).lattice;
 
-				Flock.beginTime("analysis@lub");
+				Flock.beginTime("Analysis@lub");
 
 				FlockLattice lub = values_o.lub(values_n);
 				boolean changed = !lub.equals(values_o);
 				successor.getProperty(this.propertyName).lattice = lub;
 
-				Flock.endTime("analysis@lub");
+				Flock.endTime("Analysis@lub");
 
 				if (changed) {
 					worklist.add(successor);
@@ -212,7 +212,8 @@ public abstract class Analysis {
 				Flock.increment("worklist-iteration-lub");
 			}
 		}
-		Flock.endTime("analysis@worklist");
+		Flock.endTime("Analysis@worklist");
+		Flock.endTime("Analysis@" + this.name);
 
 		this.addToClean(target);
 	}

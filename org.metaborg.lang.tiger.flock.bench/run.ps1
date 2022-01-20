@@ -1,1 +1,2 @@
-java -jar target/benchmarks.jar -f 1 -w 5 -r 5 -rff "results/result.csv"
+java -jar target/benchmarks.jar -f 1 -w 3 -r 3 -rff "results/result.csv"
+py .\rename_with_date.py "results/result.csv"

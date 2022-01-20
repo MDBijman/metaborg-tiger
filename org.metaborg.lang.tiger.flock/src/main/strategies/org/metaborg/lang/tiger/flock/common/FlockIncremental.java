@@ -54,60 +54,57 @@ public class FlockIncremental extends Flock {
 
 	@Override
 	public void replaceNode(IStrategoTerm current, IStrategoTerm replacement) {
-		try {
-			Flock.increment("replaceNode");
-			Flock.beginTime("FlockIncremental@replaceNode");
-			this.validate();
-			Flock.beginTime("FlockIncremental@replaceNode:termTree");
-			Set<Node> removedNodes = getAllNodes(current);
-			{
-				this.termTree.replace(Helpers.getTermId(current), replacement);
-				this.termTree.validate();
-			}
-			Flock.endTime("FlockIncremental@replaceNode:termTree");
-			{
-				for (Analysis a : this.analyses) {
-					this.removeAnalysisResultsAfter(a, removedNodes);
-				}
-			}
-			Flock.beginTime("FlockIncremental@replaceNode:cfg");
-			{
-				// Patch the graph, removing old nodes and placing new nodes
-				Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
-				subGraph.removeGhostNodes();
-
-				Set<Node> predecessors = new HashSet<>();
-				Set<Node> successors = new HashSet<>();
-				for (Node n : removedNodes) {
-					predecessors.addAll(this.graph.parentsOf(n));
-					successors.addAll(this.graph.childrenOf(n));
-				}
-				predecessors.removeAll(removedNodes);
-				successors.removeAll(removedNodes);
-
-				this.graph.replaceNodes(removedNodes, predecessors, successors, subGraph);
-				this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph);
-				this.graph_scss.validate(this.graph);
-
-				// This is some useful validation logic when looking for bugs in SCC creation
-
-				// SCCs new_scss = new SCCs(this.graph);
-				// if (new_scss.components.size() != this.graph_scss.components.size()) {
-				// throw new RuntimeException("Inc. vs from-scratch SCCs don't match");
-				// }
-
-				for (Node n : subGraph.nodes()) {
-					this.addToNew(n);
-				}
-			}
-
-			Flock.endTime("FlockIncremental@replaceNode:cfg");
-			this.validate();
-			Flock.endTime("FlockIncremental@replaceNode");
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
+		Flock.increment("replaceNode");
+		Flock.beginTime("FlockIncremental@replaceNode");
+		this.validate();
+		Flock.beginTime("FlockIncremental@replaceNode:termTree");
+		Set<Node> removedNodes = getAllNodes(current);
+		{
+			this.termTree.replace(Helpers.getTermId(current), replacement);
+			this.termTree.validate();
 		}
+		Flock.endTime("FlockIncremental@replaceNode:termTree");
+		Flock.beginTime("FlockIncremental@removeAnalysisResults");
+		{
+			for (Analysis a : this.analyses) {
+				this.removeAnalysisResultsAfter(a, removedNodes);
+			}
+		}
+		Flock.endTime("FlockIncremental@removeAnalysisResults");
+		Flock.beginTime("FlockIncremental@replaceNode:cfg");
+		{
+			// Patch the graph, removing old nodes and placing new nodes
+			Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
+			subGraph.removeGhostNodes();
+
+			Set<Node> predecessors = new HashSet<>();
+			Set<Node> successors = new HashSet<>();
+			for (Node n : removedNodes) {
+				predecessors.addAll(this.graph.parentsOf(n));
+				successors.addAll(this.graph.childrenOf(n));
+			}
+			predecessors.removeAll(removedNodes);
+			successors.removeAll(removedNodes);
+
+			this.graph.replaceNodes(removedNodes, predecessors, successors, subGraph);
+			this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph);
+			this.graph_scss.validate(this.graph);
+
+			// This is some useful validation logic when looking for bugs in SCC creation
+
+			// SCCs new_scss = new SCCs(this.graph);
+			// if (new_scss.components.size() != this.graph_scss.components.size()) {
+			// throw new RuntimeException("Inc. vs from-scratch SCCs don't match");
+			// }
+
+			for (Node n : subGraph.nodes()) {
+				this.addToNew(n);
+			}
+		}
+
+		Flock.endTime("FlockIncremental@replaceNode:cfg");
+		this.validate();
+		Flock.endTime("FlockIncremental@replaceNode");
 	}
 
 	@Override
@@ -135,14 +132,13 @@ public class FlockIncremental extends Flock {
 
 		if (a.direction == Direction.FORWARD) {
 			for (Component c : outdatedComponents) {
-				this.collectSuccessors(c, allOutdatedComponents);
+				this.collectSuccessors(a, c, allOutdatedComponents);
 			}
 		} else {
 			for (Component c : outdatedComponents) {
-				this.collectPredecessors(c, allOutdatedComponents);
-			}		
+				this.collectPredecessors(a, c, allOutdatedComponents);
+			}
 		}
-		
 		for (Component c : allOutdatedComponents) {
 			this.removeAnalysisResultsIn(a, c);
 		}
@@ -156,20 +152,20 @@ public class FlockIncremental extends Flock {
 		a.removeNodeResults(this.graph_scss, c.nodes);
 	}
 
-	private void collectPredecessors(Component c, Set<Component> result) {
+	private void collectPredecessors(Analysis a, Component c, Set<Component> result) {
 		for (Component neighbour : this.graph_scss.revNeighbours.get(c)) {
-			if (!result.contains(neighbour)) {
+			if (!a.dirtyComponents.contains(c) && !result.contains(neighbour)) {
 				result.add(neighbour);
-				collectPredecessors(neighbour, result);
+				collectPredecessors(a, neighbour, result);
 			}
 		}
 	}
 
-	private void collectSuccessors(Component c, Set<Component> result) {
+	private void collectSuccessors(Analysis a, Component c, Set<Component> result) {
 		for (Component neighbour : this.graph_scss.neighbours.get(c)) {
-			if (!result.contains(neighbour)) {
+			if (!a.dirtyComponents.contains(c) && !result.contains(neighbour)) {
 				result.add(neighbour);
-				collectSuccessors(neighbour, result);
+				collectSuccessors(a, neighbour, result);
 			}
 		}
 	}

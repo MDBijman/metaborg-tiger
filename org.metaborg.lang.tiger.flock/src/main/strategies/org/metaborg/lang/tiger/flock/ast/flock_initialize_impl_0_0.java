@@ -21,6 +21,7 @@ public class flock_initialize_impl_0_0 extends Strategy {
 		
 		try {
 			Flock.resetTimers();
+			Flock.resetCounters();
 			Flock.beginTime("api@analyse");
 			Flock.instance.createTermGraph(current);
 			Flock.instance.createControlFlowGraph(context, current);
