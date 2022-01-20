@@ -108,8 +108,8 @@ rules // pipeline
   // Fail if the term nor any of its subterms can be optimized
   opt-term = 
     preserve-annotation(some(opt-term))
-  < try(propagate-constant + fold-constant + simplify-let + simplify-seq + remove-dead-branch)
-  + (propagate-constant + fold-constant + simplify-let + simplify-seq + remove-dead-branch)
+  < try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch)
+  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch)
 	
 strategies
   
@@ -156,7 +156,9 @@ strategies
   remove-dead-branch: e@If(Int("0"), then, else) -> <strip-annos; flock-replace-node(|e)> else
   remove-dead-branch: e@If(Int("1"), then, else) -> <strip-annos; flock-replace-node(|e)> then
   remove-dead-branch: e@IfThen(Int("1"), then) -> <strip-annos; flock-replace-node(|e)> then
+  
   simplify-let: e@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|e)> i 
+  
   simplify-seq: e@Seq([inner]) -> <strip-annos; flock-replace-node(|e)> inner
   
 strategies

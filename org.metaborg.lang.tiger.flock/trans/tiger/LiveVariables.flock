@@ -8,5 +8,7 @@ properties
 property rules
   live(_.end) = {}
   live(VarDec(n, _, _) -> next) = {m | m <- live(next), m != n}
+  live(Assign(LValue(Var(n)), _) -> next) = {m | m <- live(next), m != n}
+  live(LoopBinding(Var(n), _, _) -> next) = {m | m <- live(next), m != n}
   live(Var(n) -> next) = {n} \/ live(next)  
   live(_ -> next) = live(next)

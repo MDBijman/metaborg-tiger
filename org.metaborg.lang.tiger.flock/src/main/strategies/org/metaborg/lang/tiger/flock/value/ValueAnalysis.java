@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.metaborg.lang.tiger.flock.common.Analysis;
+import org.metaborg.lang.tiger.flock.common.Flock;
 import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.FlockValueLattice;
@@ -384,8 +385,11 @@ class TransferFunction5 extends TransferFunction {
 			if (!usrk.equals(usrn)) {
 				result181.put(usrk, usrv);
 			}
+
 		}
+
 		Map tmp92 = (Map) result181;
+
 		Map tmp93 = (Map) MapUtils.create(usrn,
 				new Value(new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
 						new IStrategoTerm[] { Helpers.toTerm(usri) }, null))));
