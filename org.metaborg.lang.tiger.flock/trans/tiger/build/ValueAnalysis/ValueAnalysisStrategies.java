@@ -54,24 +54,39 @@ import flock.subject.common.TransferFunction;
 import flock.subject.common.UniversalSet;
 
 public class FlowAnalysisStrategies {
-	public static class get_values_0_0 extends Strategy {
-		public static get_values_0_0 instance = new get_values_0_0();
-
-		@Override
-		public IStrategoTerm invoke(Context context, IStrategoTerm current) {
-			ITermFactory factory = context.getFactory();
-			CfgNodeId id = new CfgNodeId(((IStrategoInt) current).intValue());
-			Node node = Flock.instance.getNode(id);
-			if (node == null) {
-				Flock.printDebug("CfgNode is null with id " + id.getId());
-				return null;
-			}
-			Flock.instance.analysisWithName("values").updateResultUntilBoundary(Flock.instance.graph, node);
-			IStrategoList result = factory.makeList(
-					((Map<IStrategoTerm, IStrategoTerm>) node.getProperty("values").lattice.value()).entrySet().stream()
-							.map(n -> factory.makeTuple(Helpers.toTerm(n.getKey()), Helpers.toTerm(n.getValue())))
-							.collect(Collectors.toList()));
-			return result;
-		}
-	}
+  public static class get_values_0_0 extends Strategy {
+    public static get_values_0_0 instance = new get_values_0_0 ( );
+    @Override public IStrategoTerm invoke(Context context, IStrategoTerm current) {
+                                                                                    ITermFactory factory = context. getFactory( );
+                                                                                    TermId id = new TermId (((IStrategoInt ) current). intValue( ));
+                                                                                    Node node = Flock.instance. getNode(id);
+                                                                                    if(node == null) {
+                                                                                                       Flock. printDebug("CfgNode is null with id " + id. getId( ));
+                                                                                                       return null;
+                                                                                                     }
+                                                                                    Flock.instance. analysisWithName("values"). performDataAnalysis(Flock.instance.graph, Flock.instance.graph_scss, node);
+                                                                                    IStrategoList result = factory. makeList(((Map<IStrategoTerm, IStrategoTerm> ) node. getProperty("values").lattice. value( )). entrySet( ). stream( ). map(n -> factory. makeTuple(Helpers. toTerm(n. getKey( )), Helpers. toTerm(n. getValue( )))). collect(Collectors. toList( )));
+                                                                                    return result;
+                                                                                  }
+  }
+  public static class get_values_0_1 extends Strategy {
+    public static get_values_0_1 instance = new get_values_0_1 ( );
+    @Override public IStrategoTerm invoke(Context context,IStrategoTerm current, IStrategoTerm key) {
+                                                                                                      ITermFactory factory = context. getFactory( );
+                                                                                                      TermId id = new TermId (((IStrategoInt ) current). intValue( ));
+                                                                                                      Node node = Flock.instance. getNode(id);
+                                                                                                      if(node == null) {
+                                                                                                                         Flock. printDebug("CfgNode is null with id " + id. getId( ));
+                                                                                                                         return null;
+                                                                                                                       }
+                                                                                                      Flock.instance. analysisWithName("values"). performDataAnalysis(Flock.instance.graph, Flock.instance.graph_scss, node);
+                                                                                                      Map<IStrategoTerm, Object> values = (Map<IStrategoTerm, Object> ) node. getProperty("values").lattice. value( );
+                                                                                                      Object value = values. get(key);
+                                                                                                      if(value == null) {
+                                                                                                                          return null;
+                                                                                                                        }
+                                                                                                      IStrategoTerm asTerm = Helpers. toTerm(value);
+                                                                                                      return asTerm;
+                                                                                                    }
+  }
 }

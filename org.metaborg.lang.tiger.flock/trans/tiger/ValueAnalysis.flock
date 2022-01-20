@@ -8,8 +8,11 @@ properties
 
 property rules
   values(_.end) = SimpleMap[string, Value].bottom
-  values(prev -> VarDec(n, _, Int(i))) = { k |-> v | (k |-> v) <- values(prev), k != n } \/ {n |-> Const(i)}
-  values(prev -> VarDec(n, _, _))      = { k |-> v | (k |-> v) <- values(prev), k != n } \/ {n |-> Top()}
+  values(prev -> VarDec(n, _, Int(i)))      = { k |-> v | (k |-> v) <- values(prev), k != n } \/ {n |-> Const(i)}
+  values(prev -> VarDec(n, _, _))           = { k |-> v | (k |-> v) <- values(prev), k != n } \/ {n |-> Top()}
+  values(prev -> Assign(LValue(Var(n)), Int(i)))   = { k |-> v | (k |-> v) <- values(prev), k != n } \/ {n |-> Const(i)}
+  values(prev -> Assign(LValue(Var(n)), _))        = { k |-> v | (k |-> v) <- values(prev), k != n } \/ {n |-> Top()}
+  values(prev -> LoopBinding(Var(n), _, _)) = { k |-> v | (k |-> v) <- values(prev), k != n } \/ {n |-> Top()}
   values(prev -> _) = values(prev)
 
 types

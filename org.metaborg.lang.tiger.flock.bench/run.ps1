@@ -1,1 +1,1 @@
-java -jar target/benchmarks.jar -f 1 -w 10 -r 10 -rff "results/result.csv"
+java -jar target/benchmarks.jar -f 1 -w 5 -r 5 -rff "results/result.csv"

@@ -68,6 +68,7 @@ rules // transformation actions
   analyze-const-prop: p -> with-ids
     with
       with-ids := <flock-initialize> p
+    ; <debug> "Analyzing const prop"
     ; <topdown(try(flock-get-values))> with-ids
     ; <flock-debug-graph(|"values")> ()
   
@@ -88,33 +89,39 @@ rules // pipeline
   pipeline: p -> p'
   with
     with-ids := <flock-initialize> p
+  ; <disable-logs> ()
   ; <flock-begin-timer> "pipeline"
   ; p' := <
-      inline-pass
-  	; forward-pass
+      inline-pass(|3)
+  	; forward-pass(|15)
   	; topdown(try(remove-all(?Hole())))
   > with-ids
   ; <flock-end-timer> "pipeline"
   ; <debug> <run-time>
-  ; <flock-debug-graph> ()
+  ; <flock-debug-graph(|"values")> ()
   
-  inline-pass = flock-fixpoint(inline-in-module|15)
+  inline-pass(|n) = flock-fixpoint(inline-in-module|n)
 
-  forward-pass = flock-fixpoint(forward-pass-single|20)
-  forward-pass-single = 
-    bottomup(try(propagate-constant + fold-constant + simplify-let + simplify-seq + remove-dead-branch))
-    //bottomup(try(flock-time-as(propagate-constant|"propagate-constant") + flock-time-as(fold-constant|"fold-constant")))
-    //bottomup(try(flock-time-as(remove-dead-vardec|"remove-dead-vardec")))
-    //oncetd(propagate-constant + simplify-let + simplify-seq + fold-constant + remove-dead-branch)
-    //bottomup(try(id))   
+  forward-pass(|n) = flock-fixpoint(forward-pass-single|n)
+  forward-pass-single = debug; opt-term
+	//bottomup(try(flock-time-as(propagate-constant|"propagate-constant") + flock-time-as(fold-constant|"fold-constant")))
+	//bottomup(try(flock-time-as(remove-dead-vardec|"remove-dead-vardec")))
+	//oncetd(propagate-constant + simplify-let + simplify-seq + fold-constant + remove-dead-branch)
+	//bottomup(try(id))
 
+  // Fail if the term nor any of its subterms can be optimized
+  opt-term = 
+    preserve-annotation(some(opt-term))
+  < try(propagate-constant + fold-constant + simplify-let + simplify-seq + remove-dead-branch)
+  + (propagate-constant + fold-constant + simplify-let + simplify-seq + remove-dead-branch)
+	
 strategies
   
-  propagate-constant: v@Var(n) -> new-node
+  propagate-constant: lv@LValue(v@Var(n)) -> new-node
   where
    n-no-annos := <strip-annos> n
-  ; Const(new-value) := <flock-get-value(|n-no-annos)> v
-  ; new-node := <flock-replace-node(|v)> Int(new-value)
+  ; Const(new-value) := <flock-get-values(|n-no-annos)> v
+  ; new-node := <flock-replace-node(|lv)> Int(new-value)
     
   compare-names(|other): (name, value) -> value where <equal(|name, other)> ()
   
@@ -199,6 +206,7 @@ strategies
   	
   bind-names: FArg(n, _) -> <id> where rules(BoundName: n{an*} -> <id>)//; <debug> ("bound", n)
   bind-names: VarDec(n, _, _) -> <id> where rules(BoundName: n{an*} -> <id>)//; <debug> ("bound", n)
+  bind-names: LoopBinding(Var(n), _, _) -> <id> where rules(BoundName: n{an*} -> <id>)
   //bind-names: FunDec(n, _, _, _) -> <id> where rules(BoundName: n{an*} -> <id>); <debug> ("bound", n)
   //bind-names: ProcDec(n, _, _) -> <id> where rules(BoundName: n{an*} -> <id>); <debug> ("bound", n)
   

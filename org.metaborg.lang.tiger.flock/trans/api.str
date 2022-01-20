@@ -9,7 +9,7 @@ strategies // API
 
   flock-add-id = topdown(flock-add-id-single)
   flock-add-id-single: t -> t { FlockNodeId(<flock-make-id>) }
-  flock-debug: t -> t where <debug> t
+  flock-debug: t -> t //where <debug> t
 
   external flock-disable-logging(|)
   external flock-enable-logging(|)
@@ -52,8 +52,8 @@ strategies // Analysis API
   
   flock-get-values: node {FlockNodeId(n)} -> <flock-time-as(get-values|"api@flock-get-values")> n
   external get-values(|)
-  flock-get-value(|key):  node {FlockNodeId(n)} -> <flock-time-as(get-value(|key)|"api@flock-get-value")> n
-  external get-value(|key)
+  flock-get-values(|key):  node {FlockNodeId(n)} -> <flock-time-as(get-values(|key)|"api@flock-get-value")> n
+  external get-values(|key)
 
   flock-get-ae: node {FlockNodeId(n)} -> <get-expressions; strip-annos> n
   external get-expressions(|)

@@ -124,17 +124,17 @@ public abstract class Analysis {
 	 * @param target Component containing the node which we are querying
 	 */
 	public void performDataAnalysis(Graph cfg, SCCs sccs, Component target) {
+		if (!this.dirtyComponents.contains(target)) {
+			return;
+		}
+		
 		if (this.direction == Direction.FORWARD) {
 			for (Component pred : sccs.revNeighbours.get(target)) {
-				if (this.dirtyComponents.contains(pred)) {
-					this.performDataAnalysis(cfg, sccs, pred);
-				}
+				this.performDataAnalysis(cfg, sccs, pred);
 			}
 		} else {
 			for (Component succ : sccs.neighbours.get(target)) {
-				if (this.dirtyComponents.contains(succ)) {
-					this.performDataAnalysis(cfg, sccs, succ);
-				}
+				this.performDataAnalysis(cfg, sccs, succ);
 			}
 		}
 
@@ -146,6 +146,7 @@ public abstract class Analysis {
 		Collection<Node> newNodes = componentNodes.stream().filter(this.newNodes::contains).collect(Collectors.toSet());
 
 		Queue<Node> worklist = new LinkedBlockingQueue<>(componentNodes);
+		// Avoid initializing the worklist with all the nodes in the component -> fewer iterations?
 
 		Flock.beginTime("analysis@loop1");
 		for (Node node : componentNodes) {
@@ -182,7 +183,6 @@ public abstract class Analysis {
 
 		Flock.beginTime("analysis@worklist");
 		while (!worklist.isEmpty()) {
-
 			Node node = worklist.poll();
 
 			Flock.increment("worklist-iteration");

@@ -11,7 +11,7 @@ import java.util.Set;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.metaborg.lang.tiger.flock.impl.LiveVariables;
-import org.metaborg.lang.tiger.flock.value.FlowAnalysis;
+import org.metaborg.lang.tiger.flock.value.ValueAnalysis;
 import org.spoofax.interpreter.library.IOAgent;
 import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoTerm;
@@ -30,7 +30,7 @@ public abstract class Flock {
 	public Flock() {
 		this.analyses = new ArrayList<Analysis>();
 		this.analyses.add(new LiveVariables());
-		this.analyses.add(new FlowAnalysis());
+		this.analyses.add(new ValueAnalysis());
 		// this.analyses.add(new AvailableExpressions());
 	}
 
@@ -114,7 +114,7 @@ public abstract class Flock {
 	}
 
 	private static String[] enabled = { "time", "count",
-			// "debug",
+			"debug",
 			// "incremental",
 			// "validation",
 			"api",

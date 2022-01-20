@@ -4,7 +4,7 @@ import org.metaborg.lang.tiger.flock.common.FlockValue;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.terms.util.TermUtils;
 
-public class FlowAnalysisProperties {
+public class ValueAnalysisProperties {
 	static class ConstProp extends FlockValue {
 		public IStrategoTerm value;
 

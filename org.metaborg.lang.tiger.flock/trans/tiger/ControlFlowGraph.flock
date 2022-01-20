@@ -66,6 +66,7 @@ signature
     Exp : LValue -> Exp
     LValue : Var -> LValue
     
+    
 control-flow rules
 
   root Mod(s) = start -> s -> end
@@ -96,12 +97,13 @@ control-flow rules
   Call(_, args) = entry -> args -> this -> exit
   If(c, t, e) = entry -> c -> t -> exit,
                          c -> e -> exit
+  LValue(inner) = entry -> inner -> exit
   IfThen(c, t) = entry -> c -> t -> exit
-  Assign(lval, expr) = entry -> expr -> this -> exit
+  Assign(lval, expr) = entry -> expr -> lval -> this -> exit
   Seq(stmts) = entry -> stmts -> exit
   For(binding, body) = entry -> binding -> body -> binding,
   	binding -> exit
-  LoopBinding(var, from, to) = entry -> this -> exit
+  LoopBinding(var, from, to) = entry -> from -> to -> this -> exit
   Let(decs, exps) = entry -> decs -> exps -> exit
   Array(_, len, init) = entry -> len -> init -> this -> exit
   Hole() = entry -> exit
