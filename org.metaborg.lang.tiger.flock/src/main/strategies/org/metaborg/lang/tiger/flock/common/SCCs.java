@@ -23,7 +23,7 @@ public class SCCs {
 	boolean DEBUG = false;
 
 	public SCCs(Graph g) {
-		Flock.beginTime("SCCs@computeIntervals");
+		Flock.beginTime("SCCs@constructor");
 
 		// Using AtomicLong to pass mutable reference
 		AtomicLong next_index = new AtomicLong(1);
@@ -57,11 +57,12 @@ public class SCCs {
 			}
 		}
 
-		Flock.endTime("SCCs@computeIntervals");
+		Flock.endTime("SCCs@constructor");
 	}
 
 	public void replaceNodes(Graph graph, Set<Node> replaced, Set<Node> oldPredecessors, Set<Node> oldSuccessors,
 			Graph subgraph) {
+		Flock.beginTime("SCCs@replaceNodes");
 
 		Set<Component> commonSCCs = new HashSet<>();
 		for (Node pred : oldPredecessors) {
@@ -132,7 +133,8 @@ public class SCCs {
 				this.removeComponent(c);
 			}
 		}
-
+		
+		Flock.endTime("SCCs@replaceNodes");
 	}
 
 	public Set<Component> predecessors(Component a) {

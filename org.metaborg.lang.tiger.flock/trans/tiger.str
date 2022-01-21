@@ -84,12 +84,10 @@ rules // transformation actions
 
 rules // pipeline
 
-  disable-logs = flock-disable-logging
-
   pipeline: p -> p'
   with
     with-ids := <flock-initialize> p
-  //; <disable-logs> ()
+  //; <flock-disable-logging> ()
   ; <flock-begin-timer> "pipeline"
   ; p' := <
       inline-pass(|3)
@@ -103,14 +101,19 @@ rules // pipeline
   inline-pass(|n) = flock-fixpoint(inline-in-module|n)
 
   forward-pass(|n) = flock-fixpoint(forward-pass-single|n)
-  forward-pass-single = debug; opt-term
+  forward-pass-single = opt-term
 
   // Fail if the term nor any of its subterms can be optimized
   opt-term = 
-    preserve-annotation(some(opt-term))
-  < try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch)
-  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch)
-	
+    (preserve-annotation(some(opt-term))
+  ; try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec))
+  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec)
+
+  // Optimize only one	
+  //opt-term = 
+  //  (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch)
+  //+ preserve-annotation(one(opt-term))
+
 strategies
   
   propagate-constant: lv@LValue(v@Var(n)) -> new-node

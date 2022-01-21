@@ -1,7 +1,0 @@
-let
-  var N : int := 10
-  var sum : int := 0
- in
-  for x := 0 to N do
-    0 = 0 + x
-end

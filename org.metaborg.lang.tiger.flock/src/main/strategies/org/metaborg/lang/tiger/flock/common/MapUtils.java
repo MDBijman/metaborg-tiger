@@ -3,6 +3,7 @@ package org.metaborg.lang.tiger.flock.common;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import io.usethesource.capsule.core.trie.*;
 
 public class MapUtils {
 	public static Map union(Object l, Object r) {

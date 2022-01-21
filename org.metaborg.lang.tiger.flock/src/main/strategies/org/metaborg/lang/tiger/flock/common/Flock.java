@@ -146,7 +146,7 @@ public abstract class Flock {
 	private static HashMap<String, Long> runningMap = new HashMap<>();
 
 	private static HashMap<String, Long> cumulMap = new HashMap<>();
-
+	
 	public static void beginTime(String tag) {
 		runningMap.put(tag, System.nanoTime());
 		cumulMap.putIfAbsent(tag, 0L);

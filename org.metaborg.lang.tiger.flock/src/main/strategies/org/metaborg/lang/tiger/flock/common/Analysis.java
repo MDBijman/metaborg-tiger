@@ -1,5 +1,6 @@
 package org.metaborg.lang.tiger.flock.common;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Queue;
@@ -126,7 +127,7 @@ public abstract class Analysis {
 		if (!this.dirtyComponents.contains(target)) {
 			return;
 		}
-		
+
 		if (this.direction == Direction.FORWARD) {
 			for (Component pred : sccs.revNeighbours.get(target)) {
 				this.performDataAnalysis(cfg, sccs, pred);
@@ -144,8 +145,9 @@ public abstract class Analysis {
 		Collection<Node> componentNodes = target.nodes;
 		Collection<Node> newNodes = componentNodes.stream().filter(this.newNodes::contains).collect(Collectors.toSet());
 
-		Queue<Node> worklist = new LinkedBlockingQueue<>(componentNodes);
-		// Avoid initializing the worklist with all the nodes in the component -> fewer iterations?
+		Queue<Node> worklist = new ArrayDeque<>(componentNodes);
+		// Avoid initializing the worklist with all the nodes in the component -> fewer
+		// iterations?
 
 		Flock.beginTime("Analysis@" + this.name);
 		Flock.beginTime("Analysis@loop1");
@@ -165,13 +167,15 @@ public abstract class Analysis {
 			if (cfg.roots().contains(node)) {
 				node.getProperty(this.propertyName).lattice = node.getProperty(this.propertyName).init.eval(node);
 			}
-
-			worklist.add(node);
 		}
 		Flock.endTime("Analysis@loop2");
 
+		/*
+		 * 
+		 */
 		Flock.beginTime("Analysis@loop3");
 		for (Node node : newNodes) {
+			Flock.increment("Analysis@loop3");
 			FlockLattice init = node.getProperty(this.propertyName).lattice;
 			for (Node pred : this.getPredecessors(cfg, node)) {
 				FlockLattice eval_lat = pred.getProperty(this.propertyName).transfer.eval(pred);
@@ -185,7 +189,7 @@ public abstract class Analysis {
 		while (!worklist.isEmpty()) {
 			Node node = worklist.poll();
 
-			Flock.increment("worklist-iteration");
+			Flock.increment("Analysis@worklist");
 
 			FlockLattice values_n = node.getProperty(this.propertyName).transfer.eval(node);
 
@@ -197,19 +201,19 @@ public abstract class Analysis {
 
 				FlockLattice values_o = successor.getProperty(this.propertyName).lattice;
 
-				Flock.beginTime("Analysis@lub");
-
+				Flock.beginTime("a");
 				FlockLattice lub = values_o.lub(values_n);
+				Flock.endTime("a");
+				Flock.beginTime("b");
 				boolean changed = !lub.equals(values_o);
+				Flock.endTime("b");
 				successor.getProperty(this.propertyName).lattice = lub;
-
-				Flock.endTime("Analysis@lub");
 
 				if (changed) {
 					worklist.add(successor);
 				}
 
-				Flock.increment("worklist-iteration-lub");
+				Flock.increment("Analysis@worklist");
 			}
 		}
 		Flock.endTime("Analysis@worklist");

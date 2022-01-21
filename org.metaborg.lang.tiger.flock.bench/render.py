@@ -1,8 +1,10 @@
 import csv
 import matplotlib.pyplot  as plt
+import sys
 from datetime import datetime
 
-csv_file = open('results/result.csv')
+file = sys.argv[1]
+csv_file = open(file)
 csv_reader = csv.reader(csv_file, delimiter=',')
 
 csv_iter = iter(csv_reader)
@@ -40,7 +42,7 @@ def plot_benchmark(fig, ax, name, simple_name):
 
 fig, ax = plt.subplots()
 plot_benchmark(fig, ax, "org.example.BranchBenchmark.run", "branches")
-plot_benchmark(fig, ax, "org.example.VarsBenchmark.run", "variables")
+#plot_benchmark(fig, ax, "org.example.VarsBenchmark.run", "variables")
 plt.savefig(f"results/benchmark_{today}.png")
 
 

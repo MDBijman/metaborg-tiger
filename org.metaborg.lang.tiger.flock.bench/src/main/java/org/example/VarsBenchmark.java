@@ -13,8 +13,8 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 
-@State(Scope.Thread)
-@Fork(jvmArgsAppend = { "-Xms4g", "-Xmx16g", "-Xss16m" })
+//@State(Scope.Thread)
+//@Fork(jvmArgsAppend = { "-Xms4g", "-Xmx16g", "-Xss16m" })
 public class VarsBenchmark extends BaseBenchmark {
 	public IContext context;
 	public IStrategoTerm ast;
@@ -30,7 +30,7 @@ public class VarsBenchmark extends BaseBenchmark {
 		this.doStrategyTransformation(context, ast, "disable-logs");
 	}
 	
-	@Benchmark
+	//@Benchmark
 	public IStrategoTerm run() throws MetaborgException {
 		return this.doStrategyTransformation(context, ast, "pipeline");
 	}	

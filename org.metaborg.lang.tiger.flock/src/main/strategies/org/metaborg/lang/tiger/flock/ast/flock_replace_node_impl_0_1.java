@@ -14,8 +14,10 @@ public class flock_replace_node_impl_0_1 extends Strategy {
 	@Override 
 	public IStrategoTerm invoke(Context context, IStrategoTerm newNode, IStrategoTerm oldNode) {
 		Flock.log("api", "[replace-node] " + oldNode.toString() + " with " + newNode.toString());
-        Helpers.validateIds(newNode);
+        Flock.beginTime("Helpers@validateIds");
+		Helpers.validateIds(newNode);
         Helpers.validateIds(oldNode);
+        Flock.endTime("Helpers@validateIds");
         Flock.instance.replaceNode(oldNode, newNode);
 		return newNode;
     }

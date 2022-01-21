@@ -385,7 +385,6 @@ class TransferFunction5 extends TransferFunction {
 			if (!usrk.equals(usrn)) {
 				result181.put(usrk, usrv);
 			}
-
 		}
 
 		Map tmp92 = (Map) result181;

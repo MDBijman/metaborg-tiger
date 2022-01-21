@@ -19,7 +19,7 @@ public class BranchBenchmark extends BaseBenchmark {
 	public IContext context;
 	public IStrategoTerm ast;
 	
-	@Param({"1", "10", "100", "1000", "2000", "3000", "4000", "5000"})
+	@Param({/*"1", "10", "100",*/ "1000", /*"2000", "3000", "4000", "7000"*/})
 	int count;
 	
 	@Setup
