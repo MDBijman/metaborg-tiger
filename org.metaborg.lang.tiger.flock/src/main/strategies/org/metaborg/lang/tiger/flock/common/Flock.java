@@ -143,11 +143,22 @@ public abstract class Flock {
 		}
 	}
 
+	private static boolean timingEnabled = true;
+	
+	public static void disableTiming() {
+		Flock.timingEnabled = false;
+	}
+	
+	public static void enableTiming() {
+		Flock.timingEnabled = true;
+	}
+	
 	private static HashMap<String, Long> runningMap = new HashMap<>();
 
 	private static HashMap<String, Long> cumulMap = new HashMap<>();
 	
 	public static void beginTime(String tag) {
+		if (!timingEnabled) return;
 		runningMap.put(tag, System.nanoTime());
 		cumulMap.putIfAbsent(tag, 0L);
 	}
@@ -162,6 +173,7 @@ public abstract class Flock {
 	}
 
 	public static long endTime(String tag) {
+		if (!timingEnabled) return -1;
 		long t = System.nanoTime() - runningMap.get(tag);
 		runningMap.remove(tag);
 		cumulMap.put(tag, cumulMap.get(tag) + t);
@@ -169,10 +181,12 @@ public abstract class Flock {
 	}
 
 	public static void logTime(String tag) {
+		if (!timingEnabled) return;
 		Flock.log("time", "time " + tag + ": " + cumulMap.get(tag));
 	}
 
 	public static void logTimers() {
+		if (!timingEnabled) return;
 		ArrayList<Entry<String, Long>> entries = new ArrayList<>(cumulMap.entrySet());
 		entries.sort((a, b) -> a.getKey().compareTo(b.getKey()));
 		for (Entry<String, Long> e : entries) {

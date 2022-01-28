@@ -18,6 +18,10 @@ import org.spoofax.terms.util.NotImplementedException;
 
 public interface FlockLattice {
 	public abstract FlockLattice lub(FlockLattice o);
+
+	public default boolean lubInplace(FlockLattice o) {
+		throw new NotImplementedException();
+	}
 	
 	public abstract Object value();
 	
@@ -243,7 +247,12 @@ public interface FlockLattice {
 		public FlockLattice lub(FlockLattice o) {
 			return new SimpleMap(MapUtils.union(this, o));
 		}
-
+		
+		@Override
+		public boolean lubInplace(FlockLattice o) {
+			return MapUtils.unionInplace(this, o);
+		}
+		
 		@Override
 		public Object value() {
 			return value;

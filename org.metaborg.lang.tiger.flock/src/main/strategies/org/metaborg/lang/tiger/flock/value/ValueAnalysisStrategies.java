@@ -46,7 +46,6 @@ public class ValueAnalysisStrategies {
 			TermId id = new TermId(((IStrategoInt) current).intValue());
 			Node node = Flock.instance.getNode(id);
 			if (node == null) {
-				Flock.printDebug(Flock.instance.graph.toGraphviz("values"));
 				Flock.printDebug("a CfgNode is null with id " + id.getId());
 				return null;
 			}

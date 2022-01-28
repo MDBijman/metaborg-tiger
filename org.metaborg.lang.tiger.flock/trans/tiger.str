@@ -96,7 +96,7 @@ rules // pipeline
   > with-ids
   ; <flock-end-timer> "pipeline"
   ; <debug> <run-time>
-  ; <flock-debug-graph> ()
+  ; <flock-debug-runtime> ()
   
   inline-pass(|n) = flock-fixpoint(inline-in-module|n)
 
@@ -106,8 +106,8 @@ rules // pipeline
   // Fail if the term nor any of its subterms can be optimized
   opt-term = 
     (preserve-annotation(some(opt-term))
-  ; try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec))
-  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec)
+  ; try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch))
+  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch)
 
   // Optimize only one	
   //opt-term = 

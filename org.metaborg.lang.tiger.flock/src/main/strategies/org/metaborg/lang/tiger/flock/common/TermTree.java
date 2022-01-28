@@ -357,7 +357,7 @@ public class TermTree {
 			this.children.get(res).add(sub);
 			this.parents.put(sub, res);
 		}
-
+		
 		return res;
 	}
 

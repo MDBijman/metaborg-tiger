@@ -18,8 +18,8 @@ import org.spoofax.interpreter.terms.IStrategoTerm;
 public class BranchBenchmark extends BaseBenchmark {
 	public IContext context;
 	public IStrategoTerm ast;
-	
-	@Param({/*"1", "10", "100",*/ "1000", /*"2000", "3000", "4000", "7000"*/})
+
+	@Param({/*"1", "10", "100",*/ "1000","2000", "3000",  "4000", "7000"})
 	int count;
 	
 	@Setup
@@ -27,7 +27,8 @@ public class BranchBenchmark extends BaseBenchmark {
 		ISpoofaxParseUnit tigerParseUnit = this.parseTiger("branches_" + count);
 		context = this.getContext(tigerParseUnit);
 		ast = tigerParseUnit.ast();
-		this.doStrategyTransformation(context, ast, "disable-logs");
+		this.doStrategyTransformation(context, ast, "flock-disable-logging");
+		this.doStrategyTransformation(context, ast, "flock-disable-timing");
 	}
 	
 	@Benchmark

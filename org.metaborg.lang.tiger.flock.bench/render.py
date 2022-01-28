@@ -24,9 +24,14 @@ today = make_datestring()
 def plot_benchmark(fig, ax, name, simple_name):
     a, b = [], []
     err = []
+    max_param = 0
     for i in range(0, len(data['Benchmark'])):
         if data['Benchmark'][i] == name:
             b.append(float(data['Score'][i]) / 1000.0)
+            
+            param = int(data['Param: count'][i])
+            if param > max_param:
+                max_param = param
             a.append(int(data['Param: count'][i]))
             err.append(float(data['Score Error (99.9%)'][i]) / 1000.0)
 
@@ -35,7 +40,7 @@ def plot_benchmark(fig, ax, name, simple_name):
 
     plt.yscale("linear")
     ax.errorbar(x=a, y=b, yerr=err, label=simple_name)
-    plt.xticks([x for x in range(0, 5001, 500)])
+    plt.xticks([x for x in range(0, max_param+1, 500)])
     plt.legend(loc="upper left")
     ax.set(xlabel='Size (lines)', ylabel='Time (s)', title='Synthetic Benchmarks')
     ax.grid(b=True)
@@ -43,6 +48,6 @@ def plot_benchmark(fig, ax, name, simple_name):
 fig, ax = plt.subplots()
 plot_benchmark(fig, ax, "org.example.BranchBenchmark.run", "branches")
 #plot_benchmark(fig, ax, "org.example.VarsBenchmark.run", "variables")
-plt.savefig(f"results/benchmark_{today}.png")
+plt.savefig(f"results/{today}_benchmark.png")
 
 

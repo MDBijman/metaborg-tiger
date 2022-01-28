@@ -16,7 +16,7 @@ public class SCCs {
 		Set<Node> nodes = new HashSet<>();
 	}
 
-	List<Component> components = new ArrayList<>();
+	HashSet<Component> components = new HashSet<>();
 	HashMap<Component, Set<Component>> neighbours = new HashMap<>();
 	HashMap<Component, Set<Component>> revNeighbours = new HashMap<>();
 	HashMap<Node, Component> nodeComponent = new HashMap<>();
@@ -64,6 +64,7 @@ public class SCCs {
 			Graph subgraph) {
 		Flock.beginTime("SCCs@replaceNodes");
 
+		Flock.beginTime("SCCs@replaceNodes:findCommonSCCs");
 		Set<Component> commonSCCs = new HashSet<>();
 		for (Node pred : oldPredecessors) {
 			commonSCCs.add(this.nodeComponent.get(pred));
@@ -73,6 +74,7 @@ public class SCCs {
 			successorSCCs.add(this.nodeComponent.get(suc));
 		}
 		commonSCCs.retainAll(successorSCCs);
+		Flock.endTime("SCCs@replaceNodes:findCommonSCCs");
 
 		// Case 1: The replaced subgraph is part of a greater SCC
 		// So the new subgraph is also part of the same SCC
@@ -97,10 +99,15 @@ public class SCCs {
 		// So we compute the SCCs that make up the subgraph and merge them into the
 		// larger SCCs
 		else {
+			Flock.beginTime("SCCs@replaceNodes:makeSubSCCs");
 			SCCs subgraphSCCs = new SCCs(subgraph);
-
+			Flock.endTime("SCCs@replaceNodes:makeSubSCCs");
+			
+			Flock.beginTime("SCCs@replaceNodes:mergeSCCs");
 			this.mergeSCCs(subgraphSCCs);
+			Flock.endTime("SCCs@replaceNodes:mergeSCCs");
 
+			Flock.beginTime("SCCs@replaceNodes:linkSCCpred");
 			// Add edges between old predecessors and new root components
 			for (Node root : subgraph.roots()) {
 				Component rootScc = this.nodeComponent.get(root);
@@ -111,7 +118,9 @@ public class SCCs {
 					this.makeEdge(predScc, rootScc);
 				}
 			}
+			Flock.endTime("SCCs@replaceNodes:linkSCCpred");
 
+			Flock.beginTime("SCCs@replaceNodes:linkSCCsucc");
 			// Add edges between new leaf and old successor components
 			for (Node root : subgraph.leaves()) {
 				Component leafScc = this.nodeComponent.get(root);
@@ -122,18 +131,22 @@ public class SCCs {
 					this.makeEdge(leafScc, sucScc);
 				}
 			}
+			Flock.endTime("SCCs@replaceNodes:linkSCCsucc");
 
+			Flock.beginTime("SCCs@replaceNodes:removeOld");
 			// Remove the SCCs that were replaced by the program edit
-			// This relies on the assumption that all components containing any of these nodes are fully removed
-			// Intuitively this should be true because we cannot replace part of a SCC when these are only created
-			// from a single program node (e.g. for-loop). But this does not generalize to more complex CFGs.
-			Set<Component> removedComponents = replaced.stream().map(this.nodeComponent::get)
-					.collect(Collectors.toSet());
-			for (Component c : removedComponents) {
-				this.removeComponent(c);
+			// This relies on the assumption that all components containing any of these
+			// nodes are fully removed
+			// Intuitively this should be true because we cannot replace part of a SCC when
+			// these are only created
+			// from a single program node (e.g. for-loop). But this does not generalize to
+			// more complex CFGs.
+			for (Node n : replaced) {
+				this.removeComponent(this.nodeComponent.get(n));
 			}
+			Flock.endTime("SCCs@replaceNodes:removeOld");
 		}
-		
+
 		Flock.endTime("SCCs@replaceNodes");
 	}
 
@@ -180,7 +193,7 @@ public class SCCs {
 
 	// Tarjans
 	private void strongConnect(Graph g, Node v, AtomicLong next_index, Stack<Node> S, HashSet<Node> onStack,
-			HashMap<Node, Long> lowlink, HashMap<Node, Long> index, List<Component> components,
+			HashMap<Node, Long> lowlink, HashMap<Node, Long> index, HashSet<Component> components,
 			HashMap<Node, Component> nodeComponent) {
 		index.put(v, next_index.longValue());
 		lowlink.put(v, next_index.longValue());

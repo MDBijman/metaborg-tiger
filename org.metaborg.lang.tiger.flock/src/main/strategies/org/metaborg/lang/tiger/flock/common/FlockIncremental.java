@@ -74,20 +74,30 @@ public class FlockIncremental extends Flock {
 		Flock.beginTime("FlockIncremental@replaceNode:cfg");
 		{
 			// Patch the graph, removing old nodes and placing new nodes
+			Flock.beginTime("FlockIncremental@replaceNode:cfg:create");
 			Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
 			subGraph.removeGhostNodes();
-
-			Set<Node> predecessors = new HashSet<>();
-			Set<Node> successors = new HashSet<>();
+			Flock.endTime("FlockIncremental@replaceNode:cfg:create");
+			
+			Flock.beginTime("FlockIncremental@replaceNode:cfg:gatherNeighbours");
+			Set<Node> predecessors = new HashSet<>(removedNodes.size());
+			Set<Node> successors = new HashSet<>(removedNodes.size());
 			for (Node n : removedNodes) {
 				predecessors.addAll(this.graph.parentsOf(n));
 				successors.addAll(this.graph.childrenOf(n));
 			}
 			predecessors.removeAll(removedNodes);
 			successors.removeAll(removedNodes);
+			Flock.endTime("FlockIncremental@replaceNode:cfg:gatherNeighbours");
 
+			Flock.beginTime("FlockIncremental@replaceNode:cfg:graphReplace");
 			this.graph.replaceNodes(removedNodes, predecessors, successors, subGraph);
+			Flock.endTime("FlockIncremental@replaceNode:cfg:graphReplace");
+			
+			Flock.beginTime("FlockIncremental@replaceNode:cfg:graphScssReplace");
 			this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph);
+			Flock.endTime("FlockIncremental@replaceNode:cfg:graphScssReplace");
+			
 			this.graph_scss.validate(this.graph);
 
 			// This is some useful validation logic when looking for bugs in SCC creation

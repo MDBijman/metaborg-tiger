@@ -11,8 +11,6 @@ public class flock_debug_graph_0_0 extends Strategy {
 	
 	@Override 
 	public IStrategoTerm invoke(Context context, IStrategoTerm program) {
-		Flock.logTimers();
-		Flock.logCounts();
 		String result = Flock.instance.graph.toGraphviz();
 		Flock.log("debug", result);
 		return context.getFactory().makeString(result);

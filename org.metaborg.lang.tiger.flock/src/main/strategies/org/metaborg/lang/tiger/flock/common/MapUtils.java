@@ -40,6 +40,40 @@ public class MapUtils {
 		}
 	}
 
+	public static boolean unionInplace(Object l, Object r) {
+		boolean changed = false;
+		if (l instanceof FlockLattice && r instanceof FlockLattice) {
+			Map ls = (Map) ((FlockLattice) l).value();
+			HashMap rs = (HashMap) ((FlockLattice) r).value();
+			for (Map.Entry i : (Set<Map.Entry>) rs.entrySet()) {
+				if (ls.containsKey(i.getKey())) {
+					FlockLattice v = (FlockLattice) ls.get(i.getKey());
+					FlockLattice m = ((FlockLattice) i.getValue()).lub(v);
+					if (!v.equals(m))
+						changed = true;
+					ls.put(i.getKey(), m);
+				} else {
+					changed = true;
+					ls.put(i.getKey(), i.getValue());
+				}
+			}
+		} else if (l instanceof Map && r instanceof Map) {
+			Map ls = (Map) l;
+			Map rs = (Map) r;
+			for (Map.Entry i : (Set<Map.Entry>) rs.entrySet()) {
+				if (ls.containsKey(i.getKey())) {
+					throw new RuntimeException("Key already exists");
+				} else {
+					changed = true;
+					ls.put(i.getKey(), i.getValue());
+				}
+			}
+		} else {
+			throw new RuntimeException("Cannot union these types");
+		}
+		return changed;
+	}
+
 	public static Map create(Object k, Object v) {
 		HashMap result = new HashMap();
 		result.put(k, v);

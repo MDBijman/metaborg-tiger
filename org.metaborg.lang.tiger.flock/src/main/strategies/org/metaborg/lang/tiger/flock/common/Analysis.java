@@ -146,8 +146,6 @@ public abstract class Analysis {
 		Collection<Node> newNodes = componentNodes.stream().filter(this.newNodes::contains).collect(Collectors.toSet());
 
 		Queue<Node> worklist = new ArrayDeque<>(componentNodes);
-		// Avoid initializing the worklist with all the nodes in the component -> fewer
-		// iterations?
 
 		Flock.beginTime("Analysis@" + this.name);
 		Flock.beginTime("Analysis@loop1");
@@ -169,21 +167,33 @@ public abstract class Analysis {
 			}
 		}
 		Flock.endTime("Analysis@loop2");
+		try {
+			/*
+			 * 
+			 */
+			Flock.beginTime("Analysis@loop3");
+			for (Node node : newNodes) {
+				Flock.increment("Analysis@loop3");
+				FlockLattice init = node.getProperty(this.propertyName).lattice;
+				for (Node pred : this.getPredecessors(cfg, node)) {
+					if (pred.getProperty(this.propertyName).transfer.supportsInplace()) {
+						Flock.beginTime("a1");
+						pred.getProperty(this.propertyName).transfer.evalInplace(init, pred);
+						Flock.endTime("a1");
+					} else {
+						FlockLattice tmp = pred.getProperty(this.propertyName).transfer.eval(pred);
 
-		/*
-		 * 
-		 */
-		Flock.beginTime("Analysis@loop3");
-		for (Node node : newNodes) {
-			Flock.increment("Analysis@loop3");
-			FlockLattice init = node.getProperty(this.propertyName).lattice;
-			for (Node pred : this.getPredecessors(cfg, node)) {
-				FlockLattice eval_lat = pred.getProperty(this.propertyName).transfer.eval(pred);
-				init = init.lub(eval_lat);
+						if (this.getPredecessors(cfg, node).size() == 1) {
+							init = tmp;
+						} else {
+							init.lubInplace(tmp);
+						}
+					}
+				}
+				node.getProperty(this.propertyName).lattice = init;
 			}
-			node.getProperty(this.propertyName).lattice = init;
-		}
-		Flock.endTime("Analysis@loop3");
+			Flock.endTime("Analysis@loop3");
+
 
 		Flock.beginTime("Analysis@worklist");
 		while (!worklist.isEmpty()) {
@@ -191,23 +201,22 @@ public abstract class Analysis {
 
 			Flock.increment("Analysis@worklist");
 
-			FlockLattice values_n = node.getProperty(this.propertyName).transfer.eval(node);
-
 			Set<Node> successors = this.getSuccessors(cfg, node);
 
 			for (Node successor : successors) {
 				if (!target.nodes.contains(successor))
 					continue;
-
+				
+				boolean changed = false;
+				
 				FlockLattice values_o = successor.getProperty(this.propertyName).lattice;
-
-				Flock.beginTime("a");
-				FlockLattice lub = values_o.lub(values_n);
-				Flock.endTime("a");
-				Flock.beginTime("b");
-				boolean changed = !lub.equals(values_o);
-				Flock.endTime("b");
-				successor.getProperty(this.propertyName).lattice = lub;
+				
+				if (node.getProperty(this.propertyName).transfer.supportsInplace()) {
+					changed = node.getProperty(this.propertyName).transfer.evalInplace(values_o, node);
+				} else {
+					FlockLattice eval = node.getProperty(this.propertyName).transfer.eval(node);
+					changed = values_o.lubInplace(eval);
+				}
 
 				if (changed) {
 					worklist.add(successor);
@@ -219,6 +228,9 @@ public abstract class Analysis {
 		Flock.endTime("Analysis@worklist");
 		Flock.endTime("Analysis@" + this.name);
 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		this.addToClean(target);
 	}
 

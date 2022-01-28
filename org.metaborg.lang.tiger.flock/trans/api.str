@@ -7,13 +7,14 @@ signature
 
 strategies // API
 
-  flock-add-id = topdown(flock-add-id-single)
+  flock-add-id = flock-time-as(topdown(flock-add-id-single)|"api@flock-add-id")
   flock-add-id-single: t -> t { FlockNodeId(<flock-make-id>) }
   flock-debug: t -> t //where <debug> t
 
   external flock-disable-logging(|)
   external flock-enable-logging(|)
-  
+  external flock-disable-timing(|)
+  external flock-enable-timing(|)
   external flock-disable-incremental(|)
   external flock-enable-incremental(|)
 
@@ -24,6 +25,7 @@ strategies // API
   external flock-debug-graph(|)
   external flock-debug-graph(|prop-name)
   external flock-debug-graph-spt(|)
+  external flock-debug-runtime(|)
 
   flock-initialize = flock-reset-id-counter; flock-add-id; where(flock-initialize-impl)
   external flock-initialize-impl(|)

@@ -5,9 +5,12 @@ import org.metaborg.lang.tiger.flock.ast.flock_begin_timer_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_debug_graph_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_debug_graph_0_1;
 import org.metaborg.lang.tiger.flock.ast.flock_debug_graph_spt_0_0;
+import org.metaborg.lang.tiger.flock.ast.flock_debug_runtime_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_debug_termgraph_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_disable_logging_0_0;
+import org.metaborg.lang.tiger.flock.ast.flock_disable_timing_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_enable_logging_0_0;
+import org.metaborg.lang.tiger.flock.ast.flock_enable_timing_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_end_timer_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_initialize_impl_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_make_id_0_0;
@@ -34,7 +37,10 @@ public class InteropRegisterer extends JavaInteropRegisterer {
     		flock_debug_termgraph_0_0.instance,
     		flock_debug_graph_0_1.instance,
     		flock_debug_graph_spt_0_0.instance,
+    		flock_debug_runtime_0_0.instance,
     		flock_print_impl_0_0.instance,
+    		flock_disable_timing_0_0.instance,
+    		flock_enable_timing_0_0.instance,
     		flock_disable_logging_0_0.instance,
     		flock_enable_logging_0_0.instance,
     		LiveVariablesStrategies.get_live_0_0.instance,

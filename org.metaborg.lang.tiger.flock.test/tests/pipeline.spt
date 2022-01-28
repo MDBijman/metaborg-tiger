@@ -14,7 +14,7 @@ end
 ]]
 
 test nested let [[
-let 
+let
 	var a: int := 10
 in
 	let 
@@ -57,7 +57,6 @@ in
 end
 ]] run flock-test-run-pipeline to [[
 let
-	var N: int := 10
 	var sum: int := 0
 in
 	for x := 0 to 10 do
@@ -96,7 +95,6 @@ in
 end
 ]] run flock-test-run-pipeline to [[
 let
-  var x : int := 10
  in
   for i := 0 to 10 do
     if i < 5 then
