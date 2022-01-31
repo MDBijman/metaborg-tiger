@@ -8,17 +8,18 @@ import org.strategoxt.lang.Context;
 import org.strategoxt.lang.Strategy;
 
 public class flock_replace_node_impl_0_1 extends Strategy {
-	
+
 	public static flock_replace_node_impl_0_1 instance = new flock_replace_node_impl_0_1();
-	
-	@Override 
+
+	@Override
 	public IStrategoTerm invoke(Context context, IStrategoTerm newNode, IStrategoTerm oldNode) {
-		//Flock.log("api", "[replace-node] " + oldNode.toString(1) + " with " + newNode.toString(1));
-        Flock.beginTime("Helpers@validateIds");
+		if (Flock.isLogEnabled("api"))
+			Flock.log("api", "[replace-node] " + oldNode.toString(1) + " with " + newNode.toString(1));
+		Flock.beginTime("Helpers@validateIds");
 		Helpers.validateIds(newNode);
-        Helpers.validateIds(oldNode);
-        Flock.endTime("Helpers@validateIds");
-        Flock.instance.replaceNode(oldNode, newNode);
+		Helpers.validateIds(oldNode);
+		Flock.endTime("Helpers@validateIds");
+		Flock.instance.replaceNode(oldNode, newNode);
 		return newNode;
-    }
+	}
 }

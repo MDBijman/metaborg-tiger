@@ -16,7 +16,7 @@ signature
     Const: String -> Const
 
 rules // Debugging
-  
+
   debug-show-aterm:
     (node, _, _, path, project-path) -> (filename, result)
     with
@@ -91,7 +91,7 @@ rules // pipeline
   ; <flock-begin-timer> "pipeline"
   ; p' := <
       inline-pass(|3)
-  	; forward-pass(|15)
+  	; forward-opt(|15)
   	; topdown(try(remove-all(?Hole())))
   > with-ids
   ; <flock-end-timer> "pipeline"
@@ -100,14 +100,12 @@ rules // pipeline
   
   inline-pass(|n) = flock-fixpoint(inline-in-module|n)
 
-  forward-pass(|n) = flock-fixpoint(forward-pass-single|n)
-  forward-pass-single = opt-term
-
+  forward-opt(|n) = flock-fixpoint(forward-pass|n)
+  
   // Fail if the term nor any of its subterms can be optimized
-  opt-term = 
-    (preserve-annotation(some(opt-term))
-  ; try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch))
-  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch)
+  forward-pass = (preserve-annotation(some(forward-pass))
+  ; try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec))
+  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec)
 
   // Optimize only one	
   //opt-term = 

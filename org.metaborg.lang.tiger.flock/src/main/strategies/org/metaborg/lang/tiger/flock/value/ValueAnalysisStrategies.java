@@ -33,6 +33,7 @@ public class ValueAnalysisStrategies {
 					((Map<IStrategoTerm, IStrategoTerm>) node.getProperty("values").lattice.value()).entrySet().stream()
 							.map(n -> factory.makeTuple(Helpers.toTerm(n.getKey()), Helpers.toTerm(n.getValue())))
 							.collect(Collectors.toList()));
+			
 			return result;
 		}
 	}
@@ -51,6 +52,7 @@ public class ValueAnalysisStrategies {
 			}
 			Flock.instance.analysisWithName("values").performDataAnalysis(Flock.instance.graph,
 					Flock.instance.graph_scss, node);
+
 			Map<IStrategoTerm, Object> values = (Map<IStrategoTerm, Object>) node.getProperty("values").lattice.value();
 			Object value = values.get(key);
 			if (value == null) {

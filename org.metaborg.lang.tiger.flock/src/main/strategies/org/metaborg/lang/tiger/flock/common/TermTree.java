@@ -56,6 +56,10 @@ public class TermTree {
 		public TermId getId() {
 			return this.id;
 		}
+		
+		public Collection<ITerm> children() {
+			return tree.childrenOf(this);
+		}
 
 		public ITerm childAt(int index) {
 			return tree.childrenOf(this).get(index);

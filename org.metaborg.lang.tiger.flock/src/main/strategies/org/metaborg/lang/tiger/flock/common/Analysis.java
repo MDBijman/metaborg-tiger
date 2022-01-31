@@ -167,33 +167,29 @@ public abstract class Analysis {
 			}
 		}
 		Flock.endTime("Analysis@loop2");
-		try {
-			/*
-			 * 
-			 */
-			Flock.beginTime("Analysis@loop3");
-			for (Node node : newNodes) {
-				Flock.increment("Analysis@loop3");
-				FlockLattice init = node.getProperty(this.propertyName).lattice;
-				for (Node pred : this.getPredecessors(cfg, node)) {
-					if (pred.getProperty(this.propertyName).transfer.supportsInplace()) {
-						Flock.beginTime("a1");
-						pred.getProperty(this.propertyName).transfer.evalInplace(init, pred);
-						Flock.endTime("a1");
-					} else {
-						FlockLattice tmp = pred.getProperty(this.propertyName).transfer.eval(pred);
+		
+		Flock.beginTime("Analysis@loop3");
+		for (Node node : newNodes) {
+			Flock.increment("Analysis@loop3");
+			FlockLattice init = node.getProperty(this.propertyName).lattice;
+			for (Node pred : this.getPredecessors(cfg, node)) {
+				if (pred.getProperty(this.propertyName).transfer.supportsInplace()) {
+					Flock.beginTime("a1");
+					pred.getProperty(this.propertyName).transfer.evalInplace(init, pred);
+					Flock.endTime("a1");
+				} else {
+					FlockLattice tmp = pred.getProperty(this.propertyName).transfer.eval(pred);
 
-						if (this.getPredecessors(cfg, node).size() == 1) {
-							init = tmp;
-						} else {
-							init.lubInplace(tmp);
-						}
+					if (this.getPredecessors(cfg, node).size() == 1) {
+						init = tmp;
+					} else {
+						init.lubInplace(tmp);
 					}
 				}
-				node.getProperty(this.propertyName).lattice = init;
 			}
-			Flock.endTime("Analysis@loop3");
-
+			node.getProperty(this.propertyName).lattice = init;
+		}
+		Flock.endTime("Analysis@loop3");
 
 		Flock.beginTime("Analysis@worklist");
 		while (!worklist.isEmpty()) {
@@ -206,11 +202,11 @@ public abstract class Analysis {
 			for (Node successor : successors) {
 				if (!target.nodes.contains(successor))
 					continue;
-				
+
 				boolean changed = false;
-				
+
 				FlockLattice values_o = successor.getProperty(this.propertyName).lattice;
-				
+
 				if (node.getProperty(this.propertyName).transfer.supportsInplace()) {
 					changed = node.getProperty(this.propertyName).transfer.evalInplace(values_o, node);
 				} else {
@@ -227,10 +223,6 @@ public abstract class Analysis {
 		}
 		Flock.endTime("Analysis@worklist");
 		Flock.endTime("Analysis@" + this.name);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		this.addToClean(target);
 	}
 

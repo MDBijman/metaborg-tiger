@@ -1,6 +1,7 @@
 package org.metaborg.lang.tiger.flock.common;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.spoofax.interpreter.terms.IStrategoTerm;
@@ -24,6 +25,56 @@ public class SetUtils {
 		result.addAll(ls);
 		result.addAll(rs);
 		return result;
+	}
+	
+	public static boolean intersectionInplace(Object l, Object r) {
+		Set ls;
+		if (l instanceof FlockLattice) {
+			ls = (Set) ((FlockLattice) l).value();
+		} else {
+			ls = (Set) l;
+		}
+		
+		Set rs;
+		if (r instanceof FlockLattice) {
+			rs = (Set) ((FlockLattice) r).value();
+		} else {
+			rs = (Set) r;
+		}
+
+		if (ls instanceof UniversalSet) {
+			throw new RuntimeException("Cannot perform in place intersect for lhs universal set");
+		}
+		if (rs instanceof UniversalSet) {
+			return false;
+		}
+		
+		return ls.retainAll(rs);
+	}
+
+	
+	public static boolean unionInplace(Object l, Object r) {
+		Set ls;
+		if (l instanceof FlockLattice) {
+			ls = (Set) ((FlockLattice) l).value();
+		} else {
+			ls = (Set) l;
+		}
+		
+		Set rs;
+		if (r instanceof FlockLattice) {
+			rs = (Set) ((FlockLattice) r).value();
+		} else {
+			rs = (Set) r;
+		}
+		
+		if (rs instanceof UniversalSet) {
+			throw new RuntimeException("Cannot perform in place union for rhs universal set");
+		}
+		if (ls instanceof UniversalSet) {
+			return false;
+		}
+		return ls.addAll(rs);
 	}
 
 	public static Set intersection(Object l, Object r) {

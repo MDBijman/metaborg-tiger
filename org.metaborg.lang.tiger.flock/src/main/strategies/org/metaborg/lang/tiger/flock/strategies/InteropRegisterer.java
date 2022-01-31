@@ -18,6 +18,7 @@ import org.metaborg.lang.tiger.flock.ast.flock_print_impl_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_remove_node_0_0;
 import org.metaborg.lang.tiger.flock.ast.flock_replace_node_impl_0_1;
 import org.metaborg.lang.tiger.flock.ast.flock_reset_id_counter_0_0;
+import org.metaborg.lang.tiger.flock.ast.flock_traverse_cfg_1_0;
 import org.metaborg.lang.tiger.flock.impl.LiveVariablesStrategies;
 import org.metaborg.lang.tiger.flock.value.ValueAnalysisStrategies;
 import org.strategoxt.lang.JavaInteropRegisterer;
@@ -30,6 +31,7 @@ public class InteropRegisterer extends JavaInteropRegisterer {
     		flock_replace_node_impl_0_1.instance,
     		flock_remove_node_0_0.instance,
     		flock_make_id_0_0.instance,
+    		flock_traverse_cfg_1_0.instance,
     		flock_reset_id_counter_0_0.instance,
     		flock_begin_timer_0_0.instance,
     		flock_end_timer_0_0.instance,

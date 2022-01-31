@@ -90,6 +90,11 @@ public interface FlockLattice {
 		public Object value() {
 			return value;
 		}
+		
+		@Override
+		public boolean lubInplace(FlockLattice o) {
+			return SetUtils.intersectionInplace(this, o);
+		}
 
 		@Override
 		public FlockLattice lub(FlockLattice r) {
@@ -166,6 +171,11 @@ public interface FlockLattice {
 		@Override
 		public Object value() {
 			return value;
+		}
+		
+		@Override
+		public boolean lubInplace(FlockLattice o) {
+			return SetUtils.unionInplace(this, o);
 		}
 
 		@Override

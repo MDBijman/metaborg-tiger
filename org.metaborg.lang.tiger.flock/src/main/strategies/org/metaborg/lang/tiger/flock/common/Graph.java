@@ -522,8 +522,8 @@ public class Graph {
 		return result.toString();
 	}
 
-	public String toGraphviz(String name) {
-		return toGraphviz(name, true, true, true);
+	public String toGraphviz(String property) {
+		return toGraphviz(property, true, true, true);
 	}
 
 	public String toGraphviz() {

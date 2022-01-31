@@ -10,6 +10,7 @@ strategies // API
   flock-add-id = flock-time-as(topdown(flock-add-id-single)|"api@flock-add-id")
   flock-add-id-single: t -> t { FlockNodeId(<flock-make-id>) }
   flock-debug: t -> t //where <debug> t
+  external flock-traverse-cfg(s|)
 
   external flock-disable-logging(|)
   external flock-enable-logging(|)
