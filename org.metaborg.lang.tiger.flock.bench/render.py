@@ -6,6 +6,7 @@ from datetime import datetime
 file = sys.argv[1]
 csv_file = open(file)
 csv_reader = csv.reader(csv_file, delimiter=',')
+tag = str(f"_{sys.argv[2]}" if len(sys.argv) >= 3 else "")
 
 csv_iter = iter(csv_reader)
 headers = next(csv_iter)
@@ -48,6 +49,6 @@ def plot_benchmark(fig, ax, name, simple_name):
 fig, ax = plt.subplots()
 plot_benchmark(fig, ax, "org.example.BranchBenchmark.run", "branches")
 #plot_benchmark(fig, ax, "org.example.VarsBenchmark.run", "variables")
-plt.savefig(f"results/{today}_benchmark.png")
+plt.savefig(f"results/{today}{tag}_benchmark.png")
 
 
