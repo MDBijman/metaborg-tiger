@@ -16,17 +16,17 @@ import org.spoofax.terms.StrategoList;
 import org.spoofax.terms.StrategoTuple;
 import org.spoofax.terms.util.NotImplementedException;
 
-public interface FlockLattice {
-	public abstract FlockLattice lub(FlockLattice o);
-
-	public default boolean lubInplace(FlockLattice o) {
-		throw new NotImplementedException();
-	}
+public interface FlockLattice extends Cloneable {
+	public abstract boolean lub(FlockLattice o);
 	
+	public abstract FlockLattice copy();
+
 	public abstract Object value();
 	
 	public default boolean leq(FlockLattice r) {
-		return this.lub(r).equals(r);
+		FlockLattice clone = this.copy();
+		clone.lub(r);
+		return clone.equals(r);
 	}
 
 	public default boolean nleq(FlockLattice r) {
@@ -87,18 +87,18 @@ public interface FlockLattice {
 		}
 		
 		@Override
+		public FlockLattice copy() {
+			return new MustSet(new HashSet<>(this.value));
+		}
+		
+		@Override
 		public Object value() {
 			return value;
 		}
 		
 		@Override
-		public boolean lubInplace(FlockLattice o) {
-			return SetUtils.intersectionInplace(this, o);
-		}
-
-		@Override
-		public FlockLattice lub(FlockLattice r) {
-			return new MustSet(SetUtils.intersection(this.value(), r.value()));
+		public boolean lub(FlockLattice r) {
+			return SetUtils.intersectionInplace(this, r);
 		}
 
 		@Override
@@ -164,6 +164,11 @@ public interface FlockLattice {
 		}
 
 		@Override
+		public FlockLattice copy() {
+			return new MaySet(new HashSet<>(this.value));
+		}
+		
+		@Override
 		public String toString() {
 			return value.toString();
 		}
@@ -174,13 +179,8 @@ public interface FlockLattice {
 		}
 		
 		@Override
-		public boolean lubInplace(FlockLattice o) {
+		public boolean lub(FlockLattice o) {
 			return SetUtils.unionInplace(this, o);
-		}
-
-		@Override
-		public FlockLattice lub(FlockLattice r) {
-			return new MaySet(SetUtils.union(this.value(), r.value()));
 		}
 
 		@Override
@@ -247,6 +247,11 @@ public interface FlockLattice {
 		public static SimpleMap top() {
 			throw new NotImplementedException();
 		}
+		
+		@Override
+		public FlockLattice copy() {
+			return new SimpleMap(new HashMap<>(this.value));
+		}
 
 		@Override
 		public Iterator iterator() {
@@ -254,12 +259,7 @@ public interface FlockLattice {
 		}
 		
 		@Override
-		public FlockLattice lub(FlockLattice o) {
-			return new SimpleMap(MapUtils.union(this, o));
-		}
-		
-		@Override
-		public boolean lubInplace(FlockLattice o) {
+		public boolean lub(FlockLattice o) {
 			return MapUtils.unionInplace(this, o);
 		}
 		

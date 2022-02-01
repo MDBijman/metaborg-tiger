@@ -163,7 +163,7 @@ public abstract class Analysis {
 		Flock.beginTime("Analysis@loop2");
 		for (Node node : newNodes) {
 			if (cfg.roots().contains(node)) {
-				node.getProperty(this.propertyName).lattice = node.getProperty(this.propertyName).init.eval(node);
+				node.getProperty(this.propertyName).init.eval(node.getProperty(this.propertyName).lattice, node);
 			}
 		}
 		Flock.endTime("Analysis@loop2");
@@ -173,19 +173,7 @@ public abstract class Analysis {
 			Flock.increment("Analysis@loop3");
 			FlockLattice init = node.getProperty(this.propertyName).lattice;
 			for (Node pred : this.getPredecessors(cfg, node)) {
-				if (pred.getProperty(this.propertyName).transfer.supportsInplace()) {
-					Flock.beginTime("a1");
-					pred.getProperty(this.propertyName).transfer.evalInplace(init, pred);
-					Flock.endTime("a1");
-				} else {
-					FlockLattice tmp = pred.getProperty(this.propertyName).transfer.eval(pred);
-
-					if (this.getPredecessors(cfg, node).size() == 1) {
-						init = tmp;
-					} else {
-						init.lubInplace(tmp);
-					}
-				}
+				pred.getProperty(this.propertyName).transfer.eval(init, pred);
 			}
 			node.getProperty(this.propertyName).lattice = init;
 		}
@@ -207,14 +195,9 @@ public abstract class Analysis {
 
 				FlockLattice values_o = successor.getProperty(this.propertyName).lattice;
 
-				if (node.getProperty(this.propertyName).transfer.supportsInplace()) {
-					changed = node.getProperty(this.propertyName).transfer.evalInplace(values_o, node);
-				} else {
-					FlockLattice eval = node.getProperty(this.propertyName).transfer.eval(node);
-					changed = values_o.lubInplace(eval);
-				}
+				changed = node.getProperty(this.propertyName).transfer.eval(values_o, node);
 
-				if (changed) {
+				if (changed && !worklist.contains(successor)) {
 					worklist.add(successor);
 				}
 

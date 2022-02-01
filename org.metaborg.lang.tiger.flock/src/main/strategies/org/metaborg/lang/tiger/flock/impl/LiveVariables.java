@@ -126,88 +126,94 @@ class TransferFunctions {
 }
 
 class TransferFunction0 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
-		MaySet tmp5 = (MaySet) UserFunctions.live_f(next);
-		return tmp5;
+		MaySet tmp100 = (MaySet) UserFunctions.live_f(next);
+		return res.lub(tmp100);
 	}
 }
 
 class TransferFunction1 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
-		Set tmp9 = (Set) SetUtils.create(TermUtils.asString(usrn).get());
-		Set tmp10 = (Set) SetUtils.union(tmp9, ((FlockLattice) UserFunctions.live_f(next)).value());
-		Set tmp4 = (Set) tmp10;
-		return new MaySet(tmp4);
+		Set tmp104 = (Set) SetUtils.create(TermUtils.asString(usrn).get());
+		Set tmp105 = (Set) SetUtils.union(tmp104, ((FlockLattice) UserFunctions.live_f(next)).value());
+		Set tmp99 = (Set) tmp105;
+		return res.lub(new MaySet(tmp99));
 	}
 }
 
 class TransferFunction2 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(Helpers.at(term, 0), 0);
-		Set result147 = new HashSet();
-		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
-			if (!usrm.equals(usrn)) {
-				result147.add(usrm);
-			}
-		}
-		Set tmp8 = (Set) result147;
-		Set tmp3 = (Set) tmp8;
-		return new MaySet(tmp3);
-	}
-}
-
-class TransferFunction3 extends TransferFunction {
-	@Override
-	public FlockLattice eval(Node node) {
-		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Node next = node;
-		IStrategoTerm usrn = Helpers.at(Helpers.at(Helpers.at(term, 0), 0), 0);
-		Set result148 = new HashSet();
-		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
-			if (!usrm.equals(usrn)) {
-				result148.add(usrm);
-			}
-		}
-		Set tmp7 = (Set) result148;
-		Set tmp2 = (Set) tmp7;
-		return new MaySet(tmp2);
-	}
-}
-
-class TransferFunction4 extends TransferFunction {
-	@Override
-	public FlockLattice eval(Node node) {
-		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Node next = node;
-		IStrategoTerm usrn = Helpers.at(term, 0);
 		Set result149 = new HashSet();
 		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
 			if (!usrm.equals(usrn)) {
 				result149.add(usrm);
 			}
 		}
-		Set tmp6 = (Set) result149;
-		Set tmp1 = (Set) tmp6;
-		return new MaySet(tmp1);
+		Set tmp103 = (Set) result149;
+		Set tmp98 = (Set) tmp103;
+		return res.lub(new MaySet(tmp98));
+	}
+}
+
+class TransferFunction3 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
+	@Override
+	public boolean eval(FlockLattice res, Node node) {
+		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
+		Node next = node;
+		IStrategoTerm usrn = Helpers.at(Helpers.at(Helpers.at(term, 0), 0), 0);
+		Set result150 = new HashSet();
+		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
+			if (!usrm.equals(usrn)) {
+				result150.add(usrm);
+			}
+		}
+		Set tmp102 = (Set) result150;
+		Set tmp97 = (Set) tmp102;
+		return res.lub(new MaySet(tmp97));
+	}
+}
+
+class TransferFunction4 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
+	@Override
+	public boolean eval(FlockLattice res, Node node) {
+		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
+		Node next = node;
+		IStrategoTerm usrn = Helpers.at(term, 0);
+		Set result151 = new HashSet();
+		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
+			if (!usrm.equals(usrn)) {
+				result151.add(usrm);
+			}
+		}
+		Set tmp101 = (Set) result151;
+		Set tmp96 = (Set) tmp101;
+		return res.lub(new MaySet(tmp96));
 	}
 }
 
 class TransferFunction5 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Set tmp0 = (Set) SetUtils.create();
-		return new MaySet(tmp0);
+		Set tmp95 = (Set) SetUtils.create();
+		return res.lub(new MaySet(tmp95));
 	}
 }
 

@@ -16,6 +16,7 @@ import org.spoofax.interpreter.library.IOAgent;
 import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
+import org.spoofax.terms.util.NotImplementedException;
 import org.strategoxt.lang.Context;
 
 public abstract class Flock {
@@ -119,7 +120,7 @@ public abstract class Flock {
 			// "debug",
 			// "incremental",
 			// "validation",
-			"api",
+			// "api",
 			// "dependencies",
 			// "graphviz"
 	};
@@ -229,11 +230,6 @@ class PositionLattice implements FlockLattice {
 	}
 
 	@Override
-	public FlockLattice lub(FlockLattice o) {
-		return null;
-	}
-
-	@Override
 	public Object value() {
 		return this.value;
 	}
@@ -241,5 +237,15 @@ class PositionLattice implements FlockLattice {
 	@Override
 	public IStrategoTerm toTerm() {
 		return value;
+	}
+
+	@Override
+	public boolean lub(FlockLattice o) {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public FlockLattice copy() {
+		return new PositionLattice(this.value);
 	}
 }

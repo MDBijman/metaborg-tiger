@@ -15,8 +15,7 @@ public class MapUtils {
 			for (Map.Entry i : (Set<Map.Entry>) rs.entrySet()) {
 				if (res.containsKey(i.getKey())) {
 					FlockLattice v = (FlockLattice) res.get(i.getKey());
-					FlockLattice m = ((FlockLattice) i.getValue()).lub(v);
-					res.put(i.getKey(), m);
+					((FlockLattice) i.getValue()).lub(v);
 				} else {
 					res.put(i.getKey(), i.getValue());
 				}
@@ -48,10 +47,7 @@ public class MapUtils {
 			for (Map.Entry i : (Set<Map.Entry>) rs.entrySet()) {
 				if (ls.containsKey(i.getKey())) {
 					FlockLattice v = (FlockLattice) ls.get(i.getKey());
-					FlockLattice m = ((FlockLattice) i.getValue()).lub(v);
-					if (!v.equals(m))
-						changed = true;
-					ls.put(i.getKey(), m);
+					changed |= ((FlockLattice) i.getValue()).lub(v);
 				} else {
 					changed = true;
 					ls.put(i.getKey(), i.getValue());

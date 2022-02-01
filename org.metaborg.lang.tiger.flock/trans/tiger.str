@@ -104,13 +104,8 @@ rules // pipeline
   
   // Fail if the term nor any of its subterms can be optimized
   forward-pass = (preserve-annotation(some(forward-pass))
-  ; try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec))
-  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec)
-
-  // Optimize only one	
-  //opt-term = 
-  //  (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch)
-  //+ preserve-annotation(one(opt-term))
+  ; try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch))
+  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch)
 
 strategies
   
