@@ -12,24 +12,9 @@ import org.spoofax.interpreter.terms.IStrategoTerm;
 public abstract class FlockValue {
 	public abstract IStrategoTerm toTerm();
 	
-	public static abstract class FlockValueWithDependencies extends FlockValue {
-		Set<Dependency> dependencies = new HashSet<>();
-		
-		public boolean hasDependency(Dependency d) {
-			return dependencies.contains(d);
-		}
-		public void addDependency(Dependency d) {
-			dependencies.add(d);
-		}
-		public boolean removeDependency(Dependency d) {
-			return dependencies.remove(d);
-		}
-		public Set<Dependency> dependencies() {
-			return dependencies;
-		}
-	}
+	public abstract void setValue(Object o);
 	
-	public static class Name extends FlockValueWithDependencies {
+	public static class Name extends FlockValue {
 		IStrategoTerm value;
 		
 		public Name(IStrategoTerm name) {
@@ -41,17 +26,10 @@ public abstract class FlockValue {
 		public IStrategoTerm toTerm() {
 			return value;
 		}
-		
-		public Name withOrigin(Set<TermId> ids) {
-			for (TermId id : ids) {
-				this.dependencies.add(new Dependency(id));
-			}
-			return this;
-		}
-		
-		public Name withOrigin(TermId id) {
-			this.dependencies.add(new Dependency(id));
-			return this;
+
+		@Override
+		public void setValue(Object value) {
+			this.value = (IStrategoTerm) value;
 		}
 	}
 }

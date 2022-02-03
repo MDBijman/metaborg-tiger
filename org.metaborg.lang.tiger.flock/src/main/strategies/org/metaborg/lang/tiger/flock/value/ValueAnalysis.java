@@ -1,9 +1,8 @@
 package org.metaborg.lang.tiger.flock.value;
 
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import org.metaborg.lang.tiger.flock.common.Analysis;
 import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
@@ -192,63 +191,61 @@ class Value implements FlockValueLattice {
 	}
 
 	public static Value bottom() {
-		ConstProp tmp72 = (ConstProp) new ConstProp(
+		ConstProp tmp112 = (ConstProp) new ConstProp(
 				new StrategoAppl(new StrategoConstructor("Bottom", 0), new IStrategoTerm[] {}, null));
-		return new Value(tmp72);
+		return new Value(tmp112);
 	}
 
 	public static Value top() {
-		ConstProp tmp73 = (ConstProp) new ConstProp(
+		ConstProp tmp113 = (ConstProp) new ConstProp(
 				new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
-		return new Value(tmp73);
+		return new Value(tmp113);
 	}
 
 	@Override
-	public boolean lub(FlockLattice other) {
+	public boolean lub(Object other) {
 		ConstProp usrl = ((Value) this).value;
 		ConstProp usrr = ((Value) other).value;
-		IStrategoTerm term8 = Helpers
+		IStrategoTerm term98 = Helpers
 				.toTerm(new StrategoTuple(new IStrategoTerm[] { Helpers.toTerm(usrl), Helpers.toTerm(usrr) }, null));
-		Object result149 = null;
-		if (TermUtils.isTuple(term8)
-				&& (TermUtils.isAppl(Helpers.at(term8, 0)) && (M.appl(Helpers.at(term8, 0)).getName().equals("Top")
-						&& Helpers.at(term8, 0).getSubtermCount() == 0))) {
-			result149 = new ConstProp(
-					new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
+		Object result12 = null;
+		if (TermUtils.isTuple(term98)
+				&& (TermUtils.isAppl(Helpers.at(term98, 0)) && (M.appl(Helpers.at(term98, 0)).getName().equals("Top")
+						&& Helpers.at(term98, 0).getSubtermCount() == 0))) {
+			result12 = new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
 		}
-		if (TermUtils.isTuple(term8)
-				&& (TermUtils.isAppl(Helpers.at(term8, 1)) && (M.appl(Helpers.at(term8, 1)).getName().equals("Top")
-						&& Helpers.at(term8, 1).getSubtermCount() == 0))) {
-			result149 = new ConstProp(
-					new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
+		if (TermUtils.isTuple(term98)
+				&& (TermUtils.isAppl(Helpers.at(term98, 1)) && (M.appl(Helpers.at(term98, 1)).getName().equals("Top")
+						&& Helpers.at(term98, 1).getSubtermCount() == 0))) {
+			result12 = new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
 		}
-		if (TermUtils.isTuple(term8)
-				&& (TermUtils.isAppl(Helpers.at(term8, 0)) && (M.appl(Helpers.at(term8, 0)).getName().equals("Const")
-						&& (Helpers.at(term8, 0).getSubtermCount() == 1 && (TermUtils.isAppl(Helpers.at(term8, 1))
-								&& (M.appl(Helpers.at(term8, 1)).getName().equals("Const")
-										&& Helpers.at(term8, 1).getSubtermCount() == 1)))))) {
-			IStrategoTerm usri = Helpers.at(Helpers.at(term8, 0), 0);
-			IStrategoTerm usrj = Helpers.at(Helpers.at(term8, 1), 0);
-			result149 = (boolean) usri.equals(usrj)
+		if (TermUtils.isTuple(term98)
+				&& (TermUtils.isAppl(Helpers.at(term98, 0)) && (M.appl(Helpers.at(term98, 0)).getName().equals("Const")
+						&& (Helpers.at(term98, 0).getSubtermCount() == 1 && (TermUtils.isAppl(Helpers.at(term98, 1))
+								&& (M.appl(Helpers.at(term98, 1)).getName().equals("Const")
+										&& Helpers.at(term98, 1).getSubtermCount() == 1)))))) {
+			IStrategoTerm usri = Helpers.at(Helpers.at(term98, 0), 0);
+			IStrategoTerm usrj = Helpers.at(Helpers.at(term98, 1), 0);
+			result12 = (boolean) usri.equals(usrj)
 					? new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
 							new IStrategoTerm[] { Helpers.toTerm(usri) }, null))
 					: new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null));
 		}
-		if (TermUtils.isTuple(term8)
-				&& (TermUtils.isAppl(Helpers.at(term8, 1)) && (M.appl(Helpers.at(term8, 1)).getName().equals("Bottom")
-						&& Helpers.at(term8, 1).getSubtermCount() == 0))) {
-			result149 = usrl;
+		if (TermUtils.isTuple(term98)
+				&& (TermUtils.isAppl(Helpers.at(term98, 1)) && (M.appl(Helpers.at(term98, 1)).getName().equals("Bottom")
+						&& Helpers.at(term98, 1).getSubtermCount() == 0))) {
+			result12 = usrl;
 		}
-		if (TermUtils.isTuple(term8)
-				&& (TermUtils.isAppl(Helpers.at(term8, 0)) && (M.appl(Helpers.at(term8, 0)).getName().equals("Bottom")
-						&& Helpers.at(term8, 0).getSubtermCount() == 0))) {
-			result149 = usrr;
+		if (TermUtils.isTuple(term98)
+				&& (TermUtils.isAppl(Helpers.at(term98, 0)) && (M.appl(Helpers.at(term98, 0)).getName().equals("Bottom")
+						&& Helpers.at(term98, 0).getSubtermCount() == 0))) {
+			result12 = usrr;
 		}
-		if (result149 == null) {
+		if (result12 == null) {
 			throw new RuntimeException("Could not match term");
 		}
-		ConstProp tmp74 = (ConstProp) result149;
-		Value _res_lat = new Value(tmp74);
+		ConstProp tmp114 = (ConstProp) result12;
+		Value _res_lat = new Value(tmp114);
 		boolean _is_changed = !this.equals(_res_lat);
 		this.value = _res_lat.value;
 		return _is_changed;
@@ -257,6 +254,11 @@ class Value implements FlockValueLattice {
 	@Override
 	public FlockLattice copy() {
 		return new Value(this);
+	}
+
+	@Override
+	public void setValue(Object value) {
+		this.value = (ConstProp) value;
 	}
 }
 
@@ -273,148 +275,151 @@ class TransferFunctions {
 class TransferFunction0 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
-		SimpleMap tmp56 = (SimpleMap) UserFunctions.values_f(prev);
-		return res.lub(tmp56);
+		SimpleMap tmp89 = (SimpleMap) UserFunctions.values_f(prev);
+		return TransferFunction.assignEvalResult(direction, node, res, tmp89);
 	}
 }
 
 class TransferFunction1 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		IStrategoTerm usrn = Helpers.at(Helpers.at(term, 0), 0);
-		Map result150 = new HashMap();
-		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
-			Entry entry = (Entry) o;
-			Object usrk = entry.getKey();
-			Object usrv = entry.getValue();
-			if (!usrk.equals(usrn)) {
-				result150.put(usrk, usrv);
-			}
-		}
-		Map tmp69 = (Map) result150;
-		Map tmp70 = (Map) MapUtils.create(usrn, new Value(
-				new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null))));
-		MapUtils.unionInplace(tmp69, tmp70);
-		return res.lub(new SimpleMap(tmp69));
+		Stream<Map.Entry> result13 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
+				.filter(o -> {
+					Entry entry = (Entry) o;
+					Object usrk = entry.getKey();
+					Object usrv = entry.getValue();
+					return !usrk.equals(usrn);
+				});
+		Stream tmp109 = (Stream<Map.Entry>) result13;
+		Stream tmp110 = (Stream<Map.Entry>) MapUtils
+				.create(usrn,
+						new Value(new ConstProp(
+								new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null))))
+				.entrySet().stream();
+		Stream tmp111 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp109, tmp110));
+		Stream tmp88 = (Stream<Map.Entry>) tmp111;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp88);
 	}
 }
 
 class TransferFunction2 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		IStrategoTerm usrn = Helpers.at(Helpers.at(Helpers.at(term, 0), 0), 0);
-		Map result151 = new HashMap();
-		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
-			Entry entry = (Entry) o;
-			Object usrk = entry.getKey();
-			Object usrv = entry.getValue();
-			if (!usrk.equals(usrn)) {
-				result151.put(usrk, usrv);
-			}
-		}
-		Map tmp66 = (Map) result151;
-		Map tmp67 = (Map) MapUtils.create(usrn, new Value(
-				new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null))));
-		Map tmp68 = (Map) new HashMap(MapUtils.union(tmp66, tmp67));
-		Map tmp54 = (Map) tmp68;
-		return res.lub(new SimpleMap(tmp54));
+		Stream<Map.Entry> result122 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
+				.filter(o -> {
+					Entry entry = (Entry) o;
+					Object usrk = entry.getKey();
+					Object usrv = entry.getValue();
+					return !usrk.equals(usrn);
+				});
+		Stream tmp106 = (Stream<Map.Entry>) result122;
+		Stream tmp107 = (Stream<Map.Entry>) MapUtils
+				.create(usrn,
+						new Value(new ConstProp(
+								new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null))))
+				.entrySet().stream();
+		Stream tmp108 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp106, tmp107));
+		Stream tmp87 = (Stream<Map.Entry>) tmp108;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp87);
 	}
 }
 
 class TransferFunction3 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		IStrategoTerm usrn = Helpers.at(Helpers.at(Helpers.at(term, 0), 0), 0);
 		IStrategoTerm usri = Helpers.at(Helpers.at(term, 1), 0);
-		Map result152 = new HashMap();
-		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
-			Entry entry = (Entry) o;
-			Object usrk = entry.getKey();
-			Object usrv = entry.getValue();
-			if (!usrk.equals(usrn)) {
-				result152.put(usrk, usrv);
-			}
-		}
-		Map tmp63 = (Map) result152;
-		Map tmp64 = (Map) MapUtils.create(usrn,
-				new Value(new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
-						new IStrategoTerm[] { Helpers.toTerm(usri) }, null))));
-		Map tmp65 = (Map) new HashMap(MapUtils.union(tmp63, tmp64));
-		Map tmp53 = (Map) tmp65;
-		return res.lub(new SimpleMap(tmp53));
+		Stream<Map.Entry> result123 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
+				.filter(o -> {
+					Entry entry = (Entry) o;
+					Object usrk = entry.getKey();
+					Object usrv = entry.getValue();
+					return !usrk.equals(usrn);
+				});
+		Stream tmp103 = (Stream<Map.Entry>) result123;
+		Stream tmp104 = (Stream<Map.Entry>) MapUtils
+				.create(usrn, new Value(new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
+						new IStrategoTerm[] { Helpers.toTerm(usri) }, null))))
+				.entrySet().stream();
+		Stream tmp105 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp103, tmp104));
+		Stream tmp84 = (Stream<Map.Entry>) tmp105;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp84);
 	}
 }
 
 class TransferFunction4 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
-		Map result153 = new HashMap();
-		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
-			Entry entry = (Entry) o;
-			Object usrk = entry.getKey();
-			Object usrv = entry.getValue();
-			if (!usrk.equals(usrn)) {
-				result153.put(usrk, usrv);
-			}
-		}
-		Map tmp60 = (Map) result153;
-		Map tmp61 = (Map) MapUtils.create(usrn, new Value(
-				new ConstProp(new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null))));
-		Map tmp62 = (Map) new HashMap(MapUtils.union(tmp60, tmp61));
-		Map tmp52 = (Map) tmp62;
-		return res.lub(new SimpleMap(tmp52));
+		Stream<Map.Entry> result124 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
+				.filter(o -> {
+					Entry entry = (Entry) o;
+					Object usrk = entry.getKey();
+					Object usrv = entry.getValue();
+					return !usrk.equals(usrn);
+				});
+		Stream tmp100 = (Stream<Map.Entry>) result124;
+		Stream tmp101 = (Stream<Map.Entry>) MapUtils
+				.create(usrn,
+						new Value(new ConstProp(
+								new StrategoAppl(new StrategoConstructor("Top", 0), new IStrategoTerm[] {}, null))))
+				.entrySet().stream();
+		Stream tmp102 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp100, tmp101));
+		Stream tmp81 = (Stream<Map.Entry>) tmp102;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp81);
 	}
 }
 
 class TransferFunction5 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
 		IStrategoTerm usri = Helpers.at(Helpers.at(term, 2), 0);
-		Map result154 = new HashMap();
-		for (Object o : ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet()) {
-			Entry entry = (Entry) o;
-			Object usrk = entry.getKey();
-			Object usrv = entry.getValue();
-			if (!usrk.equals(usrn)) {
-				result154.put(usrk, usrv);
-			}
-		}
-		Map tmp57 = (Map) result154;
-		Map tmp58 = (Map) MapUtils.create(usrn,
-				new Value(new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
-						new IStrategoTerm[] { Helpers.toTerm(usri) }, null))));
-		MapUtils.unionInplace(tmp57, tmp58);
-		return res.lub(new SimpleMap(tmp57));
+		Stream<Map.Entry> result125 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
+				.filter(o -> {
+					Entry entry = (Entry) o;
+					Object usrk = entry.getKey();
+					Object usrv = entry.getValue();
+					return !usrk.equals(usrn);
+				});
+		Stream tmp90 = (Stream<Map.Entry>) result125;
+		Stream tmp98 = (Stream<Map.Entry>) MapUtils
+				.create(usrn, new Value(new ConstProp(new StrategoAppl(new StrategoConstructor("Const", 1),
+						new IStrategoTerm[] { Helpers.toTerm(usri) }, null))))
+				.entrySet().stream();
+		Stream tmp99 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp90, tmp98));
+		Stream tmp78 = (Stream<Map.Entry>) tmp99;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp78);
 	}
 }
 
 class TransferFunction6 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		SimpleMap tmp50 = (SimpleMap) SimpleMap.bottom();
-		return res.lub(tmp50);
+		SimpleMap tmp75 = (SimpleMap) SimpleMap.bottom();
+		return TransferFunction.assignEvalResult(direction, node, res, tmp75);
 	}
 }
 

@@ -1,60 +1,23 @@
-package org.spoofax;
+package org.metaborg.lang.tiger.flock.live;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.strategoxt.lang.Context;
-import org.spoofax.interpreter.terms.IStrategoTerm;
-import org.spoofax.interpreter.terms.IStrategoAppl;
-import org.spoofax.interpreter.terms.IStrategoTuple;
-import org.spoofax.interpreter.terms.IStrategoList;
-import org.spoofax.interpreter.terms.IStrategoString;
-import org.spoofax.interpreter.terms.IStrategoInt;
-import org.spoofax.terms.io.TAFTermReader;
-import org.spoofax.terms.TermFactory;
-import java.io.IOException;
-import org.spoofax.terms.util.M;
-import org.spoofax.terms.util.TermUtils;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.Queue;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Collection;
-import java.util.function.Supplier;
-import org.spoofax.terms.StrategoTuple;
-import org.spoofax.terms.StrategoAppl;
-import org.spoofax.terms.StrategoConstructor;
-import org.spoofax.terms.StrategoInt;
-import org.spoofax.terms.StrategoString;
-import org.spoofax.terms.StrategoList;
-import flock.subject.common.Graph;
-import flock.subject.common.Analysis;
-import flock.subject.common.Graph.Node;
-import flock.subject.common.Analysis.Direction;
-import flock.subject.common.CfgNodeId;
-import flock.subject.common.Dependency;
-import flock.subject.common.Helpers;
-import flock.subject.common.FlockLattice;
-import flock.subject.common.FlockLattice.MaySet;
-import flock.subject.common.FlockLattice.MustSet;
-import flock.subject.common.FlockLattice.SimpleMap;
-import flock.subject.common.FlockLattice.FlockValueLattice;
-import flock.subject.common.FlockLattice.FlockCollectionLattice;
-import flock.subject.common.FlockValue;
-import flock.subject.common.FlockValue.FlockValueWithDependencies;
-import flock.subject.common.MapUtils;
-import flock.subject.common.SetUtils;
-import flock.subject.common.TransferFunction;
-import flock.subject.common.UniversalSet;
 
-public class FlowAnalysis extends Analysis {
-	public FlowAnalysis() {
+import org.metaborg.lang.tiger.flock.common.Analysis;
+import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
+import org.metaborg.lang.tiger.flock.common.FlockLattice;
+import org.metaborg.lang.tiger.flock.common.FlockLattice.MaySet;
+import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.Helpers;
+import org.metaborg.lang.tiger.flock.common.SetUtils;
+import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
+import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
+import org.metaborg.lang.tiger.flock.common.TransferFunction;
+import org.spoofax.interpreter.terms.IStrategoTerm;
+import org.spoofax.terms.util.TermUtils;
+
+public class LiveVariableAnalysis extends Analysis {
+	public LiveVariableAnalysis() {
 		super("live", Direction.BACKWARD);
 	}
 
@@ -163,88 +126,94 @@ class TransferFunctions {
 }
 
 class TransferFunction0 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
-		MaySet tmp5 = (MaySet) UserFunctions.live_f(next);
-		return tmp5;
+		MaySet tmp127 = (MaySet) UserFunctions.live_f(next);
+		return TransferFunction.assignEvalResult(direction, node, res, tmp127);
 	}
 }
 
 class TransferFunction1 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
-		Set tmp9 = (Set) SetUtils.create(TermUtils.asString(usrn).get());
-		Set tmp10 = (Set) SetUtils.union(tmp9, ((FlockLattice) UserFunctions.live_f(next)).value());
-		Set tmp4 = (Set) tmp10;
-		return new MaySet(tmp4);
+		Set tmp131 = (Set) SetUtils.create(TermUtils.asString(usrn).get());
+		Set tmp132 = (Set) SetUtils.union(tmp131, ((FlockLattice) UserFunctions.live_f(next)).value());
+		Set tmp126 = (Set) tmp132;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp126);
 	}
 }
 
 class TransferFunction2 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(Helpers.at(term, 0), 0);
-		Set result147 = new HashSet();
+		Set result13 = new HashSet();
 		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
 			if (!usrm.equals(usrn)) {
-				result147.add(usrm);
+				result13.add(usrm);
 			}
 		}
-		Set tmp8 = (Set) result147;
-		Set tmp3 = (Set) tmp8;
-		return new MaySet(tmp3);
+		Set tmp130 = (Set) result13;
+		Set tmp125 = (Set) tmp130;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp125);
 	}
 }
 
 class TransferFunction3 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(Helpers.at(Helpers.at(term, 0), 0), 0);
-		Set result148 = new HashSet();
+		Set result122 = new HashSet();
 		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
 			if (!usrm.equals(usrn)) {
-				result148.add(usrm);
+				result122.add(usrm);
 			}
 		}
-		Set tmp7 = (Set) result148;
-		Set tmp2 = (Set) tmp7;
-		return new MaySet(tmp2);
+		Set tmp129 = (Set) result122;
+		Set tmp123 = (Set) tmp129;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp123);
 	}
 }
 
 class TransferFunction4 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
-		Set result149 = new HashSet();
+		Set result123 = new HashSet();
 		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
 			if (!usrm.equals(usrn)) {
-				result149.add(usrm);
+				result123.add(usrm);
 			}
 		}
-		Set tmp6 = (Set) result149;
-		Set tmp1 = (Set) tmp6;
-		return new MaySet(tmp1);
+		Set tmp128 = (Set) result123;
+		Set tmp122 = (Set) tmp128;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp122);
 	}
 }
 
 class TransferFunction5 extends TransferFunction {
+	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public FlockLattice eval(Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Set tmp0 = (Set) SetUtils.create();
-		return new MaySet(tmp0);
+		Set tmp121 = (Set) SetUtils.create();
+		return TransferFunction.assignEvalResult(direction, node, res, tmp121);
 	}
 }
 

@@ -17,11 +17,13 @@ import org.spoofax.terms.StrategoTuple;
 import org.spoofax.terms.util.NotImplementedException;
 
 public interface FlockLattice extends Cloneable {
-	public abstract boolean lub(FlockLattice o);
+	public abstract boolean lub(Object o);
 	
 	public abstract FlockLattice copy();
 
 	public abstract Object value();
+	
+	public abstract void setValue(Object value);
 	
 	public default boolean leq(FlockLattice r) {
 		FlockLattice clone = this.copy();
@@ -97,7 +99,12 @@ public interface FlockLattice extends Cloneable {
 		}
 		
 		@Override
-		public boolean lub(FlockLattice r) {
+		public void setValue(Object value) {
+			this.value = (Set) value;
+		}
+		
+		@Override
+		public boolean lub(Object r) {
 			return SetUtils.intersectionInplace(this, r);
 		}
 
@@ -179,7 +186,12 @@ public interface FlockLattice extends Cloneable {
 		}
 		
 		@Override
-		public boolean lub(FlockLattice o) {
+		public void setValue(Object value) {
+			this.value = (Set) value;
+		}
+		
+		@Override
+		public boolean lub(Object o) {
 			return SetUtils.unionInplace(this, o);
 		}
 
@@ -259,13 +271,18 @@ public interface FlockLattice extends Cloneable {
 		}
 		
 		@Override
-		public boolean lub(FlockLattice o) {
+		public boolean lub(Object o) {
 			return MapUtils.unionInplace(this, o);
 		}
 		
 		@Override
 		public Object value() {
 			return value;
+		}
+		
+		@Override
+		public void setValue(Object value) {
+			this.value = (Map) value;
 		}
 		
 		@Override

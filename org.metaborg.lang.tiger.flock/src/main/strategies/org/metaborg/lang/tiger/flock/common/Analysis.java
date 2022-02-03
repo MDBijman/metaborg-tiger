@@ -163,7 +163,7 @@ public abstract class Analysis {
 		Flock.beginTime("Analysis@loop2");
 		for (Node node : newNodes) {
 			if (cfg.roots().contains(node)) {
-				node.getProperty(this.propertyName).init.eval(node.getProperty(this.propertyName).lattice, node);
+				node.getProperty(this.propertyName).init.eval(this.direction, node.getProperty(this.propertyName).lattice, node);
 			}
 		}
 		Flock.endTime("Analysis@loop2");
@@ -173,7 +173,7 @@ public abstract class Analysis {
 			Flock.increment("Analysis@loop3");
 			FlockLattice init = node.getProperty(this.propertyName).lattice;
 			for (Node pred : this.getPredecessors(cfg, node)) {
-				pred.getProperty(this.propertyName).transfer.eval(init, pred);
+				pred.getProperty(this.propertyName).transfer.eval(this.direction, init, pred);
 			}
 			node.getProperty(this.propertyName).lattice = init;
 		}
@@ -195,7 +195,7 @@ public abstract class Analysis {
 
 				FlockLattice values_o = successor.getProperty(this.propertyName).lattice;
 
-				changed = node.getProperty(this.propertyName).transfer.eval(values_o, node);
+				changed = node.getProperty(this.propertyName).transfer.eval(this.direction, values_o, node);
 
 				if (changed && !worklist.contains(successor)) {
 					worklist.add(successor);

@@ -1,4 +1,4 @@
-module tiger/Live
+module tiger/LiveVariableAnalysis
 imports
  tiger/Cfg
 

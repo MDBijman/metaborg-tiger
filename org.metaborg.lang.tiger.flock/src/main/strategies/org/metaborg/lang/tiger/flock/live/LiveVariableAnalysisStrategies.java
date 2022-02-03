@@ -1,4 +1,4 @@
-package org.metaborg.lang.tiger.flock.impl;
+package org.metaborg.lang.tiger.flock.live;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -14,7 +14,7 @@ import org.spoofax.interpreter.terms.ITermFactory;
 import org.strategoxt.lang.Context;
 import org.strategoxt.lang.Strategy;
 
-public class LiveVariablesStrategies {
+public class LiveVariableAnalysisStrategies {
 	public static class get_live_0_0 extends Strategy {
 		public static get_live_0_0 instance = new get_live_0_0();
 

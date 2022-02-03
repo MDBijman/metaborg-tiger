@@ -104,20 +104,13 @@ public class Helpers {
 		}
 	}
 
+	
 	public static TermId getTermId(IStrategoTerm n) {
 		if (n.getAnnotations().size() == 0)
 			return null;
 		assert TermUtils.isAppl(n.getAnnotations().getSubterm(0), "FlockNodeId", 1);
 		IStrategoInt id = (IStrategoInt) n.getAnnotations().getSubterm(0).getSubterm(0);
 		return new TermId(id.intValue());
-	}
-
-	public static Node getTermNode(IStrategoTerm n) {
-		if (n.getAnnotations().size() == 0)
-			return null;
-		assert TermUtils.isAppl(n.getAnnotations().getSubterm(0), "FlockNodeId", 1);
-		IStrategoInt id = (IStrategoInt) n.getAnnotations().getSubterm(0).getSubterm(0);
-		return new Node(new TermId(id.intValue()));
 	}
 
 	public static IStrategoTerm annotateWithIds(IStrategoTerm t) {

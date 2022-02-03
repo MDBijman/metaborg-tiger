@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
-import org.metaborg.lang.tiger.flock.impl.LiveVariables;
+import org.metaborg.lang.tiger.flock.live.LiveVariableAnalysis;
 import org.metaborg.lang.tiger.flock.value.ValueAnalysis;
 import org.spoofax.interpreter.library.IOAgent;
 import org.spoofax.interpreter.terms.IStrategoInt;
@@ -30,7 +30,7 @@ public abstract class Flock {
 
 	public Flock() {
 		this.analyses = new ArrayList<Analysis>();
-		this.analyses.add(new LiveVariables());
+		this.analyses.add(new LiveVariableAnalysis());
 		this.analyses.add(new ValueAnalysis());
 		// this.analyses.add(new AvailableExpressions());
 	}
@@ -61,9 +61,9 @@ public abstract class Flock {
 		for (IStrategoTerm term : program.getSubterms()) {
 			getAllNodes(visited, term);
 		}
-		Node id = Helpers.getTermNode(program);
-		if (id != null && this.graph.getNode(id.getId()) != null) {
-			visited.add(this.graph.getNode(id.getId()));
+		TermId id = Helpers.getTermId(program);
+		if (id != null && this.graph.getNode(id) != null) {
+			visited.add(this.graph.getNode(id));
 		}
 	}
 
@@ -90,7 +90,7 @@ public abstract class Flock {
 			ga.addToNew(this.graph_scss, n);
 		}
 	}
-	
+
 	protected void addToDirty(Component c) {
 		for (Analysis ga : analyses) {
 			ga.addToDirty(c);
@@ -114,9 +114,7 @@ public abstract class Flock {
 		System.out.println(t);
 	}
 
-	private static String[] enabled = {
-			"time",
-			"count",
+	private static String[] enabled = { "time", "count",
 			// "debug",
 			// "incremental",
 			// "validation",
@@ -145,21 +143,22 @@ public abstract class Flock {
 	}
 
 	private static boolean timingEnabled = true;
-	
+
 	public static void disableTiming() {
 		Flock.timingEnabled = false;
 	}
-	
+
 	public static void enableTiming() {
 		Flock.timingEnabled = true;
 	}
-	
+
 	private static HashMap<String, Long> runningMap = new HashMap<>();
 
 	private static HashMap<String, Long> cumulMap = new HashMap<>();
-	
+
 	public static void beginTime(String tag) {
-		if (!timingEnabled) return;
+		if (!timingEnabled)
+			return;
 		runningMap.put(tag, System.nanoTime());
 		cumulMap.putIfAbsent(tag, 0L);
 	}
@@ -168,13 +167,14 @@ public abstract class Flock {
 		runningMap.clear();
 		cumulMap.clear();
 	}
-	
+
 	public static void resetCounters() {
 		countMap.clear();
 	}
 
 	public static long endTime(String tag) {
-		if (!timingEnabled) return -1;
+		if (!timingEnabled)
+			return -1;
 		long t = System.nanoTime() - runningMap.get(tag);
 		runningMap.remove(tag);
 		cumulMap.put(tag, cumulMap.get(tag) + t);
@@ -182,16 +182,18 @@ public abstract class Flock {
 	}
 
 	public static void logTime(String tag) {
-		if (!timingEnabled) return;
+		if (!timingEnabled)
+			return;
 		Flock.log("time", "time " + tag + ": " + cumulMap.get(tag));
 	}
 
 	public static void logTimers() {
-		if (!timingEnabled) return;
+		if (!timingEnabled)
+			return;
 		ArrayList<Entry<String, Long>> entries = new ArrayList<>(cumulMap.entrySet());
 		entries.sort((a, b) -> a.getKey().compareTo(b.getKey()));
 		for (Entry<String, Long> e : entries) {
-			Flock.log("time", e.getKey() + ": " + e.getValue()/1000000.0d);
+			Flock.log("time", e.getKey() + ": " + e.getValue() / 1000000.0d);
 		}
 	}
 
@@ -215,7 +217,7 @@ public abstract class Flock {
 		Flock.nextId = new TermId(next.getId() + 1);
 		return next;
 	}
-	
+
 	public static void resetNodeId() {
 		Flock.nextId = new TermId(0);
 	}
@@ -240,12 +242,17 @@ class PositionLattice implements FlockLattice {
 	}
 
 	@Override
-	public boolean lub(FlockLattice o) {
+	public boolean lub(Object o) {
 		throw new NotImplementedException();
 	}
 
 	@Override
 	public FlockLattice copy() {
 		return new PositionLattice(this.value);
+	}
+
+	@Override
+	public void setValue(Object value) {
+		this.value = (IStrategoInt) value;
 	}
 }

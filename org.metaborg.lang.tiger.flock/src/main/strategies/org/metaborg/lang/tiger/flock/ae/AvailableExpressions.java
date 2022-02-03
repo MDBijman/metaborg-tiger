@@ -75,7 +75,7 @@ class TransferFunctions {
 class TransferFunction0 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		SimpleMap tmp83 = (SimpleMap) UserFunctions.expressions_f(prev);
@@ -86,7 +86,7 @@ class TransferFunction0 extends TransferFunction {
 class TransferFunction1 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
@@ -111,7 +111,7 @@ class TransferFunction1 extends TransferFunction {
 class TransferFunction2 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(FlockLattice res, Node node) {
+	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Map tmp81 = (Map) MapUtils.create();
 		return res.lub(new SimpleMap(tmp81));

@@ -20,21 +20,37 @@ public class Graph {
 
 		public boolean isGhost = false;
 		public ITerm virtualTerm = null;
-		public float interval = 0.0f;
 		public HashMap<String, Property> properties = new HashMap<>();
+		public Graph graph = null;
 
-		public Node() {
+		public Node(Graph parent) {
 			this.isGhost = true;
 			this.id = Flock.nextNodeId();
+			this.graph = parent;
 		}
 
-		public Node(TermId id) {
+		public Node(Graph parent, Node other) {
+			this.isGhost = other.isGhost;
+			this.id = other.id;
+			this.properties = other.properties;
+			this.virtualTerm = other.virtualTerm;
+			this.graph = parent;
+		}
+
+		public Node(Graph parent, TermId id) {
 			this.id = id;
+			this.graph = parent;
 		}
 
-		public Node(TermId id, ITerm t) {
+		public Node(Graph parent, TermId id, ITerm t) {
 			this.id = id;
 			this.virtualTerm = t;
+			this.graph = parent;
+		}
+
+		public Node withGraph(Graph parent) {
+			this.graph = parent;
+			return this;
 		}
 
 		public void addProperty(String name, FlockLattice lat) {
@@ -47,6 +63,14 @@ public class Graph {
 
 		public Collection<Property> properties() {
 			return properties.values();
+		}
+
+		public Collection<Node> predecessors(Analysis.Direction dir) {
+			if (dir == Analysis.Direction.FORWARD) {
+				return graph.parentsOf(this);
+			} else {
+				return graph.childrenOf(this);
+			}
 		}
 
 		@Override
@@ -101,7 +125,8 @@ public class Graph {
 	public Graph() {
 	}
 
-	public Graph(Node root, ITerm termNode) {
+	public Graph(TermId rootId, ITerm termNode) {
+		Node root = new Node(this, rootId);
 		root.virtualTerm = termNode;
 		this.roots.add(root);
 		this.leaves.add(root);
@@ -154,8 +179,11 @@ public class Graph {
 	 */
 	private void mergeChildren(HashMap<Node, Set<Node>> other) {
 		for (Entry<Node, Set<Node>> e : other.entrySet()) {
-			this.children.putIfAbsent(e.getKey(), new HashSet<>());
-			this.children.get(e.getKey()).addAll(e.getValue());
+			Node newKey = e.getKey().withGraph(this);
+			Set<Node> newNodes = e.getValue().stream().map(n -> n.withGraph(this)).collect(Collectors.toSet());
+
+			this.children.putIfAbsent(newKey, new HashSet<>());
+			this.children.get(newKey).addAll(newNodes);
 		}
 	}
 
@@ -167,8 +195,44 @@ public class Graph {
 	 */
 	private void mergeParents(HashMap<Node, Set<Node>> other) {
 		for (Entry<Node, Set<Node>> e : other.entrySet()) {
-			this.parents.putIfAbsent(e.getKey(), new HashSet<>());
-			this.parents.get(e.getKey()).addAll(e.getValue());
+			Node newKey = e.getKey().withGraph(this);
+			Set<Node> newNodes = e.getValue().stream().map(n -> n.withGraph(this)).collect(Collectors.toSet());
+
+			this.parents.putIfAbsent(newKey, new HashSet<>());
+			this.parents.get(newKey).addAll(newNodes);
+		}
+	}
+
+	/**
+	 * Adds the nodes to this graph.
+	 * 
+	 * @param other
+	 */
+	private void mergeNodes(HashMap<TermId, Node> other) {
+		for (Entry<TermId, Node> e : other.entrySet()) {
+			this.nodes.put(e.getKey(), e.getValue().withGraph(this));
+		}
+	}
+
+	/**
+	 * Adds the leafs to this graph.
+	 * 
+	 * @param other
+	 */
+	private void mergeLeafs(Collection<Node> other) {
+		for (Node n : other) {
+			this.leaves.add(n.withGraph(this));
+		}
+	}
+
+	/**
+	 * Adds the roots to this graph.
+	 * 
+	 * @param other
+	 */
+	private void mergeRoots(Collection<Node> other) {
+		for (Node n : other) {
+			this.roots.add(n.withGraph(this));
 		}
 	}
 
@@ -181,11 +245,11 @@ public class Graph {
 	 * @param o
 	 */
 	public void mergeGraph(Graph o) {
-		this.nodes.putAll(o.nodes);
+		this.mergeNodes(o.nodes);
 		this.mergeChildren(o.children);
 		this.mergeParents(o.parents);
-		this.leaves.addAll(o.leaves());
-		this.roots.addAll(o.roots());
+		this.mergeLeafs(o.leaves());
+		this.mergeRoots(o.roots());
 	}
 
 	/**
@@ -207,13 +271,13 @@ public class Graph {
 		if (parents.size() == 0) {
 			this.mergeGraph(o);
 		} else {
-			this.nodes.putAll(o.nodes);
+			this.mergeNodes(o.nodes);
 			this.mergeChildren(o.children);
 			this.mergeParents(o.parents);
 
 			for (Node n : parents) {
 				for (Node r : o.roots) {
-					this.createEdge(n, r);
+					this.createEdge(n.withGraph(this), r.withGraph(this));
 				}
 			}
 		}
@@ -237,25 +301,26 @@ public class Graph {
 		if (o.size() == 0) {
 			for (Node p : parents) {
 				for (Node c : children) {
+					// p and c are of this graph so no update to their graph pointers necessary
 					this.createEdge(p, c);
 				}
 			}
 			return;
 		}
 
-		this.nodes.putAll(o.nodes);
+		this.mergeNodes(o.nodes);
 		this.mergeChildren(o.children);
 		this.mergeParents(o.parents);
 
 		for (Node n : parents) {
 			for (Node r : o.roots) {
-				this.createEdge(n, r);
+				this.createEdge(n, r.withGraph(this));
 			}
 		}
 
 		for (Node n : children) {
-			for (Node r : o.leaves) {
-				this.createEdge(r, n);
+			for (Node l : o.leaves) {
+				this.createEdge(l.withGraph(this), n);
 			}
 		}
 	}
@@ -268,16 +333,17 @@ public class Graph {
 	 * Creates a non-ghost node without id, term, etc. Only use for tests.
 	 */
 	public Node createNode() {
-		Node n = new Node();
+		Node n = new Node(this);
 		n.isGhost = false;
 		this.addNode(n);
 		return n;
 	}
 
 	public void addNode(Node n) {
-		this.nodes.put(n.getId(), n);
-		this.parents.put(n, new HashSet<>());
-		this.children.put(n, new HashSet<>());
+		Node newNode = new Node(this, n);
+		this.nodes.put(newNode.getId(), newNode);
+		this.parents.put(newNode, new HashSet<>());
+		this.children.put(newNode, new HashSet<>());
 	}
 
 	public void createEdge(Node parent, Node child) {
@@ -356,20 +422,20 @@ public class Graph {
 		for (Node remove : nodes) {
 			this.removeNodeAndEdges(remove);
 		}
-		
+
 		// If root was replaced, then sub graph roots are also roots
 		if (containedRoot) {
 			this.roots.addAll(subGraph.roots);
 		}
-		
+
 		// If leaf was replaced, then sub graph leaves are also leaves
 		if (containedLeaf) {
 			this.leaves.addAll(subGraph.leaves);
 		}
-		
+
 		this.mergeGraph(predecessors, successors, subGraph);
 		this.validate();
-		
+
 		Flock.endTime("Graph@replaceNodes");
 	}
 

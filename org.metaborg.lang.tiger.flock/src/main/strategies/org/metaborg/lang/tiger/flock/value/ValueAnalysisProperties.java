@@ -2,7 +2,6 @@ package org.metaborg.lang.tiger.flock.value;
 
 import org.metaborg.lang.tiger.flock.common.FlockValue;
 import org.spoofax.interpreter.terms.IStrategoTerm;
-import org.spoofax.terms.util.TermUtils;
 
 public class ValueAnalysisProperties {
 	static class ConstProp extends FlockValue {
@@ -10,6 +9,11 @@ public class ValueAnalysisProperties {
 
 		ConstProp(IStrategoTerm value) {
 			this.value = value;
+		}
+
+		@Override
+		public void setValue(Object value) {
+			this.value = (IStrategoTerm) value;
 		}
 
 		@Override
@@ -21,17 +25,14 @@ public class ValueAnalysisProperties {
 		}
 
 		@Override
-		public boolean equals(Object other) {
-			if (other == null)
+		public boolean equals(Object obj) {
+			if (!(obj instanceof ConstProp)) {
 				return false;
-			if (other == this)
-				return true;
-			if (other.getClass() != this.getClass())
-				return false;
-			ConstProp rhs = (ConstProp) other;
-			return this.value.equals(rhs.value);
+			}
+			ConstProp other = (ConstProp) obj;
+			return this.value.equals(other.value);
 		}
-		
+
 		@Override
 		public int hashCode() {
 			return value.hashCode();

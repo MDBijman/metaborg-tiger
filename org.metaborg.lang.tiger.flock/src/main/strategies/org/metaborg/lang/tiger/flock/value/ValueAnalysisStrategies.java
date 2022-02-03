@@ -24,7 +24,7 @@ public class ValueAnalysisStrategies {
 			TermId id = new TermId(((IStrategoInt) current).intValue());
 			Node node = Flock.instance.getNode(id);
 			if (node == null) {
-				Flock.printDebug("a CfgNode is null with id " + id.getId());
+				Flock.printDebug("CfgNode is null with id " + id.getId());
 				return null;
 			}
 			Flock.instance.analysisWithName("values").performDataAnalysis(Flock.instance.graph,
@@ -33,7 +33,6 @@ public class ValueAnalysisStrategies {
 					((Map<IStrategoTerm, IStrategoTerm>) node.getProperty("values").lattice.value()).entrySet().stream()
 							.map(n -> factory.makeTuple(Helpers.toTerm(n.getKey()), Helpers.toTerm(n.getValue())))
 							.collect(Collectors.toList()));
-			
 			return result;
 		}
 	}
@@ -47,12 +46,11 @@ public class ValueAnalysisStrategies {
 			TermId id = new TermId(((IStrategoInt) current).intValue());
 			Node node = Flock.instance.getNode(id);
 			if (node == null) {
-				Flock.printDebug("a CfgNode is null with id " + id.getId());
+				Flock.printDebug("CfgNode is null with id " + id.getId());
 				return null;
 			}
 			Flock.instance.analysisWithName("values").performDataAnalysis(Flock.instance.graph,
 					Flock.instance.graph_scss, node);
-
 			Map<IStrategoTerm, Object> values = (Map<IStrategoTerm, Object>) node.getProperty("values").lattice.value();
 			Object value = values.get(key);
 			if (value == null) {

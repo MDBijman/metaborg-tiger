@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
-import org.metaborg.lang.tiger.flock.impl.GraphFactory;
+import org.metaborg.lang.tiger.flock.graph.GraphFactory;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
 import org.strategoxt.lang.Context;

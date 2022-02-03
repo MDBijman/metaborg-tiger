@@ -15,15 +15,15 @@ public class SetUtils {
 		return result;
 	}
 
-	public static Set union(Object l, Object r) {
-		Set ls = (Set) l;
-		Set rs = (Set) r;
-		if (ls instanceof UniversalSet || rs instanceof UniversalSet) {
+	public static Set union(Object o1, Object o2) {
+		Set l = (Set) o1;
+		Set r = (Set) o2;
+		if (l instanceof UniversalSet || r instanceof UniversalSet) {
 			return new UniversalSet();
 		}
 		Set<IStrategoTerm> result = new HashSet();
-		result.addAll(ls);
-		result.addAll(rs);
+		result.addAll(l);
+		result.addAll(r);
 		return result;
 	}
 	
