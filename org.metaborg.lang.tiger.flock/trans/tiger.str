@@ -111,33 +111,36 @@ rules // pipeline
   ; <flock-debug-runtime> ()
   
   opt-repeat(|n) = flock-fixpoint(opt|n)
-  
-//  t = ?FunDec(_, _, _, _)
-//    < preserve-annotation(?FunDec(n, params, type, body); !FunDec(n, params, type, body))
-//    + (preserve-annotation(some(debug; t)) < try(t-one) + t-one)
-//  t-one = ?Int(_)
-  
-  opt: l@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|l)> i
-  
-  opt: l@Let(decls, expr) -> new-l
-  where {| InlineFn, InlineCount:
-  	new-l := <some(opt)> l
-  |}
+ 
+  // 1) Dit is de originele implementatie van 'opt'
+ 
+//  opt: l@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|l)> i
+//  
+//  opt: l@Let(decls, expr) -> new-l
+//  where {| InlineFn, InlineCount:
+//  	new-l := <some(opt)> l
+//  |}
+//
+//  opt: FunDec(n, params, rt, body) -> FunDec(n, params, rt, new-body)
+//      where
+//         <finally(opt,
+//	  	    ?new-body
+//	  	  ; rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
+//	  		where
+//	  		  <should-inline> n
+//	  		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [new-body])
+//	  		; new-node := <flock-replace-node(|c)> replacement)
+//	  	)> body
+//	  	 
+//  opt = (preserve-annotation(some(opt)) < try(opt-one) + (opt-one))
 
-  opt: FunDec(n, params, rt, body) -> FunDec(n, params, rt, new-body)
-      where
-         <finally(opt,
-	  	    ?new-body
-	  	  ; rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
-	  		where
-	  		  <should-inline> n
-	  		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [new-body])
-	  		; new-node := <flock-replace-node(|c)> replacement)
-	  	)> body
-	  	 
-  opt = (preserve-annotation(some(opt)) < try(opt-one) + (opt-one))
+  // 2) Deze implementatie heeft de performance issues
 
   opt = (?FunDec(n, _, _, _) < fail + (preserve-annotation(some(opt)) < try(opt-one) + (opt-one)))
+
+  // 3) Deze implementatie heeft geen performance issues
+
+  // opt = (?FunDec(_, _, _, _) < fail + (preserve-annotation(some(opt)) < try(opt-one) + (opt-one)))
 
   // Fail if neither the term nor any of its subterms can be optimized
   opt-one = propagate-constant <+ fold-constant <+ simplify-seq <+ remove-dead-branch /*<+ remove-dead-vardec*/ <+ InlineFn
