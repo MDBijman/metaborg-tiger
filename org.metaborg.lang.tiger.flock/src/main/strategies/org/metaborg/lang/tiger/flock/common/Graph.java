@@ -120,7 +120,7 @@ public class Graph {
 	private HashMap<TermId, Node> nodes = new HashMap<>();
 	private Set<Node> roots = new HashSet<>();
 	public Set<Node> leaves = new HashSet<>();
-	private static boolean DEBUG = false;
+	private static final boolean DEBUG = Flock.DEBUG;
 
 	public Graph() {
 	}

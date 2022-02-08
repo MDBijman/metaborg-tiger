@@ -15,8 +15,7 @@ strategies
   with
     with-ids := <flock-initialize> p
   ; p' := <
-      inline-pass(|15)
-  	; forward-opt(|30)
+      opt-repeat(|15)
   	; topdown(try(remove-all(?Hole())))
   > with-ids
   

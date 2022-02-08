@@ -1,0 +1,13 @@
+let function a0(a: int): int = a + 1
+    function a1(a: int): int = a0(a) + 1
+    function a2(a: int): int = a1(a) + 1
+    function a3(a: int): int = a2(a) + 1
+    function a4(a: int): int = a3(a) + 1
+    function a5(a: int): int = a4(a) + 1
+    function a6(a: int): int = a5(a) + 1
+    function a7(a: int): int = a6(a) + 1
+    function a8(a: int): int = a7(a) + 1
+    function a9(a: int): int = a8(a) + 1
+in
+	a9(1)
+end

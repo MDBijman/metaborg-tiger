@@ -20,15 +20,12 @@ public abstract class Analysis {
 	public final String name;
 	public final String propertyName;
 	public final Direction direction;
-//	public HashSet<Node> cleanNodes = new HashSet<>();
-//	public HashSet<Node> dirtyNodes = new HashSet<>();
-//	public HashSet<Node> newNodes = new HashSet<>();
 
 	public HashSet<Component> cleanComponents = new HashSet<>();
 	public HashSet<Component> dirtyComponents = new HashSet<>();
 	public HashSet<Node> newNodes = new HashSet<>();
 
-	private boolean debug = false;
+	private static final boolean DEBUG = Flock.DEBUG;
 
 	public Analysis(String name, Direction dir) {
 		this.name = name;
@@ -73,7 +70,7 @@ public abstract class Analysis {
 	}
 
 	public void validate(Graph g, SCCs sccs) {
-		if (!debug)
+		if (!DEBUG)
 			return;
 
 		for (Component c : this.cleanComponents) {

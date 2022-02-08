@@ -5,14 +5,12 @@ imports Occurrences
 
 context-free syntax
 
-  Dec.FunDecs = <<{FunDec "\n"}+>> {longest-match}
-  
-  FunDec.ProcDec = <
+  Dec.ProcDec = <
     function <Occ>(<{FArg ", "}*>) = 
       <Exp>
   >
   
-  FunDec.FunDec = <
+  Dec.FunDec = <
     function <Occ>(<{FArg ", "}*>) : <Type> = 
       <Exp>
   >

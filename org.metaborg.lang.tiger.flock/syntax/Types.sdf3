@@ -7,9 +7,7 @@ sorts Type
 
 context-free syntax // type declarations
    
-  Dec.TypeDecs = <<{TypeDec "\n"}+>> {longest-match}
-  
-  TypeDec.TypeDec = <type <Occ> = <Type>> 
+  Dec.TypeDec = <type <Occ> = <Type>> 
   
 context-free syntax // type expressions
 

@@ -76,12 +76,25 @@ rules // transformation actions
     with
       with-ids := <flock-initialize> p
     ; p' := <topdown(try(propagate-constant))> with-ids
+	; <flock-debug-graph(|"values")> ()
 
   transform-inline: p -> p'
     with
       with-ids := <flock-initialize> p
     ; p' := <inline-in-module> with-ids
-
+  
+  /*
+  * This does inlining only, not composed with other transformations
+  * It only inlines loplevel functions
+  * Used for testing and debugging
+  */
+  inline-in-module: Mod(l@Let(decs, expr){a1*}){a2*} -> Mod(Let(decs, new-expr){a1*}){a2*}
+  where
+  	  {| InlineFn, InlineCount:
+  		<try(bind-fns-in-let-binding)> l
+  	  ; new-expr := <bottomup(try(InlineFn))> expr
+  	  |}
+  	  
 rules // pipeline
 
   pipeline: p -> p'
@@ -90,22 +103,39 @@ rules // pipeline
   //; <flock-disable-logging> ()
   ; <flock-begin-timer> "pipeline"
   ; p' := <
-      inline-pass(|3)
-  	; forward-opt(|15)
+  	  opt-repeat(|2)
   	; topdown(try(remove-all(?Hole())))
   > with-ids
   ; <flock-end-timer> "pipeline"
   ; <debug> <run-time>
   ; <flock-debug-runtime> ()
   
-  inline-pass(|n) = flock-fixpoint(inline-in-module|n)
-
-  forward-opt(|n) = flock-fixpoint(forward-pass|n)
+  opt-repeat(|n) = flock-fixpoint(opt|n)
   
-  // Fail if the term nor any of its subterms can be optimized
-  forward-pass = (preserve-annotation(some(forward-pass))
-  ; try(propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec))
-  + (propagate-constant <+ fold-constant <+ simplify-let <+ simplify-seq <+ remove-dead-branch <+ remove-dead-vardec)
+//  t = ?FunDec(_, _, _, _)
+//    < preserve-annotation(?FunDec(n, params, type, body); !FunDec(n, params, type, body))
+//    + (preserve-annotation(some(debug; t)) < try(t-one) + t-one)
+//  t-one = ?Int(_)
+  
+  /*opt: l@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|l)> i
+  opt: l@Let(decls, expr) -> new-l
+  where {| InlineFn, InlineCount:
+  	new-l := <some(opt)> l
+  |}*/
+
+  opt =
+      ?FunDec(n, params, rt, body) < preserve-annos(where(<finally(opt,
+		  	  ?new-body; rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
+		  		where
+		  		  <should-inline> n
+		  		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [new-body])
+		  		; new-node := <flock-replace-node(|c)> replacement); !new-body
+		  	)> body)
+	  	 ; !FunDec(n, params, rt, new-body))
+    + (preserve-annotation(some(opt)) < try(opt-one) + (opt-one))
+
+  // Fail if neither the term nor any of its subterms can be optimized
+  opt-one = propagate-constant <+ fold-constant <+ simplify-seq <+ remove-dead-branch /*<+ remove-dead-vardec*/ <+ InlineFn
 
 strategies
   
@@ -114,15 +144,15 @@ strategies
    n-no-annos := <strip-annos> n
   ; Const(new-value) := <flock-get-values(|n-no-annos)> v
   ; new-node := <flock-replace-node(|lv)> Int(new-value)
-    
+
   compare-names(|other): (name, value) -> value where <equal(|name, other)> ()
   
   fold-constant: e@Plus(Int(v1), Int(v2)) -> new-node
-  where 
+  where
     sum := <(string-to-int, string-to-int); addi; int-to-string> (v1, v2)
   ; <concat-strings; flock-debug> ["[fold-expressions] ", v1, " + ", v2, " -> ", sum]
   ; new-node := <flock-replace-node(|e)> Int(sum)
-  
+
   fold-constant: e@Minus(Int(v1), Int(v2)) -> new-node
   where
     sub := <(string-to-int, string-to-int); subti; int-to-string> (v1, v2)
@@ -152,9 +182,7 @@ strategies
   remove-dead-branch: e@If(Int("0"), then, else) -> <strip-annos; flock-replace-node(|e)> else
   remove-dead-branch: e@If(Int("1"), then, else) -> <strip-annos; flock-replace-node(|e)> then
   remove-dead-branch: e@IfThen(Int("1"), then) -> <strip-annos; flock-replace-node(|e)> then
-  
-  simplify-let: e@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|e)> i 
-  
+    
   simplify-seq: e@Seq([inner]) -> <strip-annos; flock-replace-node(|e)> inner
   
 strategies
@@ -163,27 +191,18 @@ strategies
   where
     <not(flock-is-live(|n))> a
   ; new-node := <flock-replace-node(|a)> Hole()
-  
+
   get-vbe: n -> n where <flock-get-ae> n
   
 strategies
 
-  inline-in-module: Mod(l@Let(decs, expr){a1*}){a2*} -> Mod(Let(decs, new-expr){a1*}){a2*}
-  where
-  	  {| InlineFn, InlineCount:
-  		<try(bind-fns-in-let-binding)> l
-  	  ; new-expr := <bottomup(try(InlineFn))> expr
-  	  |}
-  	
-  inline-rec = rec x({| InlineFn: try(bind-fns-in-let-binding); try(InlineFn); all(x) |})
-  
   bind-fns-in-let-binding: Let(bindings, expr) -> <id>
   where
-    <retain-all(?FunDecs(fns); !fns); concat; retain-all(no-free-vars; bind-fn)> bindings
-  
+    <retain-all(?FunDec(_, _, _, _) + ?ProcDec(_, _, _)); retain-all(no-free-vars; bind-fn)> bindings
+   
   // We are relying on the preorder-traversal of topdown to match the way
   // names are bound in the program!
-  
+   
   no-free-vars: FunDec(n, params, _, body) -> <id>
   where
   {| BoundName: 
@@ -198,36 +217,37 @@ strategies
   ; <topdown(try(bind-names); not(free-var))> body
   |}
   	
-  bind-names: FArg(n, _) -> <id> where rules(BoundName: n{an*} -> <id>)//; <debug> ("bound", n)
-  bind-names: VarDec(n, _, _) -> <id> where rules(BoundName: n{an*} -> <id>)//; <debug> ("bound", n)
+  bind-names: FArg(n, _) -> <id> where rules(BoundName: n{an*} -> <id>)
+  bind-names: VarDec(n, _, _) -> <id> where rules(BoundName: n{an*} -> <id>)
   bind-names: LoopBinding(Var(n), _, _) -> <id> where rules(BoundName: n{an*} -> <id>)
-  //bind-names: FunDec(n, _, _, _) -> <id> where rules(BoundName: n{an*} -> <id>); <debug> ("bound", n)
-  //bind-names: ProcDec(n, _, _) -> <id> where rules(BoundName: n{an*} -> <id>); <debug> ("bound", n)
   
   free-var: t@Var(n) -> <not(BoundName)> n
-  //free-var: Call(n, _) -> <not(BoundName)> n
 
 ///
- 
+
   bind-fn: FunDec(n, params, rt, body) -> <id>
   where
+    //<concat-strings; debug> ["binding funcdec ", n] ;
   	rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
   		where
   		  <should-inline> n
+  		//; <debug> "inlining"
   		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [body])
   		; new-node := <flock-replace-node(|c)> replacement)
-  	
+
   bind-fn: ProcDec(n, params, body) -> <id>
   where
+    //<concat-strings; debug> ["binding procdec ", n] ;
   	rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
   		where
   		  <should-inline> n
+  		//; <debug> "inlining"
   		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [body])
   		; new-node := <flock-replace-node(|c)> replacement)
 
   // This limits the amount of inlining to 3 per function definition
   should-inline: n -> n
-  where
+  where  
     count := <(InlineCount + !0); inc> n
   ; <lt> (count, 3)
   ; rules(InlineCount: n -> count)

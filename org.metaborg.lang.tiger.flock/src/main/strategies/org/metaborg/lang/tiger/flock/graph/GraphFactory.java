@@ -70,13 +70,15 @@ public class GraphFactory {
 				list = list.tail();
 			}
 		} else if (TermUtils.isAppl(term)
-				&& (M.appl(term).getName().equals("FunDecs") && term.getSubtermCount() == 1)) {
-			IStrategoTerm _FunDecs = term;
+				&& (M.appl(term).getName().equals("ProcDec") && term.getSubtermCount() == 3)) {
+			IStrategoTerm _ProcDec = term;
+			result_graph.leaves = new HashSet<>();
+		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("FunDec") && term.getSubtermCount() == 4)) {
+			IStrategoTerm _FunDec = term;
 			result_graph.leaves = new HashSet<>();
 		} else if (TermUtils.isAppl(term)
-				&& (M.appl(term).getName().equals("TypeDecs") && term.getSubtermCount() == 1)) {
-			IStrategoTerm _TypeDecs = term;
-			IStrategoTerm typeDecs = Helpers.at(term, 0);
+				&& (M.appl(term).getName().equals("TypeDec") && term.getSubtermCount() == 2)) {
+			IStrategoTerm _TypeDec = term;
 			result_graph.leaves = new HashSet<>();
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("TypeDec") && term.getSubtermCount() == 2)) {

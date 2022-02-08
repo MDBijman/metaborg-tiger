@@ -27,6 +27,7 @@ public abstract class Flock {
 	public SCCs graph_scss;
 	public TermTree termTree;
 	public List<Analysis> analyses;
+	public static final boolean DEBUG = false;
 
 	public Flock() {
 		this.analyses = new ArrayList<Analysis>();
@@ -221,7 +222,6 @@ public abstract class Flock {
 	public static void resetNodeId() {
 		Flock.nextId = new TermId(0);
 	}
-
 }
 
 class PositionLattice implements FlockLattice {

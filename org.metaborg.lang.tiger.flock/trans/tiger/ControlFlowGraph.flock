@@ -9,9 +9,7 @@ signature
     Exp
     LoopBinding
     Dec
-    FunDec
     Type
-    TypeDec
     Occ
     TypeId
     FArg
@@ -22,13 +20,11 @@ signature
 	
   constructors
     Mod : Exp -> Exp
-    FunDecs : list(FunDec) -> Dec
-    ProcDec : Occ * list(FArg) * Exp -> FunDec 
-    FunDec : Occ * list(FArg) * Type * Exp -> FunDec
+    ProcDec : Occ * list(FArg) * Exp -> Dec 
+    FunDec : Occ * list(FArg) * Type * Exp -> Dec
     VarDec : Id * Type * Exp -> Dec
     VarDecNoType : Occ * Exp -> Dec
-    TypeDecs : list(TypeDec) -> Dec
-    TypeDec : Occ * Type -> TypeDec
+    TypeDec : Occ * Type -> Dec
     Type : TypeId -> Type
     Occ : Id -> Occ 
     Tid : Occ -> TypeId
@@ -72,9 +68,11 @@ control-flow rules
   root Mod(s) = start -> s -> end
   root ProcDec(n, args, body) = start -> body -> end
   root FunDec(n, args, rt, body) = start -> body -> end
+
+  ProcDec(_, _, _) = entry -> exit
+  FunDec(_, _, _, _) = entry -> exit
+  TypeDec(_, _) = entry -> exit
   
-  FunDecs(_) = entry -> exit
-  TypeDecs(typeDecs) = entry -> exit
   TypeDec(occ, t) = entry -> exit
   VarDec(n, t, e) = entry -> e -> this -> exit
   VarDecNoType(n, e) = entry -> e -> this -> exit
