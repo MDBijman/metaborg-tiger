@@ -103,7 +103,7 @@ rules // pipeline
   //; <flock-disable-logging> ()
   ; <flock-begin-timer> "pipeline"
   ; p' := <
-  	  opt-repeat(|2)
+  	  opt-repeat(|1)
   	; topdown(try(remove-all(?Hole())))
   > with-ids
   ; <flock-end-timer> "pipeline"
@@ -117,22 +117,27 @@ rules // pipeline
 //    + (preserve-annotation(some(debug; t)) < try(t-one) + t-one)
 //  t-one = ?Int(_)
   
-  /*opt: l@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|l)> i
+  opt: l@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|l)> i
+  
   opt: l@Let(decls, expr) -> new-l
   where {| InlineFn, InlineCount:
   	new-l := <some(opt)> l
-  |}*/
+  |}
 
-  opt =
-      ?FunDec(n, params, rt, body) < preserve-annos(where(<finally(opt,
-		  	  ?new-body; rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
-		  		where
-		  		  <should-inline> n
-		  		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [new-body])
-		  		; new-node := <flock-replace-node(|c)> replacement); !new-body
-		  	)> body)
-	  	 ; !FunDec(n, params, rt, new-body))
-    + (preserve-annotation(some(opt)) < try(opt-one) + (opt-one))
+  opt: FunDec(n, params, rt, body) -> FunDec(n, params, rt, new-body)
+      where
+         <finally(opt,
+	  	    ?new-body
+	  	  ; rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
+	  		where
+	  		  <should-inline> n
+	  		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [new-body])
+	  		; new-node := <flock-replace-node(|c)> replacement)
+	  	)> body
+	  	 
+  opt = (preserve-annotation(some(opt)) < try(opt-one) + (opt-one))
+
+  opt = (?FunDec(n, _, _, _) < fail + (preserve-annotation(some(opt)) < try(opt-one) + (opt-one)))
 
   // Fail if neither the term nor any of its subterms can be optimized
   opt-one = propagate-constant <+ fold-constant <+ simplify-seq <+ remove-dead-branch /*<+ remove-dead-vardec*/ <+ InlineFn
