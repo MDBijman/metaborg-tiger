@@ -1,8 +1,7 @@
 package org.metaborg.lang.tiger.flock.graph;
 
-import java.util.HashSet;
-
 import org.metaborg.lang.tiger.flock.common.Graph;
+import org.metaborg.lang.tiger.flock.common.GraphBuilder;
 import org.metaborg.lang.tiger.flock.common.Helpers;
 import org.metaborg.lang.tiger.flock.common.TermTree;
 import org.spoofax.interpreter.terms.IStrategoList;
@@ -12,398 +11,447 @@ import org.spoofax.terms.util.TermUtils;
 
 public class GraphFactory {
 	public static Graph createCfgRecursive(TermTree tree, IStrategoTerm term) {
-		Graph result_graph = new Graph();
+		return createCfgRecursive_inner(term).build(tree);
+	}
+
+	public static Graph createCfgOnce(TermTree tree, IStrategoTerm term) {
+		return createCfg_inner(term).build(tree);
+	}
+
+	public static GraphBuilder createCfgRecursive_inner(IStrategoTerm term) {
+		GraphBuilder result_graph = GraphBuilder.empty();
 		for (IStrategoTerm subterm : term.getSubterms()) {
-			Graph subgraph = createCfgRecursive(tree, subterm);
+			GraphBuilder subgraph = createCfgRecursive_inner(subterm);
 			if (subgraph.size() != 0) {
-				result_graph.mergeGraph(subgraph);
+				result_graph.merge(subgraph);
 			}
 		}
 		if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Mod") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _Mod = term;
 			IStrategoTerm s = Helpers.at(term, 0);
-			Graph s_nr = createCfg_inner(tree, s);
-			result_graph.mergeGraph(s_nr);
-			result_graph.leaves.addAll(s_nr.leaves);
+			GraphBuilder s_nr = createCfg_inner(s);
+			result_graph.merge(s_nr);
+			result_graph.fromStart(s_nr.getEntry());
+			result_graph.toEnd(s_nr.getExit());
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("ProcDec") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _ProcDec = term;
 			IStrategoTerm n = Helpers.at(term, 0);
 			IStrategoTerm args = Helpers.at(term, 1);
 			IStrategoTerm body = Helpers.at(term, 2);
-			Graph body_nr = createCfg_inner(tree, body);
-			result_graph.mergeGraph(body_nr);
-			result_graph.leaves.addAll(body_nr.leaves);
+			GraphBuilder body_nr = createCfg_inner(body);
+			result_graph.merge(body_nr);
+			result_graph.fromStart(body_nr.getEntry());
+			result_graph.toEnd(body_nr.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("FunDec") && term.getSubtermCount() == 4)) {
 			IStrategoTerm _FunDec = term;
 			IStrategoTerm n = Helpers.at(term, 0);
 			IStrategoTerm args = Helpers.at(term, 1);
 			IStrategoTerm rt = Helpers.at(term, 2);
 			IStrategoTerm body = Helpers.at(term, 3);
-			Graph body_nr = createCfg_inner(tree, body);
-			result_graph.mergeGraph(body_nr);
-			result_graph.leaves.addAll(body_nr.leaves);
+			GraphBuilder body_nr = createCfg_inner(body);
+			result_graph.merge(body_nr);
+			result_graph.fromStart(body_nr.getEntry());
+			result_graph.toEnd(body_nr.getExit());
 		} else {
 		}
 		return result_graph;
 	}
 
-	public static Graph createCfgOnce(TermTree tree, IStrategoTerm term) {
-		return createCfg_inner(tree, term);
-	}
-
-	private static Graph createCfg_inner(TermTree tree, IStrategoTerm term) {
-		Graph result_graph = new Graph();
+	private static GraphBuilder createCfg_inner(IStrategoTerm term) {
+		GraphBuilder result_graph = GraphBuilder.empty();
 		if (TermUtils.isList(term)) {
 			IStrategoList list = M.list(term);
 			if (list.isEmpty()) {
-				return new Graph();
+				return GraphBuilder.placeholder();
 			}
-			result_graph.mergeGraph(createCfg_inner(tree, list.head()));
-			list = list.tail();
+			GraphBuilder r = GraphBuilder.empty();
+			while (r.size() == 0 && !list.isEmpty()) {
+				r = createCfg_inner(list.head());
+				list = list.tail();
+			}
+			result_graph.merge(r);
+			result_graph.fromEntry(r.getEntry());
+			result_graph.setExit(r.getExit());
 			while (!list.isEmpty()) {
-				Graph new_result = createCfg_inner(tree, list.head());
-				result_graph.mergeGraph(result_graph.leaves, new_result);
+				GraphBuilder new_result = createCfg_inner(list.head());
+				result_graph.merge(new_result);
 				if (new_result.size() > 0) {
-					result_graph.leaves = new_result.leaves;
+					result_graph.connect(result_graph.getExit(), new_result.getEntry());
+					result_graph.setExit(new_result.getExit());
 				}
 				list = list.tail();
 			}
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("ProcDec") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _ProcDec = term;
-			result_graph.leaves = new HashSet<>();
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("FunDec") && term.getSubtermCount() == 4)) {
 			IStrategoTerm _FunDec = term;
-			result_graph.leaves = new HashSet<>();
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("TypeDec") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _TypeDec = term;
-			result_graph.leaves = new HashSet<>();
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("TypeDec") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _TypeDec = term;
 			IStrategoTerm occ = Helpers.at(term, 0);
 			IStrategoTerm t = Helpers.at(term, 1);
-			result_graph.leaves = new HashSet<>();
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("VarDec") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _VarDec = term;
 			IStrategoTerm n = Helpers.at(term, 0);
 			IStrategoTerm t = Helpers.at(term, 1);
 			IStrategoTerm e = Helpers.at(term, 2);
-			Graph e_nr = createCfg_inner(tree, e);
-			Graph _VarDec_nb = new Graph(Helpers.getTermId(_VarDec), tree.nodeById(Helpers.getTermId(_VarDec)));
-			result_graph.mergeGraph(e_nr);
-			result_graph.mergeGraph(e_nr.leaves, _VarDec_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_VarDec_nb.leaves);
+			GraphBuilder e_nr = createCfg_inner(e);
+			GraphBuilder _VarDec_nb = GraphBuilder.fromSingle(Helpers.getTermId(_VarDec));
+			result_graph.merge(e_nr);
+			result_graph.merge(_VarDec_nb);
+			result_graph.fromEntry(e_nr.getEntry());
+			result_graph.connect(e_nr.getExit(), _VarDec_nb.getEntry());
+			result_graph.toExit(_VarDec_nb.getExit());
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("VarDecNoType") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _VarDecNoType = term;
 			IStrategoTerm n = Helpers.at(term, 0);
 			IStrategoTerm e = Helpers.at(term, 1);
-			Graph e_nr = createCfg_inner(tree, e);
-			Graph _VarDecNoType_nb = new Graph(Helpers.getTermId(_VarDecNoType),
-					tree.nodeById(Helpers.getTermId(_VarDecNoType)));
-			result_graph.mergeGraph(e_nr);
-			result_graph.mergeGraph(e_nr.leaves, _VarDecNoType_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_VarDecNoType_nb.leaves);
+			GraphBuilder e_nr = createCfg_inner(e);
+			GraphBuilder _VarDecNoType_nb = GraphBuilder.fromSingle(Helpers.getTermId(_VarDecNoType));
+			result_graph.merge(e_nr);
+			result_graph.merge(_VarDecNoType_nb);
+			result_graph.fromEntry(e_nr.getEntry());
+			result_graph.connect(e_nr.getExit(), _VarDecNoType_nb.getEntry());
+			result_graph.toExit(_VarDecNoType_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("UMinus") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _UMinus = term;
 			IStrategoTerm exp = Helpers.at(term, 0);
-			Graph exp_nr = createCfg_inner(tree, exp);
-			Graph _UMinus_nb = new Graph(Helpers.getTermId(_UMinus), tree.nodeById(Helpers.getTermId(_UMinus)));
-			result_graph.mergeGraph(exp_nr);
-			result_graph.mergeGraph(exp_nr.leaves, _UMinus_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_UMinus_nb.leaves);
+			GraphBuilder exp_nr = createCfg_inner(exp);
+			GraphBuilder _UMinus_nb = GraphBuilder.fromSingle(Helpers.getTermId(_UMinus));
+			result_graph.merge(exp_nr);
+			result_graph.merge(_UMinus_nb);
+			result_graph.fromEntry(exp_nr.getEntry());
+			result_graph.connect(exp_nr.getExit(), _UMinus_nb.getEntry());
+			result_graph.toExit(_UMinus_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Minus") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Minus = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Minus_nb = new Graph(Helpers.getTermId(_Minus), tree.nodeById(Helpers.getTermId(_Minus)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Minus_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Minus_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Minus_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Minus));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Minus_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Minus_nb.getEntry());
+			result_graph.toExit(_Minus_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Plus") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Plus = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Plus_nb = new Graph(Helpers.getTermId(_Plus), tree.nodeById(Helpers.getTermId(_Plus)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Plus_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Plus_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Plus_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Plus));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Plus_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Plus_nb.getEntry());
+			result_graph.toExit(_Plus_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Times") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Times = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Times_nb = new Graph(Helpers.getTermId(_Times), tree.nodeById(Helpers.getTermId(_Times)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Times_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Times_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Times_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Times));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Times_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Times_nb.getEntry());
+			result_graph.toExit(_Times_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Divide") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Divide = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Divide_nb = new Graph(Helpers.getTermId(_Divide), tree.nodeById(Helpers.getTermId(_Divide)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Divide_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Divide_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Divide_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Divide));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Divide_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Divide_nb.getEntry());
+			result_graph.toExit(_Divide_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Lt") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Lt = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Lt_nb = new Graph(Helpers.getTermId(_Lt), tree.nodeById(Helpers.getTermId(_Lt)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Lt_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Lt_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Lt_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Lt));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Lt_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Lt_nb.getEntry());
+			result_graph.toExit(_Lt_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Gt") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Gt = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Gt_nb = new Graph(Helpers.getTermId(_Gt), tree.nodeById(Helpers.getTermId(_Gt)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Gt_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Gt_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Gt_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Gt));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Gt_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Gt_nb.getEntry());
+			result_graph.toExit(_Gt_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Eq") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Eq = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Eq_nb = new Graph(Helpers.getTermId(_Eq), tree.nodeById(Helpers.getTermId(_Eq)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Eq_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Eq_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Eq_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Eq));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Eq_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Eq_nb.getEntry());
+			result_graph.toExit(_Eq_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Geq") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Geq = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Geq_nb = new Graph(Helpers.getTermId(_Geq), tree.nodeById(Helpers.getTermId(_Geq)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Geq_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Geq_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Geq_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Geq));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Geq_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Geq_nb.getEntry());
+			result_graph.toExit(_Geq_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Leq") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Leq = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Leq_nb = new Graph(Helpers.getTermId(_Leq), tree.nodeById(Helpers.getTermId(_Leq)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Leq_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Leq_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Leq_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Leq));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Leq_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Leq_nb.getEntry());
+			result_graph.toExit(_Leq_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Neq") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Neq = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Neq_nb = new Graph(Helpers.getTermId(_Neq), tree.nodeById(Helpers.getTermId(_Neq)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Neq_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Neq_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Neq_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Neq));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Neq_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Neq_nb.getEntry());
+			result_graph.toExit(_Neq_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("And") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _And = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _And_nb = new Graph(Helpers.getTermId(_And), tree.nodeById(Helpers.getTermId(_And)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _And_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_And_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _And_nb = GraphBuilder.fromSingle(Helpers.getTermId(_And));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_And_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _And_nb.getEntry());
+			result_graph.toExit(_And_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Or") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Or = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
 			IStrategoTerm rhs = Helpers.at(term, 1);
-			Graph lhs_nr = createCfg_inner(tree, lhs);
-			Graph rhs_nr = createCfg_inner(tree, rhs);
-			Graph _Or_nb = new Graph(Helpers.getTermId(_Or), tree.nodeById(Helpers.getTermId(_Or)));
-			result_graph.mergeGraph(lhs_nr);
-			result_graph.mergeGraph(lhs_nr.leaves, rhs_nr);
-			result_graph.mergeGraph(rhs_nr.leaves, _Or_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Or_nb.leaves);
+			GraphBuilder lhs_nr = createCfg_inner(lhs);
+			GraphBuilder rhs_nr = createCfg_inner(rhs);
+			GraphBuilder _Or_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Or));
+			result_graph.merge(lhs_nr);
+			result_graph.merge(rhs_nr);
+			result_graph.merge(_Or_nb);
+			result_graph.fromEntry(lhs_nr.getEntry());
+			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
+			result_graph.connect(rhs_nr.getExit(), _Or_nb.getEntry());
+			result_graph.toExit(_Or_nb.getExit());
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("Subscript") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Subscript = term;
 			IStrategoTerm lval = Helpers.at(term, 0);
 			IStrategoTerm idx = Helpers.at(term, 1);
-			Graph idx_nr = createCfg_inner(tree, idx);
-			Graph lval_nr = createCfg_inner(tree, lval);
-			Graph _Subscript_nb = new Graph(Helpers.getTermId(_Subscript),
-					tree.nodeById(Helpers.getTermId(_Subscript)));
-			result_graph.mergeGraph(idx_nr);
-			result_graph.mergeGraph(idx_nr.leaves, lval_nr);
-			result_graph.mergeGraph(lval_nr.leaves, _Subscript_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Subscript_nb.leaves);
+			GraphBuilder idx_nr = createCfg_inner(idx);
+			GraphBuilder lval_nr = createCfg_inner(lval);
+			GraphBuilder _Subscript_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Subscript));
+			result_graph.merge(idx_nr);
+			result_graph.merge(lval_nr);
+			result_graph.merge(_Subscript_nb);
+			result_graph.fromEntry(idx_nr.getEntry());
+			result_graph.connect(idx_nr.getExit(), lval_nr.getEntry());
+			result_graph.connect(lval_nr.getExit(), _Subscript_nb.getEntry());
+			result_graph.toExit(_Subscript_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Call") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Call = term;
 			IStrategoTerm args = Helpers.at(term, 1);
-			Graph args_nr = createCfg_inner(tree, args);
-			Graph _Call_nb = new Graph(Helpers.getTermId(_Call), tree.nodeById(Helpers.getTermId(_Call)));
-			result_graph.mergeGraph(args_nr);
-			result_graph.mergeGraph(args_nr.leaves, _Call_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Call_nb.leaves);
+			GraphBuilder args_nr = createCfg_inner(args);
+			GraphBuilder _Call_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Call));
+			result_graph.merge(args_nr);
+			result_graph.merge(_Call_nb);
+			result_graph.fromEntry(args_nr.getEntry());
+			result_graph.connect(args_nr.getExit(), _Call_nb.getEntry());
+			result_graph.toExit(_Call_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("If") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _If = term;
 			IStrategoTerm c = Helpers.at(term, 0);
 			IStrategoTerm t = Helpers.at(term, 1);
 			IStrategoTerm e = Helpers.at(term, 2);
-			Graph c_nr = createCfg_inner(tree, c);
-			Graph t_nr = createCfg_inner(tree, t);
-			Graph e_nr = createCfg_inner(tree, e);
-			result_graph.mergeGraph(c_nr);
-			result_graph.mergeGraph(c_nr.leaves, t_nr);
-			result_graph.mergeGraph(c_nr.leaves, e_nr);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(t_nr.leaves);
-			result_graph.leaves.addAll(e_nr.leaves);
+			GraphBuilder c_nr = createCfg_inner(c);
+			GraphBuilder t_nr = createCfg_inner(t);
+			GraphBuilder e_nr = createCfg_inner(e);
+			result_graph.merge(c_nr);
+			result_graph.merge(t_nr);
+			result_graph.merge(e_nr);
+			result_graph.fromEntry(c_nr.getEntry());
+			result_graph.connect(c_nr.getExit(), t_nr.getEntry());
+			result_graph.toExit(t_nr.getExit());
+			result_graph.connect(c_nr.getExit(), e_nr.getEntry());
+			result_graph.toExit(e_nr.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("LValue") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _LValue = term;
 			IStrategoTerm inner = Helpers.at(term, 0);
-			Graph inner_nr = createCfg_inner(tree, inner);
-			result_graph.mergeGraph(inner_nr);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(inner_nr.leaves);
+			GraphBuilder inner_nr = createCfg_inner(inner);
+			result_graph.merge(inner_nr);
+			result_graph.fromEntry(inner_nr.getEntry());
+			result_graph.toExit(inner_nr.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("IfThen") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _IfThen = term;
 			IStrategoTerm c = Helpers.at(term, 0);
 			IStrategoTerm t = Helpers.at(term, 1);
-			Graph c_nr = createCfg_inner(tree, c);
-			Graph t_nr = createCfg_inner(tree, t);
-			result_graph.mergeGraph(c_nr);
-			result_graph.mergeGraph(c_nr.leaves, t_nr);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(t_nr.leaves);
+			GraphBuilder c_nr = createCfg_inner(c);
+			GraphBuilder t_nr = createCfg_inner(t);
+			result_graph.merge(c_nr);
+			result_graph.merge(t_nr);
+			result_graph.fromEntry(c_nr.getEntry());
+			result_graph.connect(c_nr.getExit(), t_nr.getEntry());
+			result_graph.toExit(t_nr.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Assign") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Assign = term;
 			IStrategoTerm lval = Helpers.at(term, 0);
 			IStrategoTerm expr = Helpers.at(term, 1);
-			Graph expr_nr = createCfg_inner(tree, expr);
-			Graph lval_nr = createCfg_inner(tree, lval);
-			Graph _Assign_nb = new Graph(Helpers.getTermId(_Assign), tree.nodeById(Helpers.getTermId(_Assign)));
-			result_graph.mergeGraph(expr_nr);
-			result_graph.mergeGraph(expr_nr.leaves, lval_nr);
-			result_graph.mergeGraph(lval_nr.leaves, _Assign_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Assign_nb.leaves);
+			GraphBuilder expr_nr = createCfg_inner(expr);
+			GraphBuilder lval_nr = createCfg_inner(lval);
+			GraphBuilder _Assign_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Assign));
+			result_graph.merge(expr_nr);
+			result_graph.merge(lval_nr);
+			result_graph.merge(_Assign_nb);
+			result_graph.fromEntry(expr_nr.getEntry());
+			result_graph.connect(expr_nr.getExit(), lval_nr.getEntry());
+			result_graph.connect(lval_nr.getExit(), _Assign_nb.getEntry());
+			result_graph.toExit(_Assign_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Seq") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _Seq = term;
 			IStrategoTerm stmts = Helpers.at(term, 0);
-			Graph stmts_nr = createCfg_inner(tree, stmts);
-			result_graph.mergeGraph(stmts_nr);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(stmts_nr.leaves);
+			GraphBuilder stmts_nr = createCfg_inner(stmts);
+			result_graph.merge(stmts_nr);
+			result_graph.fromEntry(stmts_nr.getEntry());
+			result_graph.toExit(stmts_nr.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("For") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _For = term;
 			IStrategoTerm binding = Helpers.at(term, 0);
 			IStrategoTerm body = Helpers.at(term, 1);
-			Graph binding_nr = createCfg_inner(tree, binding);
-			Graph body_nr = createCfg_inner(tree, body);
-			result_graph.mergeGraph(binding_nr);
-			result_graph.mergeGraph(binding_nr.leaves, body_nr);
-			result_graph.mergeGraph(body_nr.leaves, binding_nr);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(binding_nr.leaves);
+			GraphBuilder binding_nr = createCfg_inner(binding);
+			GraphBuilder body_nr = createCfg_inner(body);
+			result_graph.merge(binding_nr);
+			result_graph.merge(body_nr);
+			result_graph.fromEntry(binding_nr.getEntry());
+			result_graph.connect(binding_nr.getExit(), body_nr.getEntry());
+			result_graph.connect(body_nr.getExit(), binding_nr.getEntry());
+			result_graph.toExit(binding_nr.getExit());
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("LoopBinding") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _LoopBinding = term;
 			IStrategoTerm var = Helpers.at(term, 0);
 			IStrategoTerm from = Helpers.at(term, 1);
 			IStrategoTerm to = Helpers.at(term, 2);
-			Graph from_nr = createCfg_inner(tree, from);
-			Graph to_nr = createCfg_inner(tree, to);
-			Graph _LoopBinding_nb = new Graph(Helpers.getTermId(_LoopBinding),
-					tree.nodeById(Helpers.getTermId(_LoopBinding)));
-			result_graph.mergeGraph(from_nr);
-			result_graph.mergeGraph(from_nr.leaves, to_nr);
-			result_graph.mergeGraph(to_nr.leaves, _LoopBinding_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_LoopBinding_nb.leaves);
+			GraphBuilder from_nr = createCfg_inner(from);
+			GraphBuilder to_nr = createCfg_inner(to);
+			GraphBuilder _LoopBinding_nb = GraphBuilder.fromSingle(Helpers.getTermId(_LoopBinding));
+			result_graph.merge(from_nr);
+			result_graph.merge(to_nr);
+			result_graph.merge(_LoopBinding_nb);
+			result_graph.fromEntry(from_nr.getEntry());
+			result_graph.connect(from_nr.getExit(), to_nr.getEntry());
+			result_graph.connect(to_nr.getExit(), _LoopBinding_nb.getEntry());
+			result_graph.toExit(_LoopBinding_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Let") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Let = term;
 			IStrategoTerm decs = Helpers.at(term, 0);
 			IStrategoTerm exps = Helpers.at(term, 1);
-			Graph decs_nr = createCfg_inner(tree, decs);
-			Graph exps_nr = createCfg_inner(tree, exps);
-			result_graph.mergeGraph(decs_nr);
-			result_graph.mergeGraph(decs_nr.leaves, exps_nr);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(exps_nr.leaves);
+			GraphBuilder decs_nr = createCfg_inner(decs);
+			GraphBuilder exps_nr = createCfg_inner(exps);
+			result_graph.merge(decs_nr);
+			result_graph.merge(exps_nr);
+			result_graph.fromEntry(decs_nr.getEntry());
+			result_graph.connect(decs_nr.getExit(), exps_nr.getEntry());
+			result_graph.toExit(exps_nr.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Array") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _Array = term;
 			IStrategoTerm len = Helpers.at(term, 1);
 			IStrategoTerm init = Helpers.at(term, 2);
-			Graph len_nr = createCfg_inner(tree, len);
-			Graph init_nr = createCfg_inner(tree, init);
-			Graph _Array_nb = new Graph(Helpers.getTermId(_Array), tree.nodeById(Helpers.getTermId(_Array)));
-			result_graph.mergeGraph(len_nr);
-			result_graph.mergeGraph(len_nr.leaves, init_nr);
-			result_graph.mergeGraph(init_nr.leaves, _Array_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Array_nb.leaves);
+			GraphBuilder len_nr = createCfg_inner(len);
+			GraphBuilder init_nr = createCfg_inner(init);
+			GraphBuilder _Array_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Array));
+			result_graph.merge(len_nr);
+			result_graph.merge(init_nr);
+			result_graph.merge(_Array_nb);
+			result_graph.fromEntry(len_nr.getEntry());
+			result_graph.connect(len_nr.getExit(), init_nr.getEntry());
+			result_graph.connect(init_nr.getExit(), _Array_nb.getEntry());
+			result_graph.toExit(_Array_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Hole") && term.getSubtermCount() == 0)) {
 			IStrategoTerm _Hole = term;
-			result_graph.leaves = new HashSet<>();
+		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Return") && term.getSubtermCount() == 0)) {
+			IStrategoTerm _Return = term;
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Var") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _Var = term;
-			Graph _Var_nb = new Graph(Helpers.getTermId(_Var), tree.nodeById(Helpers.getTermId(_Var)));
-			result_graph.mergeGraph(_Var_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Var_nb.leaves);
+			GraphBuilder _Var_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Var));
+			result_graph.merge(_Var_nb);
+			result_graph.fromEntry(_Var_nb.getEntry());
+			result_graph.toExit(_Var_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Int") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _Int = term;
-			Graph _Int_nb = new Graph(Helpers.getTermId(_Int), tree.nodeById(Helpers.getTermId(_Int)));
-			result_graph.mergeGraph(_Int_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_Int_nb.leaves);
+			GraphBuilder _Int_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Int));
+			result_graph.merge(_Int_nb);
+			result_graph.fromEntry(_Int_nb.getEntry());
+			result_graph.toExit(_Int_nb.getExit());
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("String") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _String = term;
-			Graph _String_nb = new Graph(Helpers.getTermId(_String), tree.nodeById(Helpers.getTermId(_String)));
-			result_graph.mergeGraph(_String_nb);
-			result_graph.leaves = new HashSet<>();
-			result_graph.leaves.addAll(_String_nb.leaves);
+			GraphBuilder _String_nb = GraphBuilder.fromSingle(Helpers.getTermId(_String));
+			result_graph.merge(_String_nb);
+			result_graph.fromEntry(_String_nb.getEntry());
+			result_graph.toExit(_String_nb.getExit());
 		} else {
 			throw new RuntimeException("Could not create CFG node for term '" + term + "'.");
 		}

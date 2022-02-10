@@ -36,6 +36,8 @@ context-free syntax
   LoopBinding.LoopBinding = <<Var> := <Exp> to <Exp>>
   
   Exp.Break = <break> 
+  
+  Exp.Return = <return>
 
 context-free priorities
 

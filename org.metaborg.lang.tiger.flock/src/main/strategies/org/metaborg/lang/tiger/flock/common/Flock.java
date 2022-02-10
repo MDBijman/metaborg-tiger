@@ -27,7 +27,7 @@ public abstract class Flock {
 	public SCCs graph_scss;
 	public TermTree termTree;
 	public List<Analysis> analyses;
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 
 	public Flock() {
 		this.analyses = new ArrayList<Analysis>();

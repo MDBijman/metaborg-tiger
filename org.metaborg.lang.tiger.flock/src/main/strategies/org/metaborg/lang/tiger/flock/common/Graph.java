@@ -23,10 +23,15 @@ public class Graph {
 		public HashMap<String, Property> properties = new HashMap<>();
 		public Graph graph = null;
 
-		public Node(Graph parent) {
-			this.isGhost = true;
-			this.id = Flock.nextNodeId();
-			this.graph = parent;
+		private Node() {
+		}
+
+		public static Node ghost(Graph parent) {
+			Node n = new Node();
+			n.graph = parent;
+			n.id = Flock.nextNodeId();
+			n.isGhost = true;
+			return n;
 		}
 
 		public Node(Graph parent, Node other) {
@@ -119,7 +124,7 @@ public class Graph {
 	private HashMap<Node, Set<Node>> parents = new HashMap<>();
 	private HashMap<TermId, Node> nodes = new HashMap<>();
 	private Set<Node> roots = new HashSet<>();
-	public Set<Node> leaves = new HashSet<>();
+	public Set<Node> leafs = new HashSet<>();
 	private static final boolean DEBUG = Flock.DEBUG;
 
 	public Graph() {
@@ -129,10 +134,19 @@ public class Graph {
 		Node root = new Node(this, rootId);
 		root.virtualTerm = termNode;
 		this.roots.add(root);
-		this.leaves.add(root);
+		this.leafs.add(root);
 		this.nodes.put(root.getId(), root);
 		this.children.put(root, new HashSet<>());
 		this.parents.put(root, new HashSet<>());
+	}
+
+	public Graph(HashMap<TermId, Node> nodes, HashMap<Node, Set<Node>> children, HashMap<Node, Set<Node>> parents,
+			Set<Node> roots, Set<Node> leafs) {
+		this.nodes = nodes;
+		this.children = children;
+		this.parents = parents;
+		this.roots = roots;
+		this.leafs = leafs;
 	}
 
 	/*
@@ -160,7 +174,7 @@ public class Graph {
 	}
 
 	public Collection<Node> leaves() {
-		return this.leaves;
+		return this.leafs;
 	}
 
 	public long size() {
@@ -221,7 +235,7 @@ public class Graph {
 	 */
 	private void mergeLeafs(Collection<Node> other) {
 		for (Node n : other) {
-			this.leaves.add(n.withGraph(this));
+			this.leafs.add(n.withGraph(this));
 		}
 	}
 
@@ -319,7 +333,7 @@ public class Graph {
 		}
 
 		for (Node n : children) {
-			for (Node l : o.leaves) {
+			for (Node l : o.leafs) {
 				this.createEdge(l.withGraph(this), n);
 			}
 		}
@@ -333,7 +347,7 @@ public class Graph {
 	 * Creates a non-ghost node without id, term, etc. Only use for tests.
 	 */
 	public Node createNode() {
-		Node n = new Node(this);
+		Node n = Node.ghost(this);
 		n.isGhost = false;
 		this.addNode(n);
 		return n;
@@ -360,11 +374,11 @@ public class Graph {
 			}
 		}
 
-		if (this.leaves.contains(n)) {
-			this.leaves.remove(n);
+		if (this.leafs.contains(n)) {
+			this.leafs.remove(n);
 
 			for (Node parent : this.parents.get(n)) {
-				this.leaves.add(parent);
+				this.leafs.add(parent);
 			}
 		}
 
@@ -390,7 +404,7 @@ public class Graph {
 	}
 
 	private boolean unleaf(Node n) {
-		return this.leaves.remove(n);
+		return this.leafs.remove(n);
 	}
 
 	/**
@@ -417,7 +431,7 @@ public class Graph {
 	public void replaceNodes(Set<Node> nodes, Set<Node> predecessors, Set<Node> successors, Graph subGraph) {
 		Flock.beginTime("Graph@replaceNodes");
 		boolean containedRoot = nodes.stream().anyMatch(node -> this.roots.contains(node));
-		boolean containedLeaf = nodes.stream().anyMatch(node -> this.leaves.contains(node));
+		boolean containedLeaf = nodes.stream().anyMatch(node -> this.leafs.contains(node));
 
 		for (Node remove : nodes) {
 			this.removeNodeAndEdges(remove);
@@ -430,7 +444,7 @@ public class Graph {
 
 		// If leaf was replaced, then sub graph leaves are also leaves
 		if (containedLeaf) {
-			this.leaves.addAll(subGraph.leaves);
+			this.leafs.addAll(subGraph.leafs);
 		}
 
 		this.mergeGraph(predecessors, successors, subGraph);
@@ -477,7 +491,7 @@ public class Graph {
 					: "";
 
 			String rootString = this.roots.contains(node) ? "r" : "";
-			String leafString = this.leaves.contains(node) ? "l" : "";
+			String leafString = this.leafs.contains(node) ? "l" : "";
 
 			result.append(node.getId().getId() + "[label=\"");
 
@@ -542,7 +556,7 @@ public class Graph {
 					: "";
 
 			String rootString = this.roots.contains(node) ? "r" : "";
-			String leafString = this.leaves.contains(node) ? "l" : "";
+			String leafString = this.leafs.contains(node) ? "l" : "";
 
 			result.append(node.getId().getId() + "[label=\\\"");
 

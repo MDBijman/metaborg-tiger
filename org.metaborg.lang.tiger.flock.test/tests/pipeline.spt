@@ -39,7 +39,7 @@ end
 
 test inline [[
 let 
-	function foo(bar: int) = bar
+	function foo(bar: int): int = bar
 in
 	if (foo(6) > 5) then 3
 end
@@ -47,26 +47,26 @@ end
 3
 ]]
 
-test loop [[
-let
-	var N: int := 10
-	var sum: int := 0
-in
-	for x := 0 to N do
-		sum := sum + x
-end
-]] run flock-test-run-pipeline to [[
-let
-	var sum: int := 0
-in
-	for x := 0 to 10 do
-		sum := sum + x
-end
-]]
+//test loop [[
+//let
+//	var N: int := 10
+//	var sum: int := 0
+//in
+//	for x := 0 to N do
+//		sum := sum + x
+//end
+//]] run flock-test-run-pipeline to [[
+//let
+//	var sum: int := 0
+//in
+//	for x := 0 to 10 do
+//		sum := sum + x
+//end
+//]]
 
 test inline twice [[
 let 
-	function foo(bar: int) = bar
+	function foo(bar: int): int = bar
 in
 	if (foo(6) > foo(5)) then 3
 end
@@ -74,37 +74,37 @@ end
 3
 ]]
 
-test fact [[
-let
-    function nfactor(n: int): int =
-      if n = 0 then 1 else (n * nfactor(n-1))
+//test fact [[
+//let
+//    function nfactor(n: int): int =
+//      if n = 0 then 1 else (n * nfactor(n-1))
+//
+//	var x: int := 10
+//in
+//    nfactor(x)
+//end
+//]] run flock-test-run-pipeline to [[
+//3628800
+//]]
 
-	var x: int := 10
-in
-    nfactor(x)
-end
-]] run flock-test-run-pipeline to [[
-3628800
-]]
-
-test loop [[
-let
-	var x: int := 10
-in
-    for i := 0 to x do (if i < 5 then print("a") else print("b"))
-end
-]] run flock-test-run-pipeline to [[
-let
- in
-  for i := 0 to 10 do
-    if i < 5 then
-      print("a")
-    else
-      print("b")
-end
-]]
-
-
+//test loop [[
+//let
+//	var x: int := 10
+//in
+//    for i := 0 to x do (if i < 5 then print("a") else print("b"))
+//end
+//]] run flock-test-run-pipeline to [[
+//let
+// in
+//  for i := 0 to 10 do
+//    if i < 5 then
+//      print("a")
+//    else
+//      print("b")
+//end
+//]]
+//
+//
 test many vars [[
 let var a0: int := 1
     var a1: int := a0 + 1
@@ -123,96 +123,96 @@ end
 ]] run flock-test-run-pipeline to [[
 11
 ]]
-
-test nqueens [[
-let
-    var N := 8
-
-    type intArray = array of int
-
-    var row := intArray [ N ] of 0
-    var col := intArray [ N ] of 0
-    var diag1 := intArray [N+N-1] of 0
-    var diag2 := intArray [N+N-1] of 0
-    var debug := 0
-
-    function printboard() =
-        (for i := 0 to N - 1
-    do (for j := 0 to N - 1 
-        do print(if col[i] = j then " O" else " .");
-        print("\n"));
-          print("\n"))
-
-    function try(c: int) = 
-      (if debug = 0 then
-        (for i := 0 to c do print(".")
-      ; print("\n")
-      ; flush())
-    ; if c = N then
-        printboard()
-      else 
-        for r := 0 to N - 1 do 
-          if row[r] = 0 & diag1[r + c] = 0 & diag2[r + 7 - c] = 0 then 
-              (row[r] := 1
-            ;  diag1[r + c] := 1
-            ;  diag2[r + 7 - c] := 1
-            ;  col[c] := r
-            ;  try(c + 1)
-            ;  row[r] := 0
-            ;  diag1[r + c] := 0
-            ;  diag2[r + 7 - c] := 0))
-  in try(0)
-end
-]] run flock-test-run-pipeline to [[
-let
-  var N := 8
-  type intArray = array of int
-  var row := intArray[N] of 0
-  var col := intArray[N] of 0
-  var diag1 := intArray[N + N - 1] of 0
-  var diag2 := intArray[N + N - 1] of 0
-  var debug := 0
-  function printboard( ) =
-    (
-      for i := 0 to N - 1 do
-        (
-          for j := 0 to N - 1 do
-            print(if col[i] = j then
-              " O"
-            else
-              " .")  ;
-          print("\n")
-        )  ;
-      print("\n")
-    )
-  function try(c : int) =
-    (
-      if debug = 0 then
-        (
-          for i := 0 to c do
-            print(".")  ;
-          print("\n");
-          flush( )
-        )  ;
-      if c = N then
-        printboard( )
-      else
-        for r := 0 to N - 1 do
-          if row[r] = 0 & diag1[r + c] = 0 & diag2[r + 7 - c] = 0 then
-            (
-              row[r] := 1;
-              diag1[r + c] := 1;
-              diag2[r + 7 - c] := 1;
-              col[c] := r;
-              try(c + 1);
-              row[r] := 0;
-              diag1[r + c] := 0;
-              diag2[r + 7 - c] := 0
-            )
-    )
- in
-  try(0)
-end
-]]
+//
+//test nqueens [[
+//let
+//    var N := 8
+//
+//    type intArray = array of int
+//
+//    var row := intArray [ N ] of 0
+//    var col := intArray [ N ] of 0
+//    var diag1 := intArray [N+N-1] of 0
+//    var diag2 := intArray [N+N-1] of 0
+//    var debug := 0
+//
+//    function printboard() =
+//        (for i := 0 to N - 1
+//    do (for j := 0 to N - 1 
+//        do print(if col[i] = j then " O" else " .");
+//        print("\n"));
+//          print("\n"))
+//
+//    function try(c: int) = 
+//      (if debug = 0 then
+//        (for i := 0 to c do print(".")
+//      ; print("\n")
+//      ; flush())
+//    ; if c = N then
+//        printboard()
+//      else 
+//        for r := 0 to N - 1 do 
+//          if row[r] = 0 & diag1[r + c] = 0 & diag2[r + 7 - c] = 0 then 
+//              (row[r] := 1
+//            ;  diag1[r + c] := 1
+//            ;  diag2[r + 7 - c] := 1
+//            ;  col[c] := r
+//            ;  try(c + 1)
+//            ;  row[r] := 0
+//            ;  diag1[r + c] := 0
+//            ;  diag2[r + 7 - c] := 0))
+//  in try(0)
+//end
+//]] run flock-test-run-pipeline to [[
+//let
+//  var N := 8
+//  type intArray = array of int
+//  var row := intArray[N] of 0
+//  var col := intArray[N] of 0
+//  var diag1 := intArray[N + N - 1] of 0
+//  var diag2 := intArray[N + N - 1] of 0
+//  var debug := 0
+//  function printboard( ) =
+//    (
+//      for i := 0 to N - 1 do
+//        (
+//          for j := 0 to N - 1 do
+//            print(if col[i] = j then
+//              " O"
+//            else
+//              " .")  ;
+//          print("\n")
+//        )  ;
+//      print("\n")
+//    )
+//  function try(c : int) =
+//    (
+//      if debug = 0 then
+//        (
+//          for i := 0 to c do
+//            print(".")  ;
+//          print("\n");
+//          flush( )
+//        )  ;
+//      if c = N then
+//        printboard( )
+//      else
+//        for r := 0 to N - 1 do
+//          if row[r] = 0 & diag1[r + c] = 0 & diag2[r + 7 - c] = 0 then
+//            (
+//              row[r] := 1;
+//              diag1[r + c] := 1;
+//              diag2[r + 7 - c] := 1;
+//              col[c] := r;
+//              try(c + 1);
+//              row[r] := 0;
+//              diag1[r + c] := 0;
+//              diag2[r + 7 - c] := 0
+//            )
+//    )
+// in
+//  try(0)
+//end
+//]]
 
 

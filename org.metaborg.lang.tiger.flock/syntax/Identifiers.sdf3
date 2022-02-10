@@ -32,3 +32,4 @@ lexical syntax
   Id = "function" {reject}
   Id = "true" {reject}
   Id = "false" {reject}
+  Id = "return" {reject}

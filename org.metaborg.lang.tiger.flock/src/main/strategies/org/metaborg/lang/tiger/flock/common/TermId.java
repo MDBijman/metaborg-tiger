@@ -3,6 +3,10 @@ package org.metaborg.lang.tiger.flock.common;
 public class TermId {
 	private long id;
 
+	public static TermId temporaryTermId() {
+		return new TermId(Long.MAX_VALUE);
+	}
+	
 	public TermId(long id) {
 		this.id = id;
 	}

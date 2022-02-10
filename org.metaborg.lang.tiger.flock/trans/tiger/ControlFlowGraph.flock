@@ -53,6 +53,7 @@ signature
     LoopBinding : Var * Exp * Exp -> LoopBinding
     Assign : LValue * Exp -> Exp
     Let : list(Dec) * list(Exp) -> Exp
+    Return : Exp
     
     String : StrConst -> Exp
     Int : IntConst -> Exp
@@ -105,6 +106,7 @@ control-flow rules
   Let(decs, exps) = entry -> decs -> exps -> exit
   Array(_, len, init) = entry -> len -> init -> this -> exit
   Hole() = entry -> exit
+  Return() = entry -> end
   
   node Var(_)
   node Int(_)
