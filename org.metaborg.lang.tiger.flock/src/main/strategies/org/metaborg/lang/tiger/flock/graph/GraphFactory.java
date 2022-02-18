@@ -3,6 +3,7 @@ package org.metaborg.lang.tiger.flock.graph;
 import org.metaborg.lang.tiger.flock.common.Graph;
 import org.metaborg.lang.tiger.flock.common.GraphBuilder;
 import org.metaborg.lang.tiger.flock.common.Helpers;
+import org.metaborg.lang.tiger.flock.common.TermId;
 import org.metaborg.lang.tiger.flock.common.TermTree;
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
@@ -22,7 +23,7 @@ public class GraphFactory {
 		GraphBuilder result_graph = GraphBuilder.empty();
 		for (IStrategoTerm subterm : term.getSubterms()) {
 			GraphBuilder subgraph = createCfgRecursive_inner(subterm);
-			if (subgraph.size() != 0) {
+			if (subgraph.hasRealNodes()) {
 				result_graph.merge(subgraph);
 			}
 		}
@@ -31,8 +32,8 @@ public class GraphFactory {
 			IStrategoTerm s = Helpers.at(term, 0);
 			GraphBuilder s_nr = createCfg_inner(s);
 			result_graph.merge(s_nr);
-			result_graph.fromStart(s_nr.getEntry());
-			result_graph.toEnd(s_nr.getExit());
+			result_graph.connect(result_graph.START, s_nr.ENTRY);
+			result_graph.connect(s_nr.EXIT, result_graph.END);
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("ProcDec") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _ProcDec = term;
@@ -41,8 +42,8 @@ public class GraphFactory {
 			IStrategoTerm body = Helpers.at(term, 2);
 			GraphBuilder body_nr = createCfg_inner(body);
 			result_graph.merge(body_nr);
-			result_graph.fromStart(body_nr.getEntry());
-			result_graph.toEnd(body_nr.getExit());
+			result_graph.connect(result_graph.START, body_nr.ENTRY);
+			result_graph.connect(body_nr.EXIT, result_graph.END);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("FunDec") && term.getSubtermCount() == 4)) {
 			IStrategoTerm _FunDec = term;
 			IStrategoTerm n = Helpers.at(term, 0);
@@ -51,8 +52,8 @@ public class GraphFactory {
 			IStrategoTerm body = Helpers.at(term, 3);
 			GraphBuilder body_nr = createCfg_inner(body);
 			result_graph.merge(body_nr);
-			result_graph.fromStart(body_nr.getEntry());
-			result_graph.toEnd(body_nr.getExit());
+			result_graph.connect(result_graph.START, body_nr.ENTRY);
+			result_graph.connect(body_nr.EXIT, result_graph.END);
 		} else {
 		}
 		return result_graph;
@@ -63,38 +64,34 @@ public class GraphFactory {
 		if (TermUtils.isList(term)) {
 			IStrategoList list = M.list(term);
 			if (list.isEmpty()) {
-				return GraphBuilder.placeholder();
+				return GraphBuilder.fallthrough();
 			}
-			GraphBuilder r = GraphBuilder.empty();
-			while (r.size() == 0 && !list.isEmpty()) {
-				r = createCfg_inner(list.head());
-				list = list.tail();
-			}
-			result_graph.merge(r);
-			result_graph.fromEntry(r.getEntry());
-			result_graph.setExit(r.getExit());
+			TermId currentTail = result_graph.ENTRY;
 			while (!list.isEmpty()) {
 				GraphBuilder new_result = createCfg_inner(list.head());
 				result_graph.merge(new_result);
-				if (new_result.size() > 0) {
-					result_graph.connect(result_graph.getExit(), new_result.getEntry());
-					result_graph.setExit(new_result.getExit());
-				}
+				result_graph.connect(currentTail, new_result.ENTRY);
+				currentTail = new_result.EXIT;
 				list = list.tail();
 			}
+			result_graph.connect(currentTail, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("ProcDec") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _ProcDec = term;
+			result_graph.connect(result_graph.ENTRY, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("FunDec") && term.getSubtermCount() == 4)) {
 			IStrategoTerm _FunDec = term;
+			result_graph.connect(result_graph.ENTRY, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("TypeDec") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _TypeDec = term;
+			result_graph.connect(result_graph.ENTRY, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("TypeDec") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _TypeDec = term;
 			IStrategoTerm occ = Helpers.at(term, 0);
 			IStrategoTerm t = Helpers.at(term, 1);
+			result_graph.connect(result_graph.ENTRY, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("VarDec") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _VarDec = term;
 			IStrategoTerm n = Helpers.at(term, 0);
@@ -104,9 +101,9 @@ public class GraphFactory {
 			GraphBuilder _VarDec_nb = GraphBuilder.fromSingle(Helpers.getTermId(_VarDec));
 			result_graph.merge(e_nr);
 			result_graph.merge(_VarDec_nb);
-			result_graph.fromEntry(e_nr.getEntry());
-			result_graph.connect(e_nr.getExit(), _VarDec_nb.getEntry());
-			result_graph.toExit(_VarDec_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, e_nr.ENTRY);
+			result_graph.connect(e_nr.EXIT, _VarDec_nb.ENTRY);
+			result_graph.connect(_VarDec_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("VarDecNoType") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _VarDecNoType = term;
@@ -116,9 +113,9 @@ public class GraphFactory {
 			GraphBuilder _VarDecNoType_nb = GraphBuilder.fromSingle(Helpers.getTermId(_VarDecNoType));
 			result_graph.merge(e_nr);
 			result_graph.merge(_VarDecNoType_nb);
-			result_graph.fromEntry(e_nr.getEntry());
-			result_graph.connect(e_nr.getExit(), _VarDecNoType_nb.getEntry());
-			result_graph.toExit(_VarDecNoType_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, e_nr.ENTRY);
+			result_graph.connect(e_nr.EXIT, _VarDecNoType_nb.ENTRY);
+			result_graph.connect(_VarDecNoType_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("UMinus") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _UMinus = term;
 			IStrategoTerm exp = Helpers.at(term, 0);
@@ -126,9 +123,9 @@ public class GraphFactory {
 			GraphBuilder _UMinus_nb = GraphBuilder.fromSingle(Helpers.getTermId(_UMinus));
 			result_graph.merge(exp_nr);
 			result_graph.merge(_UMinus_nb);
-			result_graph.fromEntry(exp_nr.getEntry());
-			result_graph.connect(exp_nr.getExit(), _UMinus_nb.getEntry());
-			result_graph.toExit(_UMinus_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, exp_nr.ENTRY);
+			result_graph.connect(exp_nr.EXIT, _UMinus_nb.ENTRY);
+			result_graph.connect(_UMinus_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Minus") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Minus = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -139,10 +136,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Minus_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Minus_nb.getEntry());
-			result_graph.toExit(_Minus_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Minus_nb.ENTRY);
+			result_graph.connect(_Minus_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Plus") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Plus = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -153,10 +150,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Plus_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Plus_nb.getEntry());
-			result_graph.toExit(_Plus_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Plus_nb.ENTRY);
+			result_graph.connect(_Plus_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Times") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Times = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -167,10 +164,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Times_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Times_nb.getEntry());
-			result_graph.toExit(_Times_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Times_nb.ENTRY);
+			result_graph.connect(_Times_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Divide") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Divide = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -181,10 +178,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Divide_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Divide_nb.getEntry());
-			result_graph.toExit(_Divide_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Divide_nb.ENTRY);
+			result_graph.connect(_Divide_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Lt") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Lt = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -195,10 +192,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Lt_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Lt_nb.getEntry());
-			result_graph.toExit(_Lt_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Lt_nb.ENTRY);
+			result_graph.connect(_Lt_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Gt") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Gt = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -209,10 +206,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Gt_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Gt_nb.getEntry());
-			result_graph.toExit(_Gt_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Gt_nb.ENTRY);
+			result_graph.connect(_Gt_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Eq") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Eq = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -223,10 +220,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Eq_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Eq_nb.getEntry());
-			result_graph.toExit(_Eq_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Eq_nb.ENTRY);
+			result_graph.connect(_Eq_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Geq") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Geq = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -237,10 +234,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Geq_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Geq_nb.getEntry());
-			result_graph.toExit(_Geq_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Geq_nb.ENTRY);
+			result_graph.connect(_Geq_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Leq") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Leq = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -251,10 +248,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Leq_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Leq_nb.getEntry());
-			result_graph.toExit(_Leq_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Leq_nb.ENTRY);
+			result_graph.connect(_Leq_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Neq") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Neq = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -265,10 +262,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Neq_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Neq_nb.getEntry());
-			result_graph.toExit(_Neq_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Neq_nb.ENTRY);
+			result_graph.connect(_Neq_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("And") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _And = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -279,10 +276,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_And_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _And_nb.getEntry());
-			result_graph.toExit(_And_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _And_nb.ENTRY);
+			result_graph.connect(_And_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Or") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Or = term;
 			IStrategoTerm lhs = Helpers.at(term, 0);
@@ -293,10 +290,10 @@ public class GraphFactory {
 			result_graph.merge(lhs_nr);
 			result_graph.merge(rhs_nr);
 			result_graph.merge(_Or_nb);
-			result_graph.fromEntry(lhs_nr.getEntry());
-			result_graph.connect(lhs_nr.getExit(), rhs_nr.getEntry());
-			result_graph.connect(rhs_nr.getExit(), _Or_nb.getEntry());
-			result_graph.toExit(_Or_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, lhs_nr.ENTRY);
+			result_graph.connect(lhs_nr.EXIT, rhs_nr.ENTRY);
+			result_graph.connect(rhs_nr.EXIT, _Or_nb.ENTRY);
+			result_graph.connect(_Or_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("Subscript") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Subscript = term;
@@ -308,10 +305,10 @@ public class GraphFactory {
 			result_graph.merge(idx_nr);
 			result_graph.merge(lval_nr);
 			result_graph.merge(_Subscript_nb);
-			result_graph.fromEntry(idx_nr.getEntry());
-			result_graph.connect(idx_nr.getExit(), lval_nr.getEntry());
-			result_graph.connect(lval_nr.getExit(), _Subscript_nb.getEntry());
-			result_graph.toExit(_Subscript_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, idx_nr.ENTRY);
+			result_graph.connect(idx_nr.EXIT, lval_nr.ENTRY);
+			result_graph.connect(lval_nr.EXIT, _Subscript_nb.ENTRY);
+			result_graph.connect(_Subscript_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Call") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Call = term;
 			IStrategoTerm args = Helpers.at(term, 1);
@@ -319,9 +316,9 @@ public class GraphFactory {
 			GraphBuilder _Call_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Call));
 			result_graph.merge(args_nr);
 			result_graph.merge(_Call_nb);
-			result_graph.fromEntry(args_nr.getEntry());
-			result_graph.connect(args_nr.getExit(), _Call_nb.getEntry());
-			result_graph.toExit(_Call_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, args_nr.ENTRY);
+			result_graph.connect(args_nr.EXIT, _Call_nb.ENTRY);
+			result_graph.connect(_Call_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("If") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _If = term;
 			IStrategoTerm c = Helpers.at(term, 0);
@@ -333,18 +330,18 @@ public class GraphFactory {
 			result_graph.merge(c_nr);
 			result_graph.merge(t_nr);
 			result_graph.merge(e_nr);
-			result_graph.fromEntry(c_nr.getEntry());
-			result_graph.connect(c_nr.getExit(), t_nr.getEntry());
-			result_graph.toExit(t_nr.getExit());
-			result_graph.connect(c_nr.getExit(), e_nr.getEntry());
-			result_graph.toExit(e_nr.getExit());
+			result_graph.connect(result_graph.ENTRY, c_nr.ENTRY);
+			result_graph.connect(c_nr.EXIT, t_nr.ENTRY);
+			result_graph.connect(t_nr.EXIT, result_graph.EXIT);
+			result_graph.connect(c_nr.EXIT, e_nr.ENTRY);
+			result_graph.connect(e_nr.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("LValue") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _LValue = term;
 			IStrategoTerm inner = Helpers.at(term, 0);
 			GraphBuilder inner_nr = createCfg_inner(inner);
 			result_graph.merge(inner_nr);
-			result_graph.fromEntry(inner_nr.getEntry());
-			result_graph.toExit(inner_nr.getExit());
+			result_graph.connect(result_graph.ENTRY, inner_nr.ENTRY);
+			result_graph.connect(inner_nr.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("IfThen") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _IfThen = term;
 			IStrategoTerm c = Helpers.at(term, 0);
@@ -353,9 +350,9 @@ public class GraphFactory {
 			GraphBuilder t_nr = createCfg_inner(t);
 			result_graph.merge(c_nr);
 			result_graph.merge(t_nr);
-			result_graph.fromEntry(c_nr.getEntry());
-			result_graph.connect(c_nr.getExit(), t_nr.getEntry());
-			result_graph.toExit(t_nr.getExit());
+			result_graph.connect(result_graph.ENTRY, c_nr.ENTRY);
+			result_graph.connect(c_nr.EXIT, t_nr.ENTRY);
+			result_graph.connect(t_nr.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Assign") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Assign = term;
 			IStrategoTerm lval = Helpers.at(term, 0);
@@ -366,45 +363,51 @@ public class GraphFactory {
 			result_graph.merge(expr_nr);
 			result_graph.merge(lval_nr);
 			result_graph.merge(_Assign_nb);
-			result_graph.fromEntry(expr_nr.getEntry());
-			result_graph.connect(expr_nr.getExit(), lval_nr.getEntry());
-			result_graph.connect(lval_nr.getExit(), _Assign_nb.getEntry());
-			result_graph.toExit(_Assign_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, expr_nr.ENTRY);
+			result_graph.connect(expr_nr.EXIT, lval_nr.ENTRY);
+			result_graph.connect(lval_nr.EXIT, _Assign_nb.ENTRY);
+			result_graph.connect(_Assign_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Seq") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _Seq = term;
 			IStrategoTerm stmts = Helpers.at(term, 0);
 			GraphBuilder stmts_nr = createCfg_inner(stmts);
 			result_graph.merge(stmts_nr);
-			result_graph.fromEntry(stmts_nr.getEntry());
-			result_graph.toExit(stmts_nr.getExit());
-		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("For") && term.getSubtermCount() == 2)) {
+			result_graph.connect(result_graph.ENTRY, stmts_nr.ENTRY);
+			result_graph.connect(stmts_nr.EXIT, result_graph.EXIT);
+		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("For")
+				&& (term.getSubtermCount() == 2 && (TermUtils.isAppl(Helpers.at(term, 0))
+						&& (M.appl(Helpers.at(term, 0)).getName().equals("LoopBinding")
+								&& Helpers.at(term, 0).getSubtermCount() == 3))))) {
 			IStrategoTerm _For = term;
 			IStrategoTerm binding = Helpers.at(term, 0);
+			IStrategoTerm var = Helpers.at(Helpers.at(term, 0), 0);
+			IStrategoTerm from = Helpers.at(Helpers.at(term, 0), 1);
+			IStrategoTerm to = Helpers.at(Helpers.at(term, 0), 2);
 			IStrategoTerm body = Helpers.at(term, 1);
+			GraphBuilder from_nr = createCfg_inner(from);
+			GraphBuilder to_nr = createCfg_inner(to);
 			GraphBuilder binding_nr = createCfg_inner(binding);
 			GraphBuilder body_nr = createCfg_inner(body);
+			result_graph.merge(from_nr);
+			result_graph.merge(to_nr);
 			result_graph.merge(binding_nr);
 			result_graph.merge(body_nr);
-			result_graph.fromEntry(binding_nr.getEntry());
-			result_graph.connect(binding_nr.getExit(), body_nr.getEntry());
-			result_graph.connect(body_nr.getExit(), binding_nr.getEntry());
-			result_graph.toExit(binding_nr.getExit());
+			result_graph.connect(result_graph.ENTRY, from_nr.ENTRY);
+			result_graph.connect(from_nr.EXIT, to_nr.ENTRY);
+			result_graph.connect(to_nr.EXIT, binding_nr.ENTRY);
+			result_graph.connect(binding_nr.EXIT, body_nr.ENTRY);
+			result_graph.connect(body_nr.EXIT, binding_nr.ENTRY);
+			result_graph.connect(binding_nr.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("LoopBinding") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _LoopBinding = term;
 			IStrategoTerm var = Helpers.at(term, 0);
 			IStrategoTerm from = Helpers.at(term, 1);
 			IStrategoTerm to = Helpers.at(term, 2);
-			GraphBuilder from_nr = createCfg_inner(from);
-			GraphBuilder to_nr = createCfg_inner(to);
 			GraphBuilder _LoopBinding_nb = GraphBuilder.fromSingle(Helpers.getTermId(_LoopBinding));
-			result_graph.merge(from_nr);
-			result_graph.merge(to_nr);
 			result_graph.merge(_LoopBinding_nb);
-			result_graph.fromEntry(from_nr.getEntry());
-			result_graph.connect(from_nr.getExit(), to_nr.getEntry());
-			result_graph.connect(to_nr.getExit(), _LoopBinding_nb.getEntry());
-			result_graph.toExit(_LoopBinding_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, _LoopBinding_nb.ENTRY);
+			result_graph.connect(_LoopBinding_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Let") && term.getSubtermCount() == 2)) {
 			IStrategoTerm _Let = term;
 			IStrategoTerm decs = Helpers.at(term, 0);
@@ -413,9 +416,9 @@ public class GraphFactory {
 			GraphBuilder exps_nr = createCfg_inner(exps);
 			result_graph.merge(decs_nr);
 			result_graph.merge(exps_nr);
-			result_graph.fromEntry(decs_nr.getEntry());
-			result_graph.connect(decs_nr.getExit(), exps_nr.getEntry());
-			result_graph.toExit(exps_nr.getExit());
+			result_graph.connect(result_graph.ENTRY, decs_nr.ENTRY);
+			result_graph.connect(decs_nr.EXIT, exps_nr.ENTRY);
+			result_graph.connect(exps_nr.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Array") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _Array = term;
 			IStrategoTerm len = Helpers.at(term, 1);
@@ -426,32 +429,35 @@ public class GraphFactory {
 			result_graph.merge(len_nr);
 			result_graph.merge(init_nr);
 			result_graph.merge(_Array_nb);
-			result_graph.fromEntry(len_nr.getEntry());
-			result_graph.connect(len_nr.getExit(), init_nr.getEntry());
-			result_graph.connect(init_nr.getExit(), _Array_nb.getEntry());
-			result_graph.toExit(_Array_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, len_nr.ENTRY);
+			result_graph.connect(len_nr.EXIT, init_nr.ENTRY);
+			result_graph.connect(init_nr.EXIT, _Array_nb.ENTRY);
+			result_graph.connect(_Array_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Hole") && term.getSubtermCount() == 0)) {
 			IStrategoTerm _Hole = term;
+			result_graph.connect(result_graph.ENTRY, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Return") && term.getSubtermCount() == 0)) {
 			IStrategoTerm _Return = term;
+			result_graph.connect(result_graph.ENTRY, result_graph.END);
+			result_graph.markIrregular(Helpers.getTermId(term));
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Var") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _Var = term;
 			GraphBuilder _Var_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Var));
 			result_graph.merge(_Var_nb);
-			result_graph.fromEntry(_Var_nb.getEntry());
-			result_graph.toExit(_Var_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, _Var_nb.ENTRY);
+			result_graph.connect(_Var_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Int") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _Int = term;
 			GraphBuilder _Int_nb = GraphBuilder.fromSingle(Helpers.getTermId(_Int));
 			result_graph.merge(_Int_nb);
-			result_graph.fromEntry(_Int_nb.getEntry());
-			result_graph.toExit(_Int_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, _Int_nb.ENTRY);
+			result_graph.connect(_Int_nb.EXIT, result_graph.EXIT);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("String") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _String = term;
 			GraphBuilder _String_nb = GraphBuilder.fromSingle(Helpers.getTermId(_String));
 			result_graph.merge(_String_nb);
-			result_graph.fromEntry(_String_nb.getEntry());
-			result_graph.toExit(_String_nb.getExit());
+			result_graph.connect(result_graph.ENTRY, _String_nb.ENTRY);
+			result_graph.connect(_String_nb.EXIT, result_graph.EXIT);
 		} else {
 			throw new RuntimeException("Could not create CFG node for term '" + term + "'.");
 		}

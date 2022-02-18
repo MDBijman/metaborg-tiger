@@ -5,49 +5,50 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.spoofax.interpreter.terms.IStrategoAppl;
 import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.IStrategoTuple;
+import org.spoofax.interpreter.terms.ITermFactory;
 import org.spoofax.terms.StrategoInt;
 import org.spoofax.terms.StrategoList;
 import org.spoofax.terms.StrategoString;
 import org.spoofax.terms.StrategoTuple;
-import org.spoofax.terms.TermFactory;
 import org.spoofax.terms.util.TermUtils;
 
 public class Helpers {
 	public static IStrategoTerm toTerm(Object o) {
+		ITermFactory tf = Flock.instance.factory;
+
 		if (o instanceof IStrategoTerm) {
 			return (IStrategoTerm) o;
 		}
 		if (o instanceof Integer) {
-			return new StrategoInt((int) o);
+			return tf.makeInt((int) o);
 		}
 		if (o instanceof String) {
-			return new StrategoString((String) o, null);
+			return tf.makeString((String) o);
 		}
 		if (o instanceof Set) {
 			Set s = (Set) o;
 			Object[] elements = s.toArray();
-			IStrategoList result = new StrategoList(toTerm(elements[elements.length - 1]), null, null);
+			IStrategoList result = tf.makeList(toTerm(elements[elements.length - 1]));
 			for (int i = elements.length - 2; i >= 0; i--) {
-				result = new StrategoList(toTerm(elements[i]), result, null);
+				result = tf.makeListCons(toTerm(elements[i]), result);
 			}
 			return result;
 		}
 		if (o instanceof HashMap) {
 			HashMap m = (HashMap) o;
-			IStrategoList result = new StrategoList(null, null, null);
+			IStrategoList result = tf.makeList();
 			for (Object eo : m.entrySet()) {
 				Entry e = (Entry) eo;
 
 				IStrategoTerm[] pair = { toTerm(e.getKey()), toTerm(e.getValue()) };
 
-				result = new StrategoList(new StrategoTuple(pair, null), result, null);
+				result = tf.makeListCons(tf.makeTuple(pair), result);
 			}
 			return result;
 		}
@@ -114,7 +115,7 @@ public class Helpers {
 	}
 
 	public static IStrategoTerm annotateWithIds(IStrategoTerm t) {
-		TermFactory tf = new TermFactory();
+		ITermFactory tf = Flock.instance.factory;
 		IStrategoList existing = t.getAnnotations();
 		IStrategoList newAnnot = tf
 				.makeListCons(tf.makeAppl("FlockNodeId", tf.makeInt((int) Flock.nextNodeId().getId())), existing);

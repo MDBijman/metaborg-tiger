@@ -1,4 +1,4 @@
-package org.metaborg.lang.tiger.flock.ast;
+package org.metaborg.lang.tiger.flock.strategies;
 
 import org.metaborg.lang.tiger.flock.common.Flock;
 import org.spoofax.interpreter.terms.IStrategoTerm;

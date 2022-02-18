@@ -34,6 +34,8 @@ import org.spoofax.terms.StrategoInt;
 import org.spoofax.terms.StrategoString;
 import org.spoofax.terms.StrategoList;
 import flock.subject.common.Graph;
+import flock.subject.common.GraphBuilder;
+import flock.subject.common.TermTree;
 import flock.subject.common.Analysis;
 import flock.subject.common.Graph.Node;
 import flock.subject.common.Analysis.Direction;

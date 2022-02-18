@@ -1,17 +1,15 @@
 package org.metaborg.lang.tiger.flock.common;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
+import org.spoofax.interpreter.terms.ITermFactory;
 import org.spoofax.terms.StrategoList;
 import org.spoofax.terms.StrategoTuple;
 import org.spoofax.terms.util.NotImplementedException;
@@ -52,9 +50,10 @@ public interface FlockLattice extends Cloneable {
 	public static interface FlockCollectionLattice extends FlockLattice, Iterable {
 		@Override
 		public default IStrategoTerm toTerm() {
-			IStrategoList result = new StrategoList(null, null, null);
+			ITermFactory tf = Flock.instance.factory;
+			IStrategoList result = tf.makeList();
 			for (Object o : this) {
-				result = new StrategoList(Helpers.toTerm(o), result, null);
+				result = tf.makeListCons(Helpers.toTerm(o), result);
 			}
 			return result;
 		}
@@ -287,11 +286,13 @@ public interface FlockLattice extends Cloneable {
 		
 		@Override
 		public IStrategoTerm toTerm() {
-			IStrategoList result = new StrategoList(null, null, null);
+		    ITermFactory tf = Flock.instance.factory;
+
+			IStrategoList result = tf.makeList();
 			for (Object o : this.value.entrySet()) {
 				Entry e = (Entry) o;
 				IStrategoTerm[] kids = { Helpers.toTerm(e.getKey()), Helpers.toTerm(e.getValue()) };
-				result = new StrategoList(new StrategoTuple(kids, null), result, null);
+				result = tf.makeListCons(tf.makeTuple(kids, null), result);
 			}
 			return result;
 		}

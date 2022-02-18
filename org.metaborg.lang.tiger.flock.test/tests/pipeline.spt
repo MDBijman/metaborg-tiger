@@ -2,6 +2,22 @@ module pipeline
 
 language tiger
 
+test test return [[
+let 
+	var a: int := 10
+	var b: int := 10
+in
+	(return; a)
+end
+]] run flock-test-run-return to [[
+let 
+	var a: int := 10
+	var b: int := 10
+in
+	a
+end
+]]
+
 test let [[
 let 
 	var a: int := 10

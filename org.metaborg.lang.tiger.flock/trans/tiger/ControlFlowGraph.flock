@@ -100,9 +100,9 @@ control-flow rules
   IfThen(c, t) = entry -> c -> t -> exit
   Assign(lval, expr) = entry -> expr -> lval -> this -> exit
   Seq(stmts) = entry -> stmts -> exit
-  For(binding, body) = entry -> binding -> body -> binding,
+  For(binding@LoopBinding(var, from, to), body) = entry -> from -> to -> binding -> body -> binding,
   	binding -> exit
-  LoopBinding(var, from, to) = entry -> from -> to -> this -> exit
+  LoopBinding(var, from, to) = entry -> this -> exit
   Let(decs, exps) = entry -> decs -> exps -> exit
   Array(_, len, init) = entry -> len -> init -> this -> exit
   Hole() = entry -> exit

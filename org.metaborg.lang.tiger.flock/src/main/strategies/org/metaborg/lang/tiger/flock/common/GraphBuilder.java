@@ -9,122 +9,62 @@ import java.util.Set;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 
 public class GraphBuilder {
+	public final TermId START = Flock.nextNodeId();
+	public final TermId END = Flock.nextNodeId();
+	public final TermId ENTRY = Flock.nextNodeId();
+	public final TermId EXIT = Flock.nextNodeId();
 	private HashSet<TermId> nodes = new HashSet<>();
 	private HashMap<TermId, Set<TermId>> children = new HashMap<>();
 	private HashMap<TermId, Set<TermId>> parents = new HashMap<>();
-	private Set<TermId> fromEntry = new HashSet<>();
-	private Set<TermId> toExit = new HashSet<>();
-	private Set<TermId> fromStart = new HashSet<>();
-	private Set<TermId> toEnd = new HashSet<>();
-	private Set<TermId> placeholders = new HashSet<>();
+	private HashSet<TermId> tmpNodes = new HashSet<>();
+	private HashSet<TermId> irregularTerms = new HashSet<>();
 
 	private GraphBuilder() {
 	}
-	
+
 	public static GraphBuilder empty() {
 		GraphBuilder r = new GraphBuilder();
+		r.addNode(r.START);
+		r.addNode(r.END);
+		r.addNode(r.ENTRY);
+		r.addNode(r.EXIT);
+		r.tmpNodes.add(r.START);
+		r.tmpNodes.add(r.END);
+		r.tmpNodes.add(r.ENTRY);
+		r.tmpNodes.add(r.EXIT);
 		return r;
 	}
 
-	public static GraphBuilder placeholder() {
-		TermId tmp = Flock.nextNodeId();
-		GraphBuilder r = GraphBuilder.fromSingle(tmp);
-		r.placeholders.add(tmp);
+	public static GraphBuilder fallthrough() {
+		GraphBuilder r = GraphBuilder.empty();
+		r.connect(r.ENTRY, r.EXIT);
 		return r;
 	}
-
+	
 	public static GraphBuilder fromSingle(TermId n) {
-		GraphBuilder r = new GraphBuilder();
-		r.nodes.add(n);
-		r.children.put(n, new HashSet<>());
-		r.parents.put(n, new HashSet<>());
-		r.fromEntry.add(n);
-		r.toExit.add(n);
+		GraphBuilder r = GraphBuilder.empty();
+		r.addNode(n);
+		r.addEdge(r.ENTRY, n);
+		r.addEdge(n, r.EXIT);
 		return r;
 	}
 
-	private boolean hasPlaceholders() {
-		return this.placeholders.size() != 0;
+	private void addNode(TermId t) {
+		this.nodes.add(t);
+		this.children.put(t, new HashSet<>());
+		this.parents.put(t, new HashSet<>());
 	}
 
-	public int size() {
-		return this.nodes.size();
+	private void addEdge(TermId parent, TermId child) {
+		this.children.get(parent).add(child);
+		this.parents.get(child).add(parent);
+	}
+
+	public void connect(TermId parent, TermId child) {
+		this.children.get(parent).add(child);
+		this.parents.get(child).add(parent);
 	}
 	
-	public Collection<TermId> nodes() {
-		return this.nodes;
-	}
-
-	public void fromEntry(TermId n) {
-		this.fromEntry.add(n);
-	}
-
-	public void fromEntry(Collection<TermId> n) {
-		this.fromEntry.addAll(n);
-	}
-
-	public Collection<TermId> getEntry() {
-		return this.fromEntry;
-	}
-
-	public void toExit(TermId n) {
-		this.toExit.add(n);
-	}
-
-	public void toExit(Collection<TermId> n) {
-		this.toExit.addAll(n);
-	}
-
-	public void setExit(Collection<TermId> n) {
-		this.toExit.clear();
-		this.toExit.addAll(n);
-	}
-	
-	public void clearExit() {
-		this.toExit.clear();
-	}
-
-	public Collection<TermId> getExit() {
-		return this.toExit;
-	}
-
-	public void fromStart(TermId n) {
-		this.fromStart.add(n);
-	}
-
-	public void fromStart(Collection<TermId> n) {
-		this.fromStart.addAll(n);
-	}
-
-	public Collection<TermId> getStart() {
-		return this.fromStart;
-	}
-
-	public void toEnd(TermId n) {
-		this.toEnd.add(n);
-	}
-
-	public void toEnd(Collection<TermId> n) {
-		this.toEnd.addAll(n);
-	}
-
-	public void clearEnd(Collection<TermId> n) {
-		this.toEnd.clear();
-	}
-	
-	public Collection<TermId> getEnd() {
-		return this.toEnd;
-	}
-
-	public void merge(GraphBuilder o) {
-		this.nodes.addAll(o.nodes);
-		this.children.putAll(o.children);
-		this.parents.putAll(o.parents);
-		this.fromStart.addAll(o.fromStart);
-		this.toEnd.addAll(o.toEnd);
-		this.placeholders.addAll(o.placeholders);
-	}
-
 	public void connect(Collection<TermId> parents, Collection<TermId> children) {
 		for (TermId p : parents) {
 			this.children.get(p).addAll(children);
@@ -132,6 +72,31 @@ public class GraphBuilder {
 		for (TermId c : children) {
 			this.parents.get(c).addAll(parents);
 		}
+	}
+
+	public boolean hasRealNodes() {
+		return this.nodes.size() > this.tmpNodes.size();
+	}
+
+	public Collection<TermId> nodes() {
+		return this.nodes;
+	}
+
+	public void merge(GraphBuilder o) {
+		this.nodes.addAll(o.nodes);
+		this.children.putAll(o.children);
+		this.parents.putAll(o.parents);
+		this.tmpNodes.addAll(o.tmpNodes);
+		this.irregularTerms.addAll(o.irregularTerms);
+		
+		this.children.get(this.START).add(o.START);
+		this.parents.get(o.START).add(this.START);
+		this.children.get(o.END).add(this.END);
+		this.parents.get(this.END).add(o.END);
+	}
+	
+	public void markIrregular(TermId node) {
+		this.irregularTerms.add(node);
 	}
 
 	public Graph build(TermTree tree) {
@@ -166,21 +131,25 @@ public class GraphBuilder {
 		}
 
 		// Fill roots/leafs
-		for (TermId t : this.fromEntry) {
+		for (TermId t : this.children.get(START)) {
 			roots.add(nodes.get(t));
 		}
-		for (TermId t : this.fromStart) {
+		for (TermId t : this.parents.get(END)) {
+			leafs.add(nodes.get(t));
+		}
+		for (TermId t : this.children.get(ENTRY)) {
 			roots.add(nodes.get(t));
 		}
-		for (TermId t : this.toExit) {
+		for (TermId t : this.parents.get(EXIT)) {
 			leafs.add(nodes.get(t));
 		}
-		for (TermId t : this.toEnd) {
-			leafs.add(nodes.get(t));
+
+		for (TermId t : this.tmpNodes) {
+			nodes.get(t).isGhost = true;
 		}
 		
-		for (TermId placeholder : this.placeholders) {
-			nodes.get(placeholder).isGhost = true;
+		for (TermId t : this.irregularTerms) {
+			tree.markIrregular(t);
 		}
 
 		return g;

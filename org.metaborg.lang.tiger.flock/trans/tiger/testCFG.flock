@@ -1,0 +1,72 @@
+module tiger/testCFG
+signature
+
+  sorts
+    Id = string
+    StrConst = string
+    IntConst = int
+    
+    Exp
+    LoopBinding
+    Dec
+    Type
+    Occ
+    TypeId
+    FArg
+	Var
+	Int
+	LValue
+	Hole
+	
+  constructors
+    Mod : Exp -> Exp
+    ProcDec : Occ * list(FArg) * Exp -> Dec 
+    FunDec : Occ * list(FArg) * Type * Exp -> Dec
+    VarDec : Id * Type * Exp -> Dec
+    VarDecNoType : Occ * Exp -> Dec
+    TypeDec : Occ * Type -> Dec
+    Type : TypeId -> Type
+    Occ : Id -> Occ 
+    Tid : Occ -> TypeId
+    DecHole : Hole -> Dec
+    Hole : Hole
+    
+    UMinus : Exp -> Exp
+    Minus : Exp * Exp -> Exp
+    Plus : Exp * Exp -> Exp
+    Times : Exp * Exp -> Exp
+    Divide : Exp * Exp -> Exp
+    Lt : Exp * Exp -> Exp
+    Gt : Exp * Exp -> Exp
+    Eq : Exp * Exp -> Exp
+    Geq : Exp * Exp -> Exp
+    Leq : Exp * Exp -> Exp
+    Neq : Exp * Exp -> Exp
+    And : Exp * Exp -> Exp
+    Or : Exp * Exp -> Exp
+    
+    Call : Occ * list(Exp) -> Exp
+    If : Exp * Exp * Exp -> Exp
+    IfThen : Exp * Exp -> Exp
+    Seq : list(Exp) -> Exp
+    For : LoopBinding * Exp -> Exp
+    LoopBinding : Var * Exp * Exp -> LoopBinding
+    Assign : LValue * Exp -> Exp
+    Let : list(Dec) * list(Exp) -> Exp
+    Return : Exp
+    
+    String : StrConst -> Exp
+    Int : IntConst -> Exp
+    Var : Id -> Var
+    Array : TypeId * Exp * Exp -> Exp
+    Subscript : LValue * Exp -> LValue
+    Exp : LValue -> Exp
+    LValue : Var -> LValue
+    
+    
+control-flow rules
+
+  Plus(lhs, rhs) = entry -> lhs -> rhs -> this -> exit
+  Return() = entry -> end
+  
+  

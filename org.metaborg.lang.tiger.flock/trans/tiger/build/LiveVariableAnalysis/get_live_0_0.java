@@ -55,34 +55,18 @@ import flock.subject.common.SetUtils;
 import flock.subject.common.TransferFunction;
 import flock.subject.common.UniversalSet;
 
-public class FlowAnalysisProperties {
-  static class ConstProp extends FlockValue {
-    public IStrategoTerm value;
-    ConstProp(IStrategoTerm value) {
-      this.value = value;
-    }
-    @Override public void setValue(Object value) {
-                                                   this.value = (IStrategoTerm ) value;
-                                                 }
-    @Override public IStrategoTerm toTerm( ) {
-                                               return this.value;
-                                             }
-    @Override public String toString( ) {
-                                          String pre = "Value(\"" + this.value. toString( ) + "\", {";
-                                          StringBuilder sb = new StringBuilder ( );
-                                          String post = "})";
-                                          return pre + sb. toString( ) + post;
-                                        }
-    @Override public boolean equals(Object obj) {
-                                                  if(!(obj instanceof ConstProp)) {
-                                                                                    return false;
-                                                                                  }
-                                                  ConstProp
-                                                  other = (ConstProp ) obj;
-                                                  return this.value. equals(other.value);
-                                                }
-    @Override public int hashCode( ) {
-                                       return value. hashCode( );
-                                     }
-  }
+public class get_live_0_0 extends Strategy {
+  public static get_live_0_0 instance = new get_live_0_0 ( );
+  @Override public IStrategoTerm invoke(Context context, IStrategoTerm current) {
+                                                                                  ITermFactory factory = context. getFactory( );
+                                                                                  TermId id = new TermId (((IStrategoInt ) current). intValue( ));
+                                                                                  Node node = Flock.instance. getNode(id);
+                                                                                  if(node == null) {
+                                                                                                     Flock. printDebug("CfgNode is null with id " + id. getId( ));
+                                                                                                     return null;
+                                                                                                   }
+                                                                                  Flock.instance. analysisWithName("live"). performDataAnalysis(Flock.instance.graph, Flock.instance.graph_scss, node);
+                                                                                  IStrategoList result = factory. makeList(((Collection<? extends IStrategoTerm> ) node. getProperty("live").lattice. value( )). stream( ). map(n -> Helpers. toTerm(n)). collect(Collectors. toList( )));
+                                                                                  return result;
+                                                                                }
 }

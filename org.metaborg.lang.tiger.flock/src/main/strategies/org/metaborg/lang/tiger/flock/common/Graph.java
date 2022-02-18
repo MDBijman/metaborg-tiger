@@ -19,6 +19,7 @@ public class Graph {
 		private TermId id;
 
 		public boolean isGhost = false;
+		public boolean isIrregular = false;
 		public ITerm virtualTerm = null;
 		public HashMap<String, Property> properties = new HashMap<>();
 		public Graph graph = null;

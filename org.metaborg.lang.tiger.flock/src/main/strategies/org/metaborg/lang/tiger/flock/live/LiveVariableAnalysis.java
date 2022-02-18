@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.metaborg.lang.tiger.flock.common.Analysis;
 import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
+import org.metaborg.lang.tiger.flock.common.Flock;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.MaySet;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
@@ -14,6 +15,7 @@ import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.metaborg.lang.tiger.flock.common.TransferFunction;
 import org.spoofax.interpreter.terms.IStrategoTerm;
+import org.spoofax.interpreter.terms.ITermFactory;
 import org.spoofax.terms.util.TermUtils;
 
 public class LiveVariableAnalysis extends Analysis {
@@ -129,10 +131,11 @@ class TransferFunction0 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
-		MaySet tmp127 = (MaySet) UserFunctions.live_f(next);
-		return TransferFunction.assignEvalResult(direction, node, res, tmp127);
+		MaySet tmp90 = (MaySet) UserFunctions.live_f(next);
+		return TransferFunction.assignEvalResult(direction, node, res, tmp90);
 	}
 }
 
@@ -140,13 +143,14 @@ class TransferFunction1 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
-		Set tmp131 = (Set) SetUtils.create(TermUtils.asString(usrn).get());
-		Set tmp132 = (Set) SetUtils.union(tmp131, ((FlockLattice) UserFunctions.live_f(next)).value());
-		Set tmp126 = (Set) tmp132;
-		return TransferFunction.assignEvalResult(direction, node, res, tmp126);
+		Set tmp94 = (Set) SetUtils.create(TermUtils.asString(usrn).get());
+		Set tmp95 = (Set) SetUtils.union(tmp94, ((FlockLattice) UserFunctions.live_f(next)).value());
+		Set tmp89 = (Set) tmp95;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp89);
 	}
 }
 
@@ -154,18 +158,19 @@ class TransferFunction2 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(Helpers.at(term, 0), 0);
-		Set result13 = new HashSet();
+		Set result10 = new HashSet();
 		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
 			if (!usrm.equals(usrn)) {
-				result13.add(usrm);
+				result10.add(usrm);
 			}
 		}
-		Set tmp130 = (Set) result13;
-		Set tmp125 = (Set) tmp130;
-		return TransferFunction.assignEvalResult(direction, node, res, tmp125);
+		Set tmp93 = (Set) result10;
+		Set tmp86 = (Set) tmp93;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp86);
 	}
 }
 
@@ -173,18 +178,19 @@ class TransferFunction3 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(Helpers.at(Helpers.at(term, 0), 0), 0);
-		Set result122 = new HashSet();
+		Set result11 = new HashSet();
 		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
 			if (!usrm.equals(usrn)) {
-				result122.add(usrm);
+				result11.add(usrm);
 			}
 		}
-		Set tmp129 = (Set) result122;
-		Set tmp123 = (Set) tmp129;
-		return TransferFunction.assignEvalResult(direction, node, res, tmp123);
+		Set tmp92 = (Set) result11;
+		Set tmp83 = (Set) tmp92;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp83);
 	}
 }
 
@@ -192,18 +198,19 @@ class TransferFunction4 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
-		Set result123 = new HashSet();
+		Set result12 = new HashSet();
 		for (Object usrm : (Set) ((FlockLattice) UserFunctions.live_f(next)).value()) {
 			if (!usrm.equals(usrn)) {
-				result123.add(usrm);
+				result12.add(usrm);
 			}
 		}
-		Set tmp128 = (Set) result123;
-		Set tmp122 = (Set) tmp128;
-		return TransferFunction.assignEvalResult(direction, node, res, tmp122);
+		Set tmp91 = (Set) result12;
+		Set tmp80 = (Set) tmp91;
+		return TransferFunction.assignEvalResult(direction, node, res, tmp80);
 	}
 }
 
@@ -211,9 +218,10 @@ class TransferFunction5 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Set tmp121 = (Set) SetUtils.create();
-		return TransferFunction.assignEvalResult(direction, node, res, tmp121);
+		Set tmp77 = (Set) SetUtils.create();
+		return TransferFunction.assignEvalResult(direction, node, res, tmp77);
 	}
 }
 

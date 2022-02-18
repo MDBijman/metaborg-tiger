@@ -24,40 +24,69 @@ public class SCCs {
 
 	public SCCs(Graph g) {
 		Flock.beginTime("SCCs@constructor");
+		this.computeSCCs(g);
+		Flock.endTime("SCCs@constructor");
+	}
 
-		// Using AtomicLong to pass mutable reference
-		AtomicLong next_index = new AtomicLong(1);
-		Stack<Node> S = new Stack<>();
-		HashSet<Node> onStack = new HashSet<>();
-		HashMap<Node, Long> lowlink = new HashMap<>();
-		HashMap<Node, Long> index = new HashMap<>();
-
-		for (Node n : g.roots()) {
-			if (index.get(n) == null) {
-				strongConnect(g, n, next_index, S, onStack, lowlink, index, components, nodeComponent);
+	/*
+	 * Returns the changed components.
+	 */
+	public Set<Component> recompute(Graph graph) {
+		SCCs new_scss = new SCCs(graph);
+		Set<Component> unchangedComponents = new HashSet<>();
+		Set<Component> newComponents = new HashSet<>();
+		/* maps new to old */
+		HashMap<Component, Component> unchangedMapping = new HashMap<>();
+		/*
+		 * Here we try to determine which sccs are unchanged.
+		 */
+		for (Component c : new_scss.components) {
+			// Get one of the matching components of this sccs of one of the nodes of c
+			// That component should match c
+			Component matchingComponent = this.nodeComponent.get(c.nodes.iterator().next());
+			if (matchingComponent == null || matchingComponent.nodes.size() != c.nodes.size()) {
+				newComponents.add(c);
+				continue;
 			}
-		}
-
-		for (Component c : this.components) {
-			this.neighbours.put(c, new HashSet<>());
-			this.revNeighbours.put(c, new HashSet<>());
-		}
-
-		for (Node n : g.nodes()) {
-			Component nComp = this.nodeComponent.get(n);
-			assert nComp != null;
-
-			for (Node v : g.childrenOf(n)) {
-				Component vComp = this.nodeComponent.get(v);
-				assert vComp != null;
-
-				if (vComp != nComp) {
-					this.makeEdge(nComp, vComp);
+			for (Node n : matchingComponent.nodes) {
+				if (!c.nodes.contains(n)) {
+					newComponents.add(c);
+					continue;
 				}
 			}
+			unchangedMapping.put(c, matchingComponent);
+			unchangedComponents.add(matchingComponent);
 		}
 
-		Flock.endTime("SCCs@constructor");
+		
+		/*
+		 * We remove changed components from this sccs
+		 */
+		for (Component c : this.components) {
+			if (unchangedComponents.contains(c)) continue;
+			this.removeComponent(c);
+		}
+		
+		/*
+		 * We create new components for all changed sccs, that is,
+		 * the components of new_sccs which do not map to one of our own.
+		 */
+		
+		/* maps new components from new_scss to corresponding new components in this scss */
+		HashMap<Component, Component> changedMapping = new HashMap<>();
+		for (Component c : newComponents) {
+			changedMapping.put(c, this.makeComponent());
+		}
+		
+		for (Component c : newComponents) {
+			Component c_here = changedMapping.get(c);
+			for (Component n : new_scss.neighbours.get(c)) {
+				Component neighbour_here = changedMapping.get(n);
+				this.makeEdge(c_here, neighbour_here);
+			}
+		}
+		
+		return new HashSet<>(changedMapping.values());
 	}
 
 	public void replaceNodes(Graph graph, Set<Node> replaced, Set<Node> oldPredecessors, Set<Node> oldSuccessors,
@@ -102,7 +131,7 @@ public class SCCs {
 			Flock.beginTime("SCCs@replaceNodes:makeSubSCCs");
 			SCCs subgraphSCCs = new SCCs(subgraph);
 			Flock.endTime("SCCs@replaceNodes:makeSubSCCs");
-			
+
 			Flock.beginTime("SCCs@replaceNodes:mergeSCCs");
 			this.mergeSCCs(subgraphSCCs);
 			Flock.endTime("SCCs@replaceNodes:mergeSCCs");
@@ -162,7 +191,15 @@ public class SCCs {
 			this.predecessors(p, result);
 		}
 	}
-
+	
+	private Component makeComponent() {
+		Component c = new Component();
+		this.components.add(c);
+		this.neighbours.put(c, new HashSet<>());
+		this.revNeighbours.put(c, new HashSet<>());
+		return c;
+	}
+	
 	private void makeEdge(Component a, Component b) {
 		this.neighbours.get(a).add(b);
 		this.revNeighbours.get(b).add(a);
@@ -189,6 +226,50 @@ public class SCCs {
 		this.components.remove(c);
 		this.neighbours.remove(c);
 		this.revNeighbours.remove(c);
+	}
+
+	private void computeSCCs(Graph g) {
+		// Using AtomicLong to pass mutable reference
+		AtomicLong next_index = new AtomicLong(1);
+		Stack<Node> S = new Stack<>();
+		HashSet<Node> onStack = new HashSet<>();
+		HashMap<Node, Long> lowlink = new HashMap<>();
+		HashMap<Node, Long> index = new HashMap<>();
+
+		for (Node n : g.roots()) {
+			if (index.get(n) == null) {
+				strongConnect(g, n, next_index, S, onStack, lowlink, index, components, nodeComponent);
+			}
+		}
+		
+		// There are dangling nodes (i.e. dead code)
+		// But we have to deal with these as well
+		if (index.size() != g.nodes().size()) {
+			for (Node n : g.nodes()) {
+				if (index.get(n) == null) {
+					strongConnect(g, n, next_index, S, onStack, lowlink, index, components, nodeComponent);
+				}
+			}
+		}
+
+		for (Component c : this.components) {
+			this.neighbours.put(c, new HashSet<>());
+			this.revNeighbours.put(c, new HashSet<>());
+		}
+
+		for (Node n : g.nodes()) {
+			Component nComp = this.nodeComponent.get(n);
+			assert nComp != null;
+
+			for (Node v : g.childrenOf(n)) {
+				Component vComp = this.nodeComponent.get(v);
+				assert vComp != null;
+
+				if (vComp != nComp) {
+					this.makeEdge(nComp, vComp);
+				}
+			}
+		}
 	}
 
 	// Tarjans

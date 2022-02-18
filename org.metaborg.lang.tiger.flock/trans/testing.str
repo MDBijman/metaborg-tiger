@@ -21,3 +21,14 @@ strategies
   
   flock-test-run-inline = flock-initialize; transform-inline
   
+  flock-test-run-return: p -> p'
+  with
+    with-ids := <flock-initialize> p
+  ; <flock-enable-logging> ()
+  ; p' := <
+  	  flock-log(|"api")
+  	; topdown(try(flock-remove-all(?Return())))
+    ; opt-repeat(|3)
+  	; topdown(try(flock-remove-all(?Hole())))
+  > with-ids
+  

@@ -106,6 +106,8 @@ rules // pipeline
   	  opt-repeat(|5)
   	; topdown(try(remove-all(?Hole())))
   > with-ids
+  ; <flock-debug-graph>()
+  ; <flock-debug-graph(|"values")> ()
   ; <flock-end-timer> "pipeline"
   ; <debug> <run-time>
   ; <flock-debug-runtime> ()
@@ -122,18 +124,17 @@ rules // pipeline
   |}
 
   opt: FunDec(n, params, rt, body) -> FunDec(n, params, rt, new-body)
-      where
-         <finally(opt,
-	  	    ?new-body
-	  	  ; rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
-	  		where
-	  		  <should-inline> n
-	  		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [new-body])
-	  		; new-node := <flock-replace-node(|c)> replacement)
-	  	)> body
-	  	 
-  opt = (preserve-annotation(some(opt)) < try(opt-one) + (opt-one))
+  where
+    <finally(opt,
+  	    ?new-body
+  	  ; rules(InlineFn: c@Call(n{anno1*}, args{anno2*}){anno3*} -> new-node
+  		where
+  		  <should-inline> n
+  		; replacement := <strip-annos> Let(<create-inlining-decs> (params, args), [new-body])
+  		; new-node := <flock-replace-node(|c)> replacement)
+  	)> body
 
+  opt = preserve-annotation(some(opt)) < try(opt-one) + (opt-one)
   // 2) Deze implementatie heeft de performance issues
 
   //opt = (?FunDec(n, _, _, _) < fail + (preserve-annotation(some(opt)) < try(opt-one) + (opt-one)))
@@ -149,9 +150,12 @@ strategies
   
   propagate-constant: lv@LValue(v@Var(n)) -> new-node
   where
-   n-no-annos := <strip-annos> n
-  ; Const(new-value) := <flock-get-values(|n-no-annos)> v
-  ; new-node := <flock-replace-node(|lv)> Int(new-value)
+    n-no-annos := <strip-annos> n
+  ; Const(c) := <flock-get-values(|n-no-annos)> v
+  ; new-node := <flock-replace-node(|lv)> Int(c)
+
+  get-const-value: Const(v) -> v where <debug> v
+  get-const-value: _ -> <debug; fail> "not const" where <debug> <id>
 
   compare-names(|other): (name, value) -> value where <equal(|name, other)> ()
   

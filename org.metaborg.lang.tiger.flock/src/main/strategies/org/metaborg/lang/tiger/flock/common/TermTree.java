@@ -11,17 +11,17 @@ import java.util.Stack;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.spoofax.interpreter.terms.IStrategoAppl;
+import org.spoofax.interpreter.terms.IStrategoConstructor;
 import org.spoofax.interpreter.terms.IStrategoInt;
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoString;
 import org.spoofax.interpreter.terms.IStrategoTerm;
+import org.spoofax.interpreter.terms.ITermFactory;
 import org.spoofax.terms.StrategoAppl;
 import org.spoofax.terms.StrategoConstructor;
 import org.spoofax.terms.StrategoInt;
 import org.spoofax.terms.StrategoList;
 import org.spoofax.terms.StrategoString;
-import org.spoofax.terms.TermFactory;
-import org.spoofax.terms.util.TermUtils;
 
 public class TermTree {
 	public abstract class ITerm {
@@ -56,7 +56,7 @@ public class TermTree {
 		public TermId getId() {
 			return this.id;
 		}
-		
+
 		public Collection<ITerm> children() {
 			return tree.childrenOf(this);
 		}
@@ -219,11 +219,16 @@ public class TermTree {
 	private HashMap<ITerm, ArrayList<ITerm>> children = new HashMap<>();
 	private HashMap<ITerm, ITerm> parents = new HashMap<>();
 	private HashMap<TermId, ITerm> nodes = new HashMap<>();
+	private HashSet<TermId> irregularTerms = new HashSet<>();
 	private ITerm root;
 	private static final boolean DEBUG = Flock.DEBUG;
 
 	public TermTree(IStrategoTerm term) {
 		root = this.createTermInTree(term);
+	}
+
+	public void markIrregular(TermId t) {
+		this.irregularTerms.add(t);
 	}
 
 	public void replace(TermId toReplace, IStrategoTerm replaceWith) {
@@ -241,6 +246,10 @@ public class TermTree {
 		}
 	}
 
+	public void remove(TermId n) {
+		this.remove(this.nodes.get(n));
+	}
+	
 	private void remove(ITerm n) {
 		if (n == null) {
 			throw new IllegalArgumentException("No node with this id");
@@ -258,6 +267,7 @@ public class TermTree {
 		this.nodes.remove(n.id);
 		this.children.remove(n);
 		this.parents.remove(n);
+		this.irregularTerms.remove(n);
 
 		if (this.root == n) {
 			this.root = null;
@@ -361,7 +371,7 @@ public class TermTree {
 			this.children.get(res).add(sub);
 			this.parents.put(sub, res);
 		}
-		
+
 		return res;
 	}
 
@@ -382,14 +392,16 @@ public class TermTree {
 	}
 
 	public IStrategoTerm nodeToStrategoTerm(ITerm n) {
+		ITermFactory tf = Flock.instance.factory;
+
 		if (!this.nodes.containsKey(n.id)) {
 			throw new RuntimeException("Term does not exist in tree");
 		}
 
 		if (n instanceof StringTerm) {
-			return new StrategoString(((StringTerm) n).stringValue, idAsList(n));
+			return tf.annotateTerm(tf.makeString(((StringTerm) n).stringValue), idAsList(n));
 		} else if (n instanceof IntTerm) {
-			return new StrategoInt(((IntTerm) n).intValue, idAsList(n));
+			return tf.annotateTerm(tf.makeInt(((IntTerm) n).intValue), idAsList(n));
 		} else if (n instanceof ListTerm) {
 			List<ITerm> children = this.childrenOf(n);
 			IStrategoTerm head = null;
@@ -399,23 +411,24 @@ public class TermTree {
 			// Counts down because we append to the front not the back
 			for (int i = children.size() - 1; i >= 0; i--) {
 				IStrategoTerm newHead = this.nodeToStrategoTerm(children.get(i));
-				tail = new StrategoList(head, tail, null);
+				tail = tf.makeListCons(head, tail);
 				head = newHead;
 			}
 			return new StrategoList(head, tail, anno);
 		} else if (n instanceof ApplTerm) {
 			List<ITerm> children = this.childrenOf(n);
-			StrategoConstructor ctor = new StrategoConstructor(((ApplTerm) n).constructor, children.size());
+			IStrategoConstructor ctor = tf.makeConstructor(((ApplTerm) n).constructor, children.size());
 			IStrategoTerm[] termChildren = children.stream().map(c -> this.nodeToStrategoTerm(c))
 					.toArray(IStrategoTerm[]::new);
-			StrategoAppl res = new StrategoAppl(ctor, termChildren, idAsList(n));
-			return res;
+			return tf.annotateTerm(tf.makeAppl(ctor, termChildren), idAsList(n));
 		} else {
 			throw new RuntimeException("Unsupported node type: " + n.toString());
 		}
 	}
 
 	public IStrategoTerm nodeToStrategoTermWithoutAnnotations(ITerm n) {
+		ITermFactory tf = Flock.instance.factory;
+
 		if (!this.nodes.containsKey(n.id)) {
 			throw new RuntimeException("Term does not exist in tree");
 		}
@@ -428,21 +441,20 @@ public class TermTree {
 			List<ITerm> children = this.childrenOf(n);
 			IStrategoTerm head = null;
 			IStrategoList tail = null;
-			IStrategoList anno = null;
 
 			// Counts down because we append to the front not the back
 			for (int i = children.size() - 1; i >= 0; i--) {
 				IStrategoTerm newHead = this.nodeToStrategoTermWithoutAnnotations(children.get(i));
-				tail = new StrategoList(head, tail, null);
+				tail = tf.makeListCons(head, tail);
 				head = newHead;
 			}
-			return new StrategoList(head, tail, anno);
+			return tf.makeListCons(head, tail);
 		} else if (n instanceof ApplTerm) {
 			List<ITerm> children = this.childrenOf(n);
-			StrategoConstructor ctor = new StrategoConstructor(((ApplTerm) n).constructor, children.size());
+			IStrategoConstructor ctor = tf.makeConstructor(((ApplTerm) n).constructor, children.size());
 			IStrategoTerm[] termChildren = children.stream().map(c -> this.nodeToStrategoTermWithoutAnnotations(c))
 					.toArray(IStrategoTerm[]::new);
-			StrategoAppl res = new StrategoAppl(ctor, termChildren, null);
+			IStrategoAppl res = tf.makeAppl(ctor, termChildren);
 			return res;
 		} else {
 			throw new RuntimeException("Unsupported node type: " + n.toString());
@@ -453,15 +465,28 @@ public class TermTree {
 		if (n.id == null) {
 			throw new RuntimeException("Node does not have an id");
 		}
+		ITermFactory tf = Flock.instance.factory;
 
-		IStrategoTerm[] kids = { new StrategoInt((int) n.id.getId()) };
-		return new StrategoList(new StrategoAppl(new StrategoConstructor("FlockNodeId", 1), kids, null),
-				new StrategoList(null, null, null), null);
+		IStrategoTerm[] kids = { tf.makeInt((int) n.id.getId()) };
+		return tf.makeList(tf.makeAppl(tf.makeConstructor("FlockNodeId", 1), kids));
 	}
 
 	/*
 	 * Getters
 	 */
+
+	public boolean containsIrregularTerm(TermId id) {
+		if (this.irregularTerms.contains(id)) {
+			return true;
+		} else {
+			for (ITerm c : this.children.get(this.nodeById(id))) {
+				if (this.containsIrregularTerm(c.id)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	public ITerm nodeById(TermId id) {
 		return this.nodes.get(id);

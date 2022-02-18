@@ -14,6 +14,7 @@ strategies // API
 
   external flock-disable-logging(|)
   external flock-enable-logging(|)
+  external flock-log(|tag)
   external flock-disable-timing(|)
   external flock-enable-timing(|)
   external flock-disable-incremental(|)
@@ -40,8 +41,8 @@ strategies // API
   flock-replace-node(|old): new -> <flock-time-as((flock-add-id; flock-replace-node-impl(|old))|"api@flock-replace-node")> new
   external flock-replace-node-impl(|n)
 
-  flock-remove-all(s): [] -> []
-  flock-remove-all(s): l@[h|t] -> <remove-all(s; flock-remove-node)> l 
+  flock-remove-all(s): []{a*} -> []{a*}
+  flock-remove-all(s): l@[h|t] -> <preserve-annos(remove-all(s; flock-remove-node))> l 
 
   flock-fixpoint(s|0) = id
   flock-fixpoint(s|bound): p -> <s < (flock-fixpoint(s | <dec> bound)) + id> p

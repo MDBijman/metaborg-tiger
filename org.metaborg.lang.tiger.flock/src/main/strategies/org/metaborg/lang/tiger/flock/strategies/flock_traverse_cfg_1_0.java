@@ -1,4 +1,4 @@
-package org.metaborg.lang.tiger.flock.ast;
+package org.metaborg.lang.tiger.flock.strategies;
 
 import java.util.Stack;
 

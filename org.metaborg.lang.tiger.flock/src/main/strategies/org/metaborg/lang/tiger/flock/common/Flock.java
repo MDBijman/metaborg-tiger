@@ -23,6 +23,7 @@ public abstract class Flock {
 	public static Flock instance = new FlockIncremental();
 
 	public IOAgent io;
+	public ITermFactory factory;
 	public Graph graph;
 	public SCCs graph_scss;
 	public TermTree termTree;
@@ -119,7 +120,7 @@ public abstract class Flock {
 			// "debug",
 			// "incremental",
 			// "validation",
-			// "api",
+			 "api",
 			// "dependencies",
 			// "graphviz"
 	};

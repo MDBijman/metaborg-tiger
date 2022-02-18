@@ -1,4 +1,4 @@
-package org.metaborg.lang.tiger.flock.ast;
+package org.metaborg.lang.tiger.flock.strategies;
 
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
@@ -23,14 +23,15 @@ public class flock_initialize_impl_0_0 extends Strategy {
 			Flock.resetTimers();
 			Flock.resetCounters();
 			Flock.beginTime("api@analyse");
+			Flock.instance.io = context.getIOAgent();
+			Flock.instance.factory = factory;
+
 			Flock.instance.createTermGraph(current);
 			Flock.instance.createControlFlowGraph(context, current);
 			//Flock.log("graphviz", Flock.instance.graph.toGraphviz());
 			Flock.log("api", "initialize");
 			Flock.instance.init(current);
 			Flock.endTime("api@analyse");
-
-			
 		} catch (ParseError e) {
 			context.getIOAgent().printError(e.toString());
 			return null;
