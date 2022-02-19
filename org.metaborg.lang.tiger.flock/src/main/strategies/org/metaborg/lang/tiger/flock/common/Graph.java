@@ -11,6 +11,7 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 
@@ -18,7 +19,7 @@ public class Graph {
 	public static class Node {
 		private TermId id;
 
-		public boolean isGhost = false;
+		public boolean isTransient = false;
 		public boolean isIrregular = false;
 		public ITerm virtualTerm = null;
 		public HashMap<String, Property> properties = new HashMap<>();
@@ -27,16 +28,16 @@ public class Graph {
 		private Node() {
 		}
 
-		public static Node ghost(Graph parent) {
+		public static Node transient_(Graph parent) {
 			Node n = new Node();
 			n.graph = parent;
 			n.id = Flock.nextNodeId();
-			n.isGhost = true;
+			n.isTransient = true;
 			return n;
 		}
 
 		public Node(Graph parent, Node other) {
-			this.isGhost = other.isGhost;
+			this.isTransient = other.isTransient;
 			this.id = other.id;
 			this.properties = other.properties;
 			this.virtualTerm = other.virtualTerm;
@@ -123,6 +124,10 @@ public class Graph {
 
 	private HashMap<Node, Set<Node>> children = new HashMap<>();
 	private HashMap<Node, Set<Node>> parents = new HashMap<>();
+	private HashMap<Node, Set<Node>> inactiveChildren = new HashMap<>();
+	private HashMap<Node, Set<Node>> inactiveParents = new HashMap<>();
+	private HashMap<TermId, Pair<Node, Node>> inactiveEdgeSource = new HashMap<>();
+	private HashMap<Pair<Node, Node>, TermId> inactiveEdgeSourceRev = new HashMap<>();
 	private HashMap<TermId, Node> nodes = new HashMap<>();
 	private Set<Node> roots = new HashSet<>();
 	public Set<Node> leafs = new HashSet<>();
@@ -142,9 +147,15 @@ public class Graph {
 	}
 
 	public Graph(HashMap<TermId, Node> nodes, HashMap<Node, Set<Node>> children, HashMap<Node, Set<Node>> parents,
-			Set<Node> roots, Set<Node> leafs) {
+			HashMap<Node, Set<Node>> inactiveChildren, HashMap<Node, Set<Node>> inactiveParents,
+			HashMap<TermId, Pair<Node, Node>> inactiveEdgeSource,
+			HashMap<Pair<Node, Node>, TermId> inactiveEdgeSourceRev, Set<Node> roots, Set<Node> leafs) {
 		this.nodes = nodes;
 		this.children = children;
+		this.inactiveChildren = inactiveChildren;
+		this.inactiveParents = inactiveParents;
+		this.inactiveEdgeSource = inactiveEdgeSource;
+		this.inactiveEdgeSourceRev = inactiveEdgeSourceRev;
 		this.parents = parents;
 		this.roots = roots;
 		this.leafs = leafs;
@@ -162,8 +173,16 @@ public class Graph {
 		return this.children.get(n);
 	}
 
+	public Set<Node> inactiveChildrenOf(Node n) {
+		return this.inactiveChildren.get(n);
+	}
+
 	public Set<Node> parentsOf(Node n) {
 		return this.parents.get(n);
+	}
+
+	public Set<Node> inactiveParentsOf(Node n) {
+		return this.inactiveParents.get(n);
 	}
 
 	public Collection<Node> nodes() {
@@ -199,6 +218,38 @@ public class Graph {
 
 			this.children.putIfAbsent(newKey, new HashSet<>());
 			this.children.get(newKey).addAll(newNodes);
+		}
+	}
+
+	/**
+	 * Adds the given inactive child relations to this graph, adding to existing
+	 * collections if exists.
+	 * 
+	 * @param other
+	 */
+	private void mergeInactiveChildren(HashMap<Node, Set<Node>> other) {
+		for (Entry<Node, Set<Node>> e : other.entrySet()) {
+			Node newKey = e.getKey().withGraph(this);
+			Set<Node> newNodes = e.getValue().stream().map(n -> n.withGraph(this)).collect(Collectors.toSet());
+
+			this.inactiveChildren.putIfAbsent(newKey, new HashSet<>());
+			this.inactiveChildren.get(newKey).addAll(newNodes);
+		}
+	}
+
+	/**
+	 * Adds the given inactive parent relations to this graph, adding to existing
+	 * collections if exists.
+	 * 
+	 * @param other
+	 */
+	private void mergeInactiveParents(HashMap<Node, Set<Node>> other) {
+		for (Entry<Node, Set<Node>> e : other.entrySet()) {
+			Node newKey = e.getKey().withGraph(this);
+			Set<Node> newNodes = e.getValue().stream().map(n -> n.withGraph(this)).collect(Collectors.toSet());
+
+			this.inactiveParents.putIfAbsent(newKey, new HashSet<>());
+			this.inactiveParents.get(newKey).addAll(newNodes);
 		}
 	}
 
@@ -263,6 +314,8 @@ public class Graph {
 		this.mergeNodes(o.nodes);
 		this.mergeChildren(o.children);
 		this.mergeParents(o.parents);
+		this.mergeInactiveChildren(o.inactiveChildren);
+		this.mergeInactiveParents(o.inactiveParents);
 		this.mergeLeafs(o.leaves());
 		this.mergeRoots(o.roots());
 	}
@@ -289,6 +342,8 @@ public class Graph {
 			this.mergeNodes(o.nodes);
 			this.mergeChildren(o.children);
 			this.mergeParents(o.parents);
+			this.mergeInactiveChildren(o.inactiveChildren);
+			this.mergeInactiveParents(o.inactiveParents);
 
 			for (Node n : parents) {
 				for (Node r : o.roots) {
@@ -326,6 +381,8 @@ public class Graph {
 		this.mergeNodes(o.nodes);
 		this.mergeChildren(o.children);
 		this.mergeParents(o.parents);
+		this.mergeInactiveChildren(o.inactiveChildren);
+		this.mergeInactiveParents(o.inactiveParents);
 
 		for (Node n : parents) {
 			for (Node r : o.roots) {
@@ -345,11 +402,11 @@ public class Graph {
 	 */
 
 	/*
-	 * Creates a non-ghost node without id, term, etc. Only use for tests.
+	 * Creates a non-transient node without id, term, etc. Only use for tests.
 	 */
 	public Node createNode() {
-		Node n = Node.ghost(this);
-		n.isGhost = false;
+		Node n = Node.transient_(this);
+		n.isTransient = false;
 		this.addNode(n);
 		return n;
 	}
@@ -395,6 +452,51 @@ public class Graph {
 			}
 		}
 
+		// n has at least one inactive child
+		if (this.inactiveChildren.get(n) != null) {
+			// for each inactive child
+			for (Node child : this.inactiveChildren.get(n)) {
+				// get and remove the origin map
+				TermId source = this.inactiveEdgeSourceRev.remove(Pair.of(n, child));
+				this.inactiveEdgeSource.remove(source);
+
+				// we give it to each of the parents of n
+				for (Node parent : this.parents.get(n)) {
+					this.inactiveChildren.putIfAbsent(parent, new HashSet<>());
+					this.inactiveChildren.get(parent).add(child);
+					// update the inactive parent of n
+					this.inactiveParents.get(child).add(parent);
+
+					// and update the origin maps
+					this.inactiveEdgeSourceRev.put(Pair.of(parent, child), source);
+					this.inactiveEdgeSource.put(source, Pair.of(parent, child));
+				}
+				// and then remove n from the inactive parents of the child
+				this.inactiveParents.get(child).remove(n);
+			}
+			// finally remove n's set of inactive children
+			this.inactiveChildren.remove(n);
+		}
+
+		// same as above but for parents instead of children
+		if (this.inactiveParents.get(n) != null) {
+			for (Node parent : this.inactiveParents.get(n)) {
+				TermId source = this.inactiveEdgeSourceRev.remove(Pair.of(parent, n));
+				this.inactiveEdgeSource.remove(source);
+
+				for (Node child : this.children.get(n)) {
+					this.inactiveParents.putIfAbsent(child, new HashSet<>());
+					this.inactiveParents.get(child).add(parent);
+					this.inactiveChildren.get(parent).add(child);
+
+					this.inactiveEdgeSourceRev.put(Pair.of(parent, child), source);
+					this.inactiveEdgeSource.put(source, Pair.of(parent, child));
+				}
+				this.inactiveChildren.get(parent).remove(n);
+			}
+			this.inactiveParents.remove(n);
+		}
+
 		this.children.remove(n);
 		this.parents.remove(n);
 		this.nodes.remove(n.getId());
@@ -429,6 +531,47 @@ public class Graph {
 		this.nodes.remove(n.getId());
 	}
 
+	private void activateInactiveEdges(TermId t) {
+		Pair<Node, Node> edge = this.inactiveEdgeSource.get(t);
+		this.removeInactiveEdges(t);
+		this.createEdge(edge.getLeft(), edge.getRight());
+	}
+
+	private void removeInactiveEdges(TermId t) {
+		Pair<Node, Node> edge = this.inactiveEdgeSource.get(t);
+
+		if (edge == null)
+			return;
+
+		this.inactiveEdgeSource.remove(t);
+		this.inactiveChildren.get(edge.getLeft()).remove(edge.getRight());
+		this.inactiveParents.get(edge.getRight()).remove(edge.getLeft());
+	}
+
+	public void removeNodes(TermId root, Set<TermId> inner, Set<Node> nodes) {
+		Flock.beginTime("Graph@removeNodes");
+
+		this.activateInactiveEdges(root);
+		for (TermId t : inner) {
+			this.removeInactiveEdges(t);
+		}
+
+		for (Node n : nodes) {
+			this.removeNode(n);
+		}
+
+		Flock.endTime("Graph@removeNodes");
+	}
+
+	public void removeTransientNodes() {
+		Flock.beginTime("Graph@removeTransientNodes");
+		Set<Node> transientNodes = this.nodes().stream().filter(n -> n.isTransient).collect(Collectors.toSet());
+		for (Node n : transientNodes) {
+			this.removeNode(n);
+		}
+		Flock.endTime("Graph@removeTransientNodes");
+	}
+
 	public void replaceNodes(Set<Node> nodes, Set<Node> predecessors, Set<Node> successors, Graph subGraph) {
 		Flock.beginTime("Graph@replaceNodes");
 		boolean containedRoot = nodes.stream().anyMatch(node -> this.roots.contains(node));
@@ -452,15 +595,6 @@ public class Graph {
 		this.validate();
 
 		Flock.endTime("Graph@replaceNodes");
-	}
-
-	public void removeGhostNodes() {
-		Flock.beginTime("Graph@removeGhostNodes");
-		Set<Node> ghostNodes = this.nodes().stream().filter(n -> n.isGhost).collect(Collectors.toSet());
-		for (Node n : ghostNodes) {
-			this.removeNode(n);
-		}
-		Flock.endTime("Graph@removeGhostNodes");
 	}
 
 	/*

@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.management.RuntimeErrorException;
+
 import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
@@ -45,20 +47,25 @@ public class FlockIncremental extends Flock {
 
 	@Override
 	public void createControlFlowGraph(Context context, IStrategoTerm current) {
+		try {
 		this.graph = GraphFactory.createCfgRecursive(this.termTree, current);
-		this.graph.removeGhostNodes();
+		this.graph.removeTransientNodes();
 		this.graph.validate();
 		initPosition(graph, context.getFactory());
 		this.graph_scss = new SCCs(this.graph);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	@Override
 	public void replaceNode(IStrategoTerm current, IStrategoTerm replacement) {
 		Flock.increment("replaceNode");
-		Flock.beginTime("FlockIncremental@replaceNode");
+		// Flock.beginTime("FlockIncremental@replaceNode");
 		this.validate();
-		Flock.beginTime("FlockIncremental@replaceNode:termTree");
-		try {
+		// Flock.beginTime("FlockIncremental@replaceNode:termTree");
+
 		Set<Node> removedNodes = getAllNodes(current);
 		boolean changedIrregular = false;
 		{
@@ -66,8 +73,8 @@ public class FlockIncremental extends Flock {
 			this.termTree.replace(Helpers.getTermId(current), replacement);
 			this.termTree.validate();
 		}
-		Flock.endTime("FlockIncremental@replaceNode:termTree");
-		Flock.beginTime("FlockIncremental@removeAnalysisResults");
+		// Flock.endTime("FlockIncremental@replaceNode:termTree");
+		// Flock.beginTime("FlockIncremental@removeAnalysisResults");
 		{
 			/*
 			 * We remove the results that may depend on the removed nodes. We must do this
@@ -77,18 +84,37 @@ public class FlockIncremental extends Flock {
 			for (Analysis a : this.analyses) {
 				this.removeAnalysisResultsAfter(a, removedNodes);
 			}
+			this.removeNodesInAnalyses(removedNodes);
 		}
-		Flock.endTime("FlockIncremental@removeAnalysisResults");
-		Flock.beginTime("FlockIncremental@replaceNode:cfg");
+		// Flock.endTime("FlockIncremental@removeAnalysisResults");
+		// Flock.beginTime("FlockIncremental@replaceNode:cfg");
+		Graph subGraph;
 		{
-			// Patch the graph, removing old nodes and placing new nodes
-			Flock.beginTime("FlockIncremental@replaceNode:cfg:create");
-			Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
-			subGraph.removeGhostNodes();
+			// Create the new subgraph
+			// Flock.beginTime("FlockIncremental@replaceNode:cfg:create");
+			subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
+			subGraph.removeTransientNodes();
 			changedIrregular |= this.termTree.containsIrregularTerm(Helpers.getTermId(replacement));
-			Flock.endTime("FlockIncremental@replaceNode:cfg:create");
+			// Flock.endTime("FlockIncremental@replaceNode:cfg:create");
+		}
 
-			Flock.beginTime("FlockIncremental@replaceNode:cfg:gatherNeighbours");
+		if (changedIrregular) {
+
+			this.graph_scss.recompute(this.graph);
+			// Flock.beginTime("FlockIncremental@removeAnalysisResultsIrregular");
+			/*
+			 * We do the removal of analysis results again because the update was irregular.
+			 * This means nodes may now depend on the new subgraph whereas they did not
+			 * depend on the replaced subgraph previously.
+			 */
+			for (Analysis a : this.analyses) {
+				this.removeAnalysisResultsAfter(a, subGraph.nodes());
+			}
+			throw new RuntimeException("Fix the graph");
+
+			// Flock.endTime("FlockIncremental@removeAnalysisResultsIrregular");
+		} else {
+			// Flock.beginTime("FlockIncremental@replaceNode:cfg:gatherNeighbours");
 			Set<Node> predecessors = new HashSet<>(removedNodes.size());
 			Set<Node> successors = new HashSet<>(removedNodes.size());
 			for (Node n : removedNodes) {
@@ -97,57 +123,34 @@ public class FlockIncremental extends Flock {
 			}
 			predecessors.removeAll(removedNodes);
 			successors.removeAll(removedNodes);
-			Flock.endTime("FlockIncremental@replaceNode:cfg:gatherNeighbours");
-
-			Flock.beginTime("FlockIncremental@replaceNode:cfg:graphReplace");
+			// Flock.endTime("FlockIncremental@replaceNode:cfg:gatherNeighbours");
+			// Flock.beginTime("FlockIncremental@replaceNode:cfg:graphReplace");
 			this.graph.replaceNodes(removedNodes, predecessors, successors, subGraph);
-			Flock.endTime("FlockIncremental@replaceNode:cfg:graphReplace");
+			// Flock.endTime("FlockIncremental@replaceNode:cfg:graphReplace");
+			// Flock.beginTime("FlockIncremental@replaceNode:cfg:graphScssReplace");
+			this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph);
+			// Flock.endTime("FlockIncremental@replaceNode:cfg:graphScssReplace");
 
-			Flock.beginTime("FlockIncremental@replaceNode:cfg:graphScssReplace");
-			if (changedIrregular) {
-				this.graph_scss.recompute(this.graph);
-			} else {
-				this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph);
-			}
-			Flock.endTime("FlockIncremental@replaceNode:cfg:graphScssReplace");
+		}
+		this.graph_scss.validate(this.graph);
+		// This is some useful validation logic when looking for bugs in SCC creation
 
-			this.graph_scss.validate(this.graph);
-
-			// This is some useful validation logic when looking for bugs in SCC creation
-
-//			if (Flock.DEBUG) {
-//				SCCs new_scss = new SCCs(this.graph);
-//				if (new_scss.components.size() != this.graph_scss.components.size()) {
-//					throw new RuntimeException("Inc. vs from-scratch SCCs don't match");
-//				}
+//		if (Flock.DEBUG) {
+//			SCCs new_scss = new SCCs(this.graph);
+//			if (new_scss.components.size() != this.graph_scss.components.size()) {
+//				throw new RuntimeException("Inc. vs from-scratch SCCs don't match");
 //			}
+//		}
 
+		{
 			for (Node n : subGraph.nodes()) {
 				this.addToNew(n);
 			}
+		}
 
-			if (changedIrregular) {
-				Flock.beginTime("FlockIncremental@removeAnalysisResultsIrregular");
-				{
-					/*
-					 * We do the removal of analysis results again because the update was irregular.
-					 * This means nodes may now depend on the new subgraph whereas they did not
-					 * depend on the replaced subgraph previously.
-					 */
-					for (Analysis a : this.analyses) {
-						this.removeAnalysisResultsAfter(a, subGraph.nodes());
-					}
-				}
-				Flock.endTime("FlockIncremental@removeAnalysisResultsIrregular");
-			}
-		}
-		} catch(Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
-		Flock.endTime("FlockIncremental@replaceNode:cfg");
+		// Flock.endTime("FlockIncremental@replaceNode:cfg");
 		this.validate();
-		Flock.endTime("FlockIncremental@replaceNode");
+		// Flock.endTime("FlockIncremental@replaceNode");
 	}
 
 	@Override
@@ -161,21 +164,36 @@ public class FlockIncremental extends Flock {
 		this.termTree.remove(Helpers.getTermId(node));
 
 		if (changedIrregular) {
+			TermId root = Helpers.getTermId(node);
+			Set<TermId> inner = getAllIds(node);
+			inner.remove(root);
+			
+			this.graph.removeNodes(root, inner, removedNodes);
 			Set<Component> changed = this.graph_scss.recompute(this.graph);
 			this.removeResultsAfter(changed);
+			throw new RuntimeException("Fix the graph");
 		} else {
 			for (Analysis a : this.analyses) {
 				this.removeAnalysisResultsAfter(a, removedNodes);
 			}
 
 			// Go through graph and remove facts with origin in removed id's
-			this.applyGhostMask(removedNodes);
-			this.graph.removeGhostNodes();
+			this.markTransient(removedNodes);
+			this.graph.removeTransientNodes();
 		}
+		this.removeNodesInAnalyses(removedNodes);
 
 		this.graph_scss.validate(this.graph);
 
 		Flock.endTime("FlockIncremental@removeNode");
+	}
+
+	private void removeNodesInAnalyses(Collection<Node> removedNodes) {
+		for (Analysis a : this.analyses) {
+			for (Node n : removedNodes) {
+				a.remove(n);
+			}
+		}
 	}
 
 	private void removeResultsAfter(Set<Component> cs) {
@@ -207,9 +225,6 @@ public class FlockIncremental extends Flock {
 		for (Component c : outdatedComponents)
 			this.removeAnalysisResultsAfter(a, c);
 
-		for (Node n : removedNodes) {
-			a.remove(n);
-		}
 	}
 
 	private void removeAnalysisResultsIn(Analysis a, Component c) {

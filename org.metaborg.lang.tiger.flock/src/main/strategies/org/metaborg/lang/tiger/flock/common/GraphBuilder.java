@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 
 public class GraphBuilder {
@@ -17,7 +18,21 @@ public class GraphBuilder {
 	private HashMap<TermId, Set<TermId>> children = new HashMap<>();
 	private HashMap<TermId, Set<TermId>> parents = new HashMap<>();
 	private HashSet<TermId> tmpNodes = new HashSet<>();
+
 	private HashSet<TermId> irregularTerms = new HashSet<>();
+
+	private class InactiveEdge {
+		TermId target;
+		TermId irregularOrigin;
+
+		public InactiveEdge(TermId target, TermId irregularOrigin) {
+			this.target = target;
+			this.irregularOrigin = irregularOrigin;
+		}
+	}
+
+	private HashMap<TermId, Set<InactiveEdge>> inactivePredecessors = new HashMap<>();
+	private HashMap<TermId, Set<InactiveEdge>> inactiveSuccessors = new HashMap<>();
 
 	private GraphBuilder() {
 	}
@@ -40,12 +55,12 @@ public class GraphBuilder {
 		r.connect(r.ENTRY, r.EXIT);
 		return r;
 	}
-	
+
 	public static GraphBuilder fromSingle(TermId n) {
 		GraphBuilder r = GraphBuilder.empty();
 		r.addNode(n);
-		r.addEdge(r.ENTRY, n);
-		r.addEdge(n, r.EXIT);
+		r.connect(r.ENTRY, n);
+		r.connect(n, r.EXIT);
 		return r;
 	}
 
@@ -55,23 +70,9 @@ public class GraphBuilder {
 		this.parents.put(t, new HashSet<>());
 	}
 
-	private void addEdge(TermId parent, TermId child) {
-		this.children.get(parent).add(child);
-		this.parents.get(child).add(parent);
-	}
-
 	public void connect(TermId parent, TermId child) {
 		this.children.get(parent).add(child);
 		this.parents.get(child).add(parent);
-	}
-	
-	public void connect(Collection<TermId> parents, Collection<TermId> children) {
-		for (TermId p : parents) {
-			this.children.get(p).addAll(children);
-		}
-		for (TermId c : children) {
-			this.parents.get(c).addAll(parents);
-		}
 	}
 
 	public boolean hasRealNodes() {
@@ -88,24 +89,35 @@ public class GraphBuilder {
 		this.parents.putAll(o.parents);
 		this.tmpNodes.addAll(o.tmpNodes);
 		this.irregularTerms.addAll(o.irregularTerms);
-		
+		this.inactivePredecessors.putAll(o.inactivePredecessors);
+		this.inactiveSuccessors.putAll(o.inactiveSuccessors);
+
 		this.children.get(this.START).add(o.START);
 		this.parents.get(o.START).add(this.START);
 		this.children.get(o.END).add(this.END);
 		this.parents.get(this.END).add(o.END);
 	}
-	
+
 	public void markIrregular(TermId node) {
 		this.irregularTerms.add(node);
+		this.inactiveSuccessors.putIfAbsent(this.ENTRY, new HashSet<>());
+		this.inactiveSuccessors.get(this.ENTRY).add(new InactiveEdge(this.EXIT, node));
+		this.inactivePredecessors.putIfAbsent(this.EXIT, new HashSet<>());
+		this.inactivePredecessors.get(this.EXIT).add(new InactiveEdge(this.ENTRY, node));
 	}
 
 	public Graph build(TermTree tree) {
 		HashMap<TermId, Node> nodes = new HashMap<>();
 		HashMap<Node, Set<Node>> children = new HashMap<>();
+		HashMap<Node, Set<Node>> inactiveChildren = new HashMap<>();
+		HashMap<TermId, Pair<Node, Node>> sourceMap = new HashMap<>();
+		HashMap<Pair<Node, Node>, TermId> sourceMapRev = new HashMap<>();
 		HashMap<Node, Set<Node>> parents = new HashMap<>();
+		HashMap<Node, Set<Node>> inactiveParents = new HashMap<>();
 		HashSet<Node> roots = new HashSet<>();
 		HashSet<Node> leafs = new HashSet<>();
-		Graph g = new Graph(nodes, children, parents, roots, leafs);
+		Graph g = new Graph(nodes, children, parents, inactiveChildren, inactiveParents, sourceMap, sourceMapRev, roots,
+				leafs);
 
 		// Fill nodes
 		for (TermId t : this.nodes) {
@@ -121,6 +133,17 @@ public class GraphBuilder {
 			children.put(nodes.get(t.getKey()), tChildren);
 		}
 
+		// Fill inactive children
+		for (Map.Entry<TermId, Set<InactiveEdge>> t : this.inactiveSuccessors.entrySet()) {
+			Set<Node> tChildren = new HashSet<>();
+			for (InactiveEdge c : t.getValue()) {
+				tChildren.add(nodes.get(c.target));
+				sourceMap.put(c.irregularOrigin, Pair.of(nodes.get(t.getKey()), nodes.get(c.target)));
+				sourceMapRev.put(Pair.of(nodes.get(t.getKey()), nodes.get(c.target)), c.irregularOrigin);
+			}
+			inactiveChildren.put(nodes.get(t.getKey()), tChildren);
+		}
+
 		// Fill parents
 		for (Map.Entry<TermId, Set<TermId>> t : this.parents.entrySet()) {
 			Set<Node> tParents = new HashSet<>();
@@ -128,6 +151,15 @@ public class GraphBuilder {
 				tParents.add(nodes.get(c));
 			}
 			parents.put(nodes.get(t.getKey()), tParents);
+		}
+
+		// Fill inactive parents
+		for (Map.Entry<TermId, Set<InactiveEdge>> t : this.inactivePredecessors.entrySet()) {
+			Set<Node> tParents = new HashSet<>();
+			for (InactiveEdge c : t.getValue()) {
+				tParents.add(nodes.get(c.target));
+			}
+			inactiveParents.put(nodes.get(t.getKey()), tParents);
 		}
 
 		// Fill roots/leafs
@@ -145,9 +177,9 @@ public class GraphBuilder {
 		}
 
 		for (TermId t : this.tmpNodes) {
-			nodes.get(t).isGhost = true;
+			nodes.get(t).isTransient = true;
 		}
-		
+
 		for (TermId t : this.irregularTerms) {
 			tree.markIrregular(t);
 		}

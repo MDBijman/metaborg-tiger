@@ -37,10 +37,10 @@ public abstract class Flock {
 		// this.analyses.add(new AvailableExpressions());
 	}
 
-	protected void applyGhostMask(Set<Node> mask) {
+	protected void markTransient(Set<Node> mask) {
 		for (Node n : this.graph.nodes()) {
 			if (mask.contains(n)) {
-				n.isGhost = true;
+				n.isTransient = true;
 			}
 		}
 	}
@@ -69,6 +69,22 @@ public abstract class Flock {
 		}
 	}
 
+	protected Set<TermId> getAllIds(IStrategoTerm term) {
+		Set<TermId> set = new HashSet<>();
+		getAllIds(set, term);
+		return set;
+	}
+	
+	protected void getAllIds(Set<TermId> visited, IStrategoTerm program) {
+		for (IStrategoTerm term : program.getSubterms()) {
+			getAllIds(visited, term);
+		}
+		TermId id = Helpers.getTermId(program);
+		if (id != null && id != null) {
+			visited.add(id);
+		}
+	}
+	
 	public abstract void init(IStrategoTerm program);
 
 	public abstract void createTermGraph(IStrategoTerm term);
