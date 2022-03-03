@@ -8,6 +8,7 @@ imports
   libstratego-lib
   signatures/tiger-sig
   pp
+  dr
 
 signature
 
@@ -62,6 +63,15 @@ rules /// editor transformation actions
       p' := <pipeline> p
     ; filename := <guarantee-extension(|"opt.tig")> path
     ; result   := <pp-tiger-string> p'
+    
+  editor-transform-dr:
+    (p, _, _, path, project-path) -> (filename, result)
+    with
+      p' := <prop-const> p
+    ; <debug> <run-time>
+    ; filename := <guarantee-extension(|"opt.tig")> path
+    ; result   := <pp-tiger-string> p'
+    
 
 rules // transformation actions
 
@@ -116,14 +126,13 @@ rules // pipeline
  
   // 1) Dit is de originele implementatie van 'opt'
  
-  opt: l@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|l)> i
-  
-  opt: l@Let(decls, expr) -> new-l
+  let-opt: l@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|l)> i
+  let-opt: l@Let(decls, expr) -> new-l
   where {| InlineFn, InlineCount:
   	new-l := <some(opt)> l
   |}
 
-  opt: FunDec(n, params, rt, body) -> FunDec(n, params, rt, new-body)
+  fundec-opt: FunDec(n, params, rt, body) -> FunDec(n, params, rt, new-body)
   where
     <finally(opt,
   	    ?new-body
@@ -134,7 +143,8 @@ rules // pipeline
   		; new-node := <flock-replace-node(|c)> replacement)
   	)> body
 
-  opt = preserve-annotation(some(opt)) < try(opt-one) + (opt-one)
+  opt = flock-opt(let-opt, fundec-opt, opt-one)
+   //debug; preserve-annotation(some(opt)) < try(opt-one) + (opt-one)
   // 2) Deze implementatie heeft de performance issues
 
   //opt = (?FunDec(n, _, _, _) < fail + (preserve-annotation(some(opt)) < try(opt-one) + (opt-one)))

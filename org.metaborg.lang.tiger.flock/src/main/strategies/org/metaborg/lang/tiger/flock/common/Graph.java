@@ -12,44 +12,42 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
+import org.metaborg.lang.tiger.flock.common.Graph.Node.NodeType;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 
 public class Graph {
 	public static class Node {
 		private TermId id;
 
-		public boolean isTransient = false;
-		public boolean isIrregular = false;
+		public enum NodeType {
+			START, END, ENTRY, EXIT, NORMAL
+		};
+
+		public NodeType type;
 		public ITerm virtualTerm = null;
 		public HashMap<String, Property> properties = new HashMap<>();
 		public Graph graph = null;
 
-		private Node() {
+		private Node(NodeType t) {
+			this.type = t;
 		}
 
-		public static Node transient_(Graph parent) {
-			Node n = new Node();
-			n.graph = parent;
-			n.id = Flock.nextNodeId();
-			n.isTransient = true;
-			return n;
-		}
-
-		public Node(Graph parent, Node other) {
-			this.isTransient = other.isTransient;
+		public Node(Graph parent, Node other, NodeType t) {
+			this.type = t;
 			this.id = other.id;
 			this.properties = other.properties;
 			this.virtualTerm = other.virtualTerm;
 			this.graph = parent;
 		}
 
-		public Node(Graph parent, TermId id) {
+		public Node(Graph parent, TermId id, NodeType t) {
+			this.type = t;
 			this.id = id;
 			this.graph = parent;
 		}
 
-		public Node(Graph parent, TermId id, ITerm t) {
+		public Node(Graph parent, TermId id, ITerm t, NodeType ty) {
+			this.type = ty;
 			this.id = id;
 			this.virtualTerm = t;
 			this.graph = parent;
@@ -72,8 +70,8 @@ public class Graph {
 			return properties.values();
 		}
 
-		public Collection<Node> predecessors(Analysis.Direction dir) {
-			if (dir == Analysis.Direction.FORWARD) {
+		public Collection<Node> predecessors(SingleAnalysis.Direction dir) {
+			if (dir == SingleAnalysis.Direction.FORWARD) {
 				return graph.parentsOf(this);
 			} else {
 				return graph.childrenOf(this);
@@ -124,41 +122,32 @@ public class Graph {
 
 	private HashMap<Node, Set<Node>> children = new HashMap<>();
 	private HashMap<Node, Set<Node>> parents = new HashMap<>();
-	private HashMap<Node, Set<Node>> inactiveChildren = new HashMap<>();
-	private HashMap<Node, Set<Node>> inactiveParents = new HashMap<>();
-	private HashMap<TermId, Pair<Node, Node>> inactiveEdgeSource = new HashMap<>();
-	private HashMap<Pair<Node, Node>, TermId> inactiveEdgeSourceRev = new HashMap<>();
 	private HashMap<TermId, Node> nodes = new HashMap<>();
-	private Set<Node> roots = new HashSet<>();
-	public Set<Node> leafs = new HashSet<>();
+
+	private HashMap<TermId, TermId> entry = new HashMap<>();
+	private HashMap<TermId, TermId> exit = new HashMap<>();
+	private Node theEntry = null;
+	private Node theExit = null;
+	private Node theStart = null;
+	private Node theEnd = null;
+
 	private static final boolean DEBUG = Flock.DEBUG;
 
 	public Graph() {
 	}
 
-	public Graph(TermId rootId, ITerm termNode) {
-		Node root = new Node(this, rootId);
-		root.virtualTerm = termNode;
-		this.roots.add(root);
-		this.leafs.add(root);
-		this.nodes.put(root.getId(), root);
-		this.children.put(root, new HashSet<>());
-		this.parents.put(root, new HashSet<>());
-	}
-
 	public Graph(HashMap<TermId, Node> nodes, HashMap<Node, Set<Node>> children, HashMap<Node, Set<Node>> parents,
-			HashMap<Node, Set<Node>> inactiveChildren, HashMap<Node, Set<Node>> inactiveParents,
-			HashMap<TermId, Pair<Node, Node>> inactiveEdgeSource,
-			HashMap<Pair<Node, Node>, TermId> inactiveEdgeSourceRev, Set<Node> roots, Set<Node> leafs) {
+			HashMap<TermId, TermId> entry, HashMap<TermId, TermId> exit, Node theEntry, Node theExit, Node theStart,
+			Node theEnd) {
 		this.nodes = nodes;
 		this.children = children;
-		this.inactiveChildren = inactiveChildren;
-		this.inactiveParents = inactiveParents;
-		this.inactiveEdgeSource = inactiveEdgeSource;
-		this.inactiveEdgeSourceRev = inactiveEdgeSourceRev;
 		this.parents = parents;
-		this.roots = roots;
-		this.leafs = leafs;
+		this.entry = entry;
+		this.exit = exit;
+		this.theEntry = theEntry;
+		this.theExit = theExit;
+		this.theStart = theStart;
+		this.theEnd = theEnd;
 	}
 
 	/*
@@ -169,32 +158,32 @@ public class Graph {
 		return this.nodes.get(n);
 	}
 
+	public TermId entryOf(TermId n) {
+		return this.entry.get(n);
+	}
+	
+	public TermId exitOf(TermId n) {
+		return this.exit.get(n);
+	}
+		
 	public Set<Node> childrenOf(Node n) {
 		return this.children.get(n);
-	}
-
-	public Set<Node> inactiveChildrenOf(Node n) {
-		return this.inactiveChildren.get(n);
 	}
 
 	public Set<Node> parentsOf(Node n) {
 		return this.parents.get(n);
 	}
 
-	public Set<Node> inactiveParentsOf(Node n) {
-		return this.inactiveParents.get(n);
-	}
-
 	public Collection<Node> nodes() {
 		return this.nodes.values();
 	}
 
-	public Collection<Node> roots() {
-		return this.roots;
+	public Node root() {
+		return this.getStart();
 	}
 
-	public Collection<Node> leaves() {
-		return this.leafs;
+	public Node leaf() {
+		return this.theEnd;
 	}
 
 	public long size() {
@@ -218,38 +207,6 @@ public class Graph {
 
 			this.children.putIfAbsent(newKey, new HashSet<>());
 			this.children.get(newKey).addAll(newNodes);
-		}
-	}
-
-	/**
-	 * Adds the given inactive child relations to this graph, adding to existing
-	 * collections if exists.
-	 * 
-	 * @param other
-	 */
-	private void mergeInactiveChildren(HashMap<Node, Set<Node>> other) {
-		for (Entry<Node, Set<Node>> e : other.entrySet()) {
-			Node newKey = e.getKey().withGraph(this);
-			Set<Node> newNodes = e.getValue().stream().map(n -> n.withGraph(this)).collect(Collectors.toSet());
-
-			this.inactiveChildren.putIfAbsent(newKey, new HashSet<>());
-			this.inactiveChildren.get(newKey).addAll(newNodes);
-		}
-	}
-
-	/**
-	 * Adds the given inactive parent relations to this graph, adding to existing
-	 * collections if exists.
-	 * 
-	 * @param other
-	 */
-	private void mergeInactiveParents(HashMap<Node, Set<Node>> other) {
-		for (Entry<Node, Set<Node>> e : other.entrySet()) {
-			Node newKey = e.getKey().withGraph(this);
-			Set<Node> newNodes = e.getValue().stream().map(n -> n.withGraph(this)).collect(Collectors.toSet());
-
-			this.inactiveParents.putIfAbsent(newKey, new HashSet<>());
-			this.inactiveParents.get(newKey).addAll(newNodes);
 		}
 	}
 
@@ -281,32 +238,8 @@ public class Graph {
 	}
 
 	/**
-	 * Adds the leafs to this graph.
-	 * 
-	 * @param other
-	 */
-	private void mergeLeafs(Collection<Node> other) {
-		for (Node n : other) {
-			this.leafs.add(n.withGraph(this));
-		}
-	}
-
-	/**
-	 * Adds the roots to this graph.
-	 * 
-	 * @param other
-	 */
-	private void mergeRoots(Collection<Node> other) {
-		for (Node n : other) {
-			this.roots.add(n.withGraph(this));
-		}
-	}
-
-	/**
-	 * Places the graph <code>o</code> into this graph.
-	 * 
-	 * This adds the leaves and roots of <code>o</code> to those of this graph. Does
-	 * not create any other edges.
+	 * Places the graph <code>o</code> into this graph. Does not change the roots
+	 * and leaves of this graph.
 	 * 
 	 * @param o
 	 */
@@ -314,87 +247,20 @@ public class Graph {
 		this.mergeNodes(o.nodes);
 		this.mergeChildren(o.children);
 		this.mergeParents(o.parents);
-		this.mergeInactiveChildren(o.inactiveChildren);
-		this.mergeInactiveParents(o.inactiveParents);
-		this.mergeLeafs(o.leaves());
-		this.mergeRoots(o.roots());
-	}
 
-	/**
-	 * Places the graph <code>o</code> into this graph, with edges between the roots
-	 * of <code>o</code> and the given parents.
-	 * 
-	 * Does not change the roots and leaves of this graph, unless the parents
-	 * collection is empty, in which case the graphs are merged as if
-	 * mergeGraph(Graph) was called.
-	 *
-	 * @param parents
-	 * @param o
-	 */
-	public void mergeGraph(Collection<Node> parents, Graph o) {
-		if (o.size() == 0) {
-			return;
+		for (Node child : this.childrenOf(o.theStart.withGraph(this))) {
+			this.createEdge(this.theStart, child);
 		}
 
-		if (parents.size() == 0) {
-			this.mergeGraph(o);
-		} else {
-			this.mergeNodes(o.nodes);
-			this.mergeChildren(o.children);
-			this.mergeParents(o.parents);
-			this.mergeInactiveChildren(o.inactiveChildren);
-			this.mergeInactiveParents(o.inactiveParents);
-
-			for (Node n : parents) {
-				for (Node r : o.roots) {
-					this.createEdge(n.withGraph(this), r.withGraph(this));
-				}
-			}
-		}
-	}
-
-	/**
-	 * Places the graph <code>o</code> into this graph, with edges between the roots
-	 * of <code>o</code> and the given parents, and edges between the leaves of
-	 * <code>o</code> and the given children.
-	 * 
-	 * Does not change the roots and leaves of this graph.
-	 * 
-	 * If <code>o</code> is empty, edges will be created between each parent and
-	 * child in the given collections.
-	 * 
-	 * @param parents
-	 * @param children
-	 * @param o
-	 */
-	public void mergeGraph(Collection<Node> parents, Collection<Node> children, Graph o) {
-		if (o.size() == 0) {
-			for (Node p : parents) {
-				for (Node c : children) {
-					// p and c are of this graph so no update to their graph pointers necessary
-					this.createEdge(p, c);
-				}
-			}
-			return;
+		for (Node parent : this.parentsOf(o.theEnd.withGraph(this))) {
+			this.createEdge(parent, this.theEnd);
 		}
 
-		this.mergeNodes(o.nodes);
-		this.mergeChildren(o.children);
-		this.mergeParents(o.parents);
-		this.mergeInactiveChildren(o.inactiveChildren);
-		this.mergeInactiveParents(o.inactiveParents);
+		this.removeNode(o.theStart.withGraph(this));
+		this.removeNode(o.theEnd.withGraph(this));
 
-		for (Node n : parents) {
-			for (Node r : o.roots) {
-				this.createEdge(n, r.withGraph(this));
-			}
-		}
-
-		for (Node n : children) {
-			for (Node l : o.leafs) {
-				this.createEdge(l.withGraph(this), n);
-			}
-		}
+		this.entry.putAll(o.entry);
+		this.exit.putAll(o.exit);
 	}
 
 	/*
@@ -405,14 +271,13 @@ public class Graph {
 	 * Creates a non-transient node without id, term, etc. Only use for tests.
 	 */
 	public Node createNode() {
-		Node n = Node.transient_(this);
-		n.isTransient = false;
+		Node n = new Node(NodeType.NORMAL);
 		this.addNode(n);
 		return n;
 	}
 
 	public void addNode(Node n) {
-		Node newNode = new Node(this, n);
+		Node newNode = new Node(this, n, NodeType.NORMAL);
 		this.nodes.put(newNode.getId(), newNode);
 		this.parents.put(newNode, new HashSet<>());
 		this.children.put(newNode, new HashSet<>());
@@ -423,22 +288,15 @@ public class Graph {
 		this.parents.get(child).add(parent);
 	}
 
-	public void removeNode(Node n) {
-		if (this.roots.contains(n)) {
-			this.roots.remove(n);
-
-			for (Node child : this.children.get(n)) {
-				this.roots.add(child);
-			}
-		}
-
-		if (this.leafs.contains(n)) {
-			this.leafs.remove(n);
-
-			for (Node parent : this.parents.get(n)) {
-				this.leafs.add(parent);
-			}
-		}
+	public void removeNodeAndConnectNeighbours(Node n) {
+		if (this.theStart.equals(n))
+			throw new RuntimeException("Cannot remove start");
+		if (this.theEnd.equals(n))
+			throw new RuntimeException("Cannot remove end");
+		if (this.theEntry.equals(n))
+			throw new RuntimeException("Cannot remove entry");
+		if (this.theExit.equals(n))
+			throw new RuntimeException("Cannot remove exit");
 
 		for (Node child : this.children.get(n)) {
 			this.parents.get(child).remove(n);
@@ -452,72 +310,23 @@ public class Graph {
 			}
 		}
 
-		// n has at least one inactive child
-		if (this.inactiveChildren.get(n) != null) {
-			// for each inactive child
-			for (Node child : this.inactiveChildren.get(n)) {
-				// get and remove the origin map
-				TermId source = this.inactiveEdgeSourceRev.remove(Pair.of(n, child));
-				this.inactiveEdgeSource.remove(source);
-
-				// we give it to each of the parents of n
-				for (Node parent : this.parents.get(n)) {
-					this.inactiveChildren.putIfAbsent(parent, new HashSet<>());
-					this.inactiveChildren.get(parent).add(child);
-					// update the inactive parent of n
-					this.inactiveParents.get(child).add(parent);
-
-					// and update the origin maps
-					this.inactiveEdgeSourceRev.put(Pair.of(parent, child), source);
-					this.inactiveEdgeSource.put(source, Pair.of(parent, child));
-				}
-				// and then remove n from the inactive parents of the child
-				this.inactiveParents.get(child).remove(n);
-			}
-			// finally remove n's set of inactive children
-			this.inactiveChildren.remove(n);
-		}
-
-		// same as above but for parents instead of children
-		if (this.inactiveParents.get(n) != null) {
-			for (Node parent : this.inactiveParents.get(n)) {
-				TermId source = this.inactiveEdgeSourceRev.remove(Pair.of(parent, n));
-				this.inactiveEdgeSource.remove(source);
-
-				for (Node child : this.children.get(n)) {
-					this.inactiveParents.putIfAbsent(child, new HashSet<>());
-					this.inactiveParents.get(child).add(parent);
-					this.inactiveChildren.get(parent).add(child);
-
-					this.inactiveEdgeSourceRev.put(Pair.of(parent, child), source);
-					this.inactiveEdgeSource.put(source, Pair.of(parent, child));
-				}
-				this.inactiveChildren.get(parent).remove(n);
-			}
-			this.inactiveParents.remove(n);
-		}
-
 		this.children.remove(n);
 		this.parents.remove(n);
 		this.nodes.remove(n.getId());
 	}
 
-	private boolean unroot(Node n) {
-		return this.roots.remove(n);
-	}
-
-	private boolean unleaf(Node n) {
-		return this.leafs.remove(n);
-	}
-
 	/**
-	 * Removes node n from the graph, removing all edges with it. In contrast to
-	 * removeNode(Node) this will not create edges between children and parents of
-	 * n. This will also not create new roots and leaves.
+	 * Removes node n from the graph, removing all edges with it.
 	 */
-	private void removeNodeAndEdges(Node n) {
-		this.unroot(n);
-		this.unleaf(n);
+	public void removeNode(Node n) {
+		if (this.theStart.equals(n))
+			throw new RuntimeException("Cannot remove start");
+		if (this.theEnd.equals(n))
+			throw new RuntimeException("Cannot remove end");
+		if (this.theEntry.equals(n))
+			throw new RuntimeException("Cannot remove entry");
+		if (this.theExit.equals(n))
+			throw new RuntimeException("Cannot remove exit");
 
 		for (Node child : this.children.get(n)) {
 			this.parents.get(child).remove(n);
@@ -531,67 +340,82 @@ public class Graph {
 		this.nodes.remove(n.getId());
 	}
 
-	private void activateInactiveEdges(TermId t) {
-		Pair<Node, Node> edge = this.inactiveEdgeSource.get(t);
-		this.removeInactiveEdges(t);
-		this.createEdge(edge.getLeft(), edge.getRight());
+	private void removeTerm(TermId n) {
+		TermId entry = this.entry.get(n);
+		TermId exit = this.exit.get(n);
+		if (this.nodes.get(n) != null)
+			this.removeNode(this.nodes.get(n));
+		if (entry != null) {
+			this.removeNode(this.nodes.get(entry));
+			this.entry.remove(n);
+		}
+		if (exit != null) {
+			this.removeNode(this.nodes.get(exit));
+			this.exit.remove(n);
+		}
 	}
 
-	private void removeInactiveEdges(TermId t) {
-		Pair<Node, Node> edge = this.inactiveEdgeSource.get(t);
-
-		if (edge == null)
-			return;
-
-		this.inactiveEdgeSource.remove(t);
-		this.inactiveChildren.get(edge.getLeft()).remove(edge.getRight());
-		this.inactiveParents.get(edge.getRight()).remove(edge.getLeft());
-	}
-
-	public void removeNodes(TermId root, Set<TermId> inner, Set<Node> nodes) {
+	public void removeNodes(TermId root, Set<TermId> innerTerms) {
 		Flock.beginTime("Graph@removeNodes");
 
-		this.activateInactiveEdges(root);
-		for (TermId t : inner) {
-			this.removeInactiveEdges(t);
+		TermId entry = this.entry.get(root);
+		TermId exit = this.exit.get(root);
+
+		for (TermId remove : innerTerms) {
+			this.removeTerm(remove);
 		}
 
-		for (Node n : nodes) {
-			this.removeNode(n);
+		for (Node pred : this.parents.get(this.nodes.get(entry))) {
+			for (Node succ : this.children.get(this.nodes.get(exit))) {
+				this.createEdge(pred, succ);
+			}
 		}
+
+		this.removeTerm(root);
+
+		this.validate();
 
 		Flock.endTime("Graph@removeNodes");
 	}
 
-	public void removeTransientNodes() {
-		Flock.beginTime("Graph@removeTransientNodes");
-		Set<Node> transientNodes = this.nodes().stream().filter(n -> n.isTransient).collect(Collectors.toSet());
-		for (Node n : transientNodes) {
-			this.removeNode(n);
-		}
-		Flock.endTime("Graph@removeTransientNodes");
-	}
-
-	public void replaceNodes(Set<Node> nodes, Set<Node> predecessors, Set<Node> successors, Graph subGraph) {
+	public void replaceNodes(TermId root, Set<TermId> innerTerms, Graph newGraph) {
 		Flock.beginTime("Graph@replaceNodes");
-		boolean containedRoot = nodes.stream().anyMatch(node -> this.roots.contains(node));
-		boolean containedLeaf = nodes.stream().anyMatch(node -> this.leafs.contains(node));
 
-		for (Node remove : nodes) {
-			this.removeNodeAndEdges(remove);
+		// First put all elements of newGraph into this graph
+		this.mergeGraph(newGraph);
+
+		TermId entry = this.entry.get(root);
+		TermId exit = this.exit.get(root);
+
+		// Create edges between the parents of `root` and the entry of newGraph
+		Set<Node> parents = this.parents.get(this.nodes.get(entry));
+		for (Node n : parents) {
+			this.createEdge(n, this.nodes.get(newGraph.theEntry.id));
 		}
 
-		// If root was replaced, then sub graph roots are also roots
-		if (containedRoot) {
-			this.roots.addAll(subGraph.roots);
+		// Create edges between the children of `root` and the exit of newGraph
+		Set<Node> children = this.children.get(this.nodes.get(exit));
+		for (Node n : children) {
+			this.createEdge(this.nodes.get(newGraph.theExit.id), n);
+		}
+		
+		// If we delete the entry node, `newGraphs` entry is the new entry
+		if (this.theEntry.equals(this.getNode(entry))) {
+			this.theEntry = newGraph.theEntry.withGraph(this);
 		}
 
-		// If leaf was replaced, then sub graph leaves are also leaves
-		if (containedLeaf) {
-			this.leafs.addAll(subGraph.leafs);
+		// If we delete the exit node, `newGraphs` exit is the new exit
+		if (this.theExit.equals(this.getNode(exit))) {
+			this.theExit = newGraph.theExit.withGraph(this);
 		}
 
-		this.mergeGraph(predecessors, successors, subGraph);
+		// Remove all of the inner nodes
+		for (TermId remove : innerTerms) {
+			this.removeTerm(remove);
+		}
+
+		this.removeTerm(root);
+
 		this.validate();
 
 		Flock.endTime("Graph@replaceNodes");
@@ -625,13 +449,16 @@ public class Graph {
 			String termString = node.virtualTerm != null ? removeAnnotations(escapeString(node.virtualTerm.toString(1)))
 					: "";
 
-			String rootString = this.roots.contains(node) ? "r" : "";
-			String leafString = this.leafs.contains(node) ? "l" : "";
+			String typeString = node.type.toString();
+			String originString = node.type.equals(NodeType.NORMAL)
+					? this.entry.get(node.id).getId() + "," + this.exit.get(node.id).getId() + ","
+
+					: "";
 
 			result.append(node.getId().getId() + "[label=\"");
 
 			if (includeNodeType) {
-				result.append("<f0>" + rootString + leafString);
+				result.append("<f0>" + typeString + "(" + originString + ")");
 			}
 
 			// We need this to determine if we have to prepend '|'
@@ -690,13 +517,12 @@ public class Graph {
 					? removeAnnotations(escapeStringSPT(escapeString(node.virtualTerm.toString(1))))
 					: "";
 
-			String rootString = this.roots.contains(node) ? "r" : "";
-			String leafString = this.leafs.contains(node) ? "l" : "";
+			String typeString = node.type.toString();
 
 			result.append(node.getId().getId() + "[label=\\\"");
 
 			if (includeNodeType) {
-				result.append("<f0>" + rootString + leafString);
+				result.append("<f0>" + typeString);
 			}
 
 			// We need this to determine if we have to prepend '|'
@@ -743,5 +569,21 @@ public class Graph {
 
 	public String toGraphviz() {
 		return toGraphviz(null);
+	}
+
+	public Node getStart() {
+		return theStart;
+	}
+
+	public Node getEnd() {
+		return theEnd;
+	}
+	
+	public Node getEntry() {
+		return theEntry;
+	}
+
+	public Node getExit() {
+		return theExit;
 	}
 }

@@ -1,0 +1,224 @@
+module dr
+imports
+  testing
+  libstratego-lib
+  signatures/tiger-sig
+  pp
+
+strategies
+	forward-prop(transform, before, recur, after, effects | Rs1 , Rs2 , Rs3 ) =
+		let fp(transform, before, recur, after, effects | Rs1 , Rs2 , RsSc , RsDF ) =
+			( ( forward-prop-let (transform, before, recur, after | RsSc )
+			//<+ forward-prop-for (transform, before, recur, after | Rs1 ,Rs2 ,RsSc )
+			<+ forward-prop-vardec (transform, before, recur, after | RsSc )
+			//<+ forward-prop-funcdec(transform, before, recur, after | RsSc )
+			<+ forward-prop-assign (transform, before, recur, after | RsDF )
+			<+ forward-prop-if (transform, before, recur, after | Rs1 , Rs2 )
+			//<+ forward-prop-while (transform, before, recur, after | Rs1 , Rs2 )
+			//<+ forward-prop-call (transform, before, recur, after,effects | RsSc )
+			)
+			<+ transform <+ before; all(recur); after
+			)
+		in fp(transform, try(before), recur, try(after), effects
+			| Rs1 , Rs2 , <conc>(Rs1 , Rs2 , Rs3 ), <conc>(Rs1 , Rs2 ))
+		end
+		
+strategies // variables
+
+	forward-prop-let(transform, before, recur, after | Rs ) =
+		? Let(d, e)
+		; (transform <+ {| ~Rs : before; all(recur); after |})
+		
+	forward-prop-vardec(transform, before, recur, after | Rs ) =
+		?VarDec(n, t, e)
+		; !VarDec(n, t, <recur> e)
+		; (transform
+			<+ before
+			; try(?VarDec(x, ta, e); where(<new-dynamic-rules(|Rs, x)> x))
+			; after
+			)
+//	forward-prop-vardec(transform, before, recur, after | Rs ) =
+//		? |[ var x ta ]|
+//		; (transform
+//		<+ before
+//		; try(?|[ var x ta ]|; where( <new-dynamic-rules(|Rs , x )>x ))
+//		; after
+//		)
+	
+	forward-prop-assign(transform, before, recur, after | Rs ) =
+		?Assign(n, e)
+		; !Assign(n, <recur> e)
+		; (transform
+		<+ before
+		; try( ?Assign(x, e); where(undefine-dynamic-rules(|Rs, x)))
+		; after
+		)
+		
+strategies // control-flow
+
+	forward-prop-if(transform, before, recur, after | Rs1 , Rs2 ) =
+		  ?IfThen(b, e)
+	    ; !IfThen(<recur> b, <id> e)
+		; (transform
+		<+ before
+		; ((?IfThen(b, e); !IfThen(<id> b, <recur> e)) /~Rs1 \~Rs2 / id)
+		; after)
+		
+//	forward-prop-if(transform, before, recur, after | Rs1 , Rs2 ) =
+//		|[ if <recur> then <id> else <id> ]|
+//		; (transform
+//		<+ before
+//		; (|[ if <id> then <recur> else <id> ]|
+//		/~Rs1 \~Rs2 / |[ if <id> then <id> else <recur> ]|)
+//		; after)
+		
+//	forward-prop-while(transform, before, recur, after | Rs1 , Rs2 ) =
+//		|[ while <id> do <id> ]|
+//		; (transform
+//		<+ before
+//		; (/~Rs1 \~Rs2 /* |[ while <recur> do <recur> ]|)
+//		; after)
+
+//	forward-prop-for(transform, before, recur, after | Rs1 ,Rs2 ,Rs ) =
+//		|[ for <id:id> := <recur> to <recur> do <id> ]|
+//		; (transform
+//		<+ {| ~Rs1 :
+//		before
+//		; ?|[for x := e to e1 do e3 ]|
+//		; where(<new-dynamic-rules(|Rs1 , x )>x )
+//		; (/~Rs1 \~Rs2 /* |[ for <id:id> := <id> to <id> do <recur> ]|)
+//		; after
+//		|}
+//		)
+	
+//	forward-prop-funcdec (transform, before, recur, after | RsSc ) =
+//		|[ function <id>(<*id>) <id> = <id> ]|
+//		; (transform
+//		<+ dr-ignore-rules-state(fp-function(transform, before, recur, after)|RsSc )
+//		)
+	
+//	fp-function(transform, before, recur, after) =
+//		|[ function <?f >(<*id>) <id> = <id> ]|
+//		; where(free-vars;?vs ; rules(ForwardProp: |[ f (a* ) ]| -> vs ))
+//		; |[ function <id>(<*id>) <id> = <recur> ]|
+
+//	forward-prop-call (transform, before, recur, after, effects | Rs ) =
+//		|[ <id>(<*map(try(recur))>) ]|
+//		; (transform
+//		<+ before
+//		; ?|[ f (a* ) ]|
+//		; where(try(ForwardProp; effects) )
+//		; after
+//		)
+
+strategies 
+	prop-const = forward-prop( prop-const-transform(prop-const)
+		, id
+		, prop-const
+		, prop-const-after
+		, prop-const-function-effects
+		| ["PropConst"], [], [] )
+
+	prop-const-transform(recur) =
+		/*EvalFor <+*/ EvalIf; recur /*<+ (?While(c, b); !While(<recur> c, b)); EvalWhile; recur*/
+	
+	prop-const-after =
+		PropConst + prop-const-assign <+ prop-const-declare	<+ EvalBinOp //<+ EvalRelOp <+ EvalString
+	
+	prop-const-declare =
+		?VarDec(x, ta, e); where( <prop-const-assign> Assign(x, e) )
+	
+	prop-const-assign = 
+		?Assign(x, e)
+		; where(<is-value> e)
+		//; rules(PropConst.x : LValue(Var(x)) -> e where <debug> "replacing" depends on [(x, x)])
+		; rules(PropConst : LValue(Var(x)) -> e depends on [(x, x)])
+		
+	prop-const-function-effects =
+		map({x: ?LValue(Var(x)); undefine-dynamic-rules(|["PropConst"], x)})
+
+//strategies
+//
+//	bvr = forward-prop(fail, bvr-before, bvr, bvr-after, id| [],[],["RenameVar"])
+//	
+//	bvr-before = try(bvr-declare <+ bvr-assign)
+//	
+//	bvr-after = try(RenameVar)
+//	
+//	bvr-declare : VarDec(x, ta, e) -> !VarDec(y, ta, e)
+//		where <rename-variable> x => y
+//	
+////	bvr-declare : |[ var x ta ]| -> |[ var y ta ]|
+////		where <rename-variable> x => y
+//	
+//	rename-variable : x -> y
+//		where innermost-scope-RenameVar(?x )
+//		; <newname> x => y
+//		; rules( RenameVar : LValue(Var(x)) -> LValue(Var(y)) )
+//	
+//	bvr-assign : Assign(x, e) -> !Assign(y, e)
+//		where <RenameVar> LValue(Var(x) => y
+
+//strategies
+//
+//	copy-prop = forward-prop(fail, id
+//		, copy-prop
+//		, copy-prop-after
+//		, prop-const-function-effects
+//		|["CopyProp"],[],[] )
+//	
+//	copy-prop-after =
+//		copy-prop-assign <+ copy-prop-declare <+ repeat1(CopyProp)
+//		
+//	copy-prop-declare =
+//		?VarDec(x, ta, e)
+//		; where( try(<copy-prop-assign> Assign(x, e)) )
+//		
+//	copy-prop-assign =
+//		? |[ x := y ]|
+//		; where( <not(eq)>(x ,y ) )
+//		; where( get-var-dependencies => xs )
+//		; where( innermost-scope-CopyProp => z )
+//		; rules( CopyProp.z : |[ x ]| -> |[ y ]| depends on xs )
+//		
+//	prop-const-function-effects =
+//		map({x: ?|[ x ]|; undefine-dynamic-rules(|["CopyProp"], x )})
+//	
+//	innermost-scope-CopyProp =
+//		get-var-names => vars
+//		; innermost-scope-CopyProp(elem-of(|vars ))
+//
+strategies
+
+	super-opt =
+		forward-prop( prop-const-transform(super-opt)
+		, super-opt-before(super-opt)
+		, super-opt
+		, super-opt-after
+		, prop-const-function-effects
+		| ["PropConst","CopyProp","CSE"], [], ["RenameVar"]
+		)
+
+	super-opt-before(recur) = id // try(prop-const-before)
+//		try(bvr-before(recur));
+		
+	super-opt-after =
+		try(prop-const-after)
+//		try(bvr-after); try(copy-prop-after); try(prop-const-after); try(cse-after)
+
+	//prop-const-function-effects =
+    //	map({x: ?LValue(Var(x)); undefine-dynamic-rules(|["PropConst","CopyProp","CSE"], x)})	
+    
+    undefine-dynamic-rules(|list, k): _ -> <map(?n; <dr-undefine-rule(|n, k)> ())> list
+    new-dynamic-rules(|list, k): v -> <map(?n; <dr-set-rule(|n, k, v)> ())> list
+    
+strategies 
+
+	EvalBinOp : Plus(Int(i), Int(j)) -> Int(k) where <addS> (i, j) => k
+	EvalBinOp : Gt(Int(i), Int(j)) -> Int("1") where <gtS> (i, j)
+	EvalBinOp : Times(Int(i), Int(j)) -> Int(k) where <mulS> (i, j) => k
+//	EvalWhile : |[ while 0 do e ]| -> |[ () ]|
+	EvalIf : If(Int("0"), e1, e2) -> e2
+	EvalIf : If(i, e1, e2) -> e1 where <debug> <id>; <not(eq)> (i, Int("0"))
+	
+	is-value = ?Int(_) + ?String(_)

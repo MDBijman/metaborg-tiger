@@ -16,7 +16,7 @@ def gen_branches(n):
     f = open("branches_" + str(n) + ".tig", "w")
     f.write("let var a0: int := 1\n")
     for i in range(1, n):
-        f.write(f"    var a{i}: int := if a{i - 1} > 0 then a{i-1}\n")
+        f.write(f"    var a{i}: int := if a{i - 1} > 0 then a{i-1} else 0\n")
     f.write(f"in\n")
     f.write(f"\ta{n - 1}\n")
     f.write(f"end\n")

@@ -219,16 +219,12 @@ public class TermTree {
 	private HashMap<ITerm, ArrayList<ITerm>> children = new HashMap<>();
 	private HashMap<ITerm, ITerm> parents = new HashMap<>();
 	private HashMap<TermId, ITerm> nodes = new HashMap<>();
-	private HashSet<TermId> irregularTerms = new HashSet<>();
+	private HashSet<TermId> irregular = new HashSet<>();
 	private ITerm root;
 	private static final boolean DEBUG = Flock.DEBUG;
 
 	public TermTree(IStrategoTerm term) {
 		root = this.createTermInTree(term);
-	}
-
-	public void markIrregular(TermId t) {
-		this.irregularTerms.add(t);
 	}
 
 	public void replace(TermId toReplace, IStrategoTerm replaceWith) {
@@ -249,7 +245,7 @@ public class TermTree {
 	public void remove(TermId n) {
 		this.remove(this.nodes.get(n));
 	}
-	
+
 	private void remove(ITerm n) {
 		if (n == null) {
 			throw new IllegalArgumentException("No node with this id");
@@ -267,7 +263,7 @@ public class TermTree {
 		this.nodes.remove(n.id);
 		this.children.remove(n);
 		this.parents.remove(n);
-		this.irregularTerms.remove(n);
+		this.irregular.remove(n.id);
 
 		if (this.root == n) {
 			this.root = null;
@@ -288,6 +284,7 @@ public class TermTree {
 		this.nodes.remove(toRemove);
 		this.children.remove(n);
 		this.parents.remove(n);
+		this.irregular.remove(n.id);
 	}
 
 	public void validate() {
@@ -475,19 +472,6 @@ public class TermTree {
 	 * Getters
 	 */
 
-	public boolean containsIrregularTerm(TermId id) {
-		if (this.irregularTerms.contains(id)) {
-			return true;
-		} else {
-			for (ITerm c : this.children.get(this.nodeById(id))) {
-				if (this.containsIrregularTerm(c.id)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
 	public ITerm nodeById(TermId id) {
 		return this.nodes.get(id);
 	}
@@ -515,5 +499,13 @@ public class TermTree {
 	@Override
 	public String toString() {
 		return this.nodeToString(this.root);
+	}
+
+	public void markIrregular(TermId t) {
+		this.irregular.add(t);
+	}
+
+	public boolean isIrregular(TermId t) {
+		return this.irregular.contains(t);
 	}
 }

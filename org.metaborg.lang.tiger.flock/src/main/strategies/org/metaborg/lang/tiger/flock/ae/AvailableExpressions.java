@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.metaborg.lang.tiger.flock.common.Analysis;
-import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.MustSet;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.SimpleMap;
@@ -14,12 +12,13 @@ import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.Helpers;
 import org.metaborg.lang.tiger.flock.common.MapUtils;
 import org.metaborg.lang.tiger.flock.common.SetUtils;
+import org.metaborg.lang.tiger.flock.common.SingleAnalysis;
 import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.metaborg.lang.tiger.flock.common.TransferFunction;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 
-public class AvailableExpressions extends Analysis {
+public class AvailableExpressions extends SingleAnalysis {
 	public AvailableExpressions() {
 		super("expressions", Direction.FORWARD);
 	}
@@ -75,7 +74,7 @@ class TransferFunctions {
 class TransferFunction0 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		SimpleMap tmp83 = (SimpleMap) UserFunctions.expressions_f(prev);
@@ -86,7 +85,7 @@ class TransferFunction0 extends TransferFunction {
 class TransferFunction1 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		IStrategoTerm usrn = Helpers.at(term, 0);
@@ -111,7 +110,7 @@ class TransferFunction1 extends TransferFunction {
 class TransferFunction2 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Map tmp81 = (Map) MapUtils.create();
 		return res.lub(new SimpleMap(tmp81));

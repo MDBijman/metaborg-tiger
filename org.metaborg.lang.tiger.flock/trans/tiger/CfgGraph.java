@@ -65,10 +65,10 @@ public class GraphFactory {
 	}
 
 	public static GraphBuilder createCfgRecursive_inner(IStrategoTerm term) {
-		GraphBuilder result_graph = GraphBuilder.empty();
+		GraphBuilder result_graph = GraphBuilder.empty(Helpers.getTermId(term));
 		for (IStrategoTerm subterm : term.getSubterms()) {
 			GraphBuilder subgraph = createCfgRecursive_inner(subterm);
-			if (subgraph.hasRealNodes()) {
+			if (subgraph != null) {
 				result_graph.merge(subgraph);
 			}
 		}
@@ -100,16 +100,17 @@ public class GraphFactory {
 			result_graph.connect(result_graph.START, body_nr.ENTRY);
 			result_graph.connect(body_nr.EXIT, result_graph.END);
 		} else {
+			return null;
 		}
 		return result_graph;
 	}
 
 	private static GraphBuilder createCfg_inner(IStrategoTerm term) {
-		GraphBuilder result_graph = GraphBuilder.empty();
+		GraphBuilder result_graph = GraphBuilder.empty(Helpers.getTermId(term));
 		if (TermUtils.isList(term)) {
 			IStrategoList list = M.list(term);
 			if (list.isEmpty()) {
-				return GraphBuilder.fallthrough();
+				return GraphBuilder.fallthrough(Helpers.getTermId(term));
 			}
 			TermId currentTail = result_graph.ENTRY;
 			while (!list.isEmpty()) {

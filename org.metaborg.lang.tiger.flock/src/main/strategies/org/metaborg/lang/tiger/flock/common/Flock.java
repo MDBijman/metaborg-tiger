@@ -10,7 +10,9 @@ import java.util.Set;
 
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
+import org.metaborg.lang.tiger.flock.fastvalue.FastValueAnalysis;
 import org.metaborg.lang.tiger.flock.live.LiveVariableAnalysis;
+import org.metaborg.lang.tiger.flock.singlevalue.SpecializableValueAnalysis;
 import org.metaborg.lang.tiger.flock.value.ValueAnalysis;
 import org.spoofax.interpreter.library.IOAgent;
 import org.spoofax.interpreter.terms.IStrategoInt;
@@ -27,22 +29,16 @@ public abstract class Flock {
 	public Graph graph;
 	public SCCs graph_scss;
 	public TermTree termTree;
-	public List<Analysis> analyses;
-	public static final boolean DEBUG = true;
+	public List<IAnalysis> analyses;
+	public static final boolean DEBUG = false;
 
 	public Flock() {
-		this.analyses = new ArrayList<Analysis>();
+		this.analyses = new ArrayList<IAnalysis>();
 		this.analyses.add(new LiveVariableAnalysis());
-		this.analyses.add(new ValueAnalysis());
+		//this.analyses.add(new ValueAnalysis());
+		this.analyses.add(new FastValueAnalysis());
+		//this.analyses.add(new SpecializableValueAnalysis());
 		// this.analyses.add(new AvailableExpressions());
-	}
-
-	protected void markTransient(Set<Node> mask) {
-		for (Node n : this.graph.nodes()) {
-			if (mask.contains(n)) {
-				n.isTransient = true;
-			}
-		}
 	}
 
 	protected void initPosition(Graph g, ITermFactory factory) {
@@ -64,9 +60,22 @@ public abstract class Flock {
 			getAllNodes(visited, term);
 		}
 		TermId id = Helpers.getTermId(program);
-		if (id != null && this.graph.getNode(id) != null) {
-			visited.add(this.graph.getNode(id));
+		if (id == null) {
+			throw new RuntimeException("Null id");
 		}
+
+		Node n = this.graph.getNode(id);
+		Node entry = this.graph.getNode(this.graph.entryOf(id));
+		Node exit = this.graph.getNode(this.graph.exitOf(id));
+
+		if (n != null)
+			visited.add(n);
+
+		if (entry != null)
+			visited.add(entry);
+
+		if (exit != null)
+			visited.add(exit);
 	}
 
 	protected Set<TermId> getAllIds(IStrategoTerm term) {
@@ -74,7 +83,7 @@ public abstract class Flock {
 		getAllIds(set, term);
 		return set;
 	}
-	
+
 	protected void getAllIds(Set<TermId> visited, IStrategoTerm program) {
 		for (IStrategoTerm term : program.getSubterms()) {
 			getAllIds(visited, term);
@@ -84,7 +93,7 @@ public abstract class Flock {
 			visited.add(id);
 		}
 	}
-	
+
 	public abstract void init(IStrategoTerm program);
 
 	public abstract void createTermGraph(IStrategoTerm term);
@@ -97,26 +106,26 @@ public abstract class Flock {
 
 	public abstract Node getNode(TermId id);
 
-	public abstract Analysis analysisWithName(String name);
+	public abstract IAnalysis analysisWithName(String name);
 
 	/*
 	 * Helpers for mutating graph analyses
 	 */
 
 	protected void addToNew(Node n) {
-		for (Analysis ga : analyses) {
+		for (IAnalysis ga : analyses) {
 			ga.addToNew(this.graph_scss, n);
 		}
 	}
 
 	protected void addToDirty(Component c) {
-		for (Analysis ga : analyses) {
+		for (IAnalysis ga : analyses) {
 			ga.addToDirty(c);
 		}
 	}
 
 	protected void clearAnalyses() {
-		for (Analysis ga : analyses) {
+		for (IAnalysis ga : analyses) {
 			ga.clear();
 		}
 	}
@@ -136,7 +145,7 @@ public abstract class Flock {
 			// "debug",
 			// "incremental",
 			// "validation",
-			 "api",
+			// "api",
 			// "dependencies",
 			// "graphviz"
 	};

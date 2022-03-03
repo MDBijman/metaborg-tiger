@@ -1,5 +1,6 @@
-package org.metaborg.lang.tiger.flock.value;
+package org.metaborg.lang.tiger.flock.fastvalue;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
@@ -17,14 +18,15 @@ import org.metaborg.lang.tiger.flock.common.SingleAnalysis;
 import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.metaborg.lang.tiger.flock.common.TransferFunction;
-import org.metaborg.lang.tiger.flock.value.ValueAnalysisProperties.ConstProp;
+import org.metaborg.lang.tiger.flock.fastvalue.FastValueAnalysisProperties.*;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
 import org.spoofax.terms.util.M;
+import org.spoofax.terms.util.NotImplementedException;
 import org.spoofax.terms.util.TermUtils;
 
-public class ValueAnalysis extends SingleAnalysis {
-	public ValueAnalysis() {
+public class FastValueAnalysis extends SingleAnalysis {
+	public FastValueAnalysis() {
 		super("values", Direction.FORWARD);
 	}
 
@@ -194,15 +196,13 @@ class Value implements FlockValueLattice {
 
 	public static Value bottom() {
 		ITermFactory factory = Flock.instance.factory;
-		ConstProp tmp73 = (ConstProp) new ConstProp(
-				factory.makeAppl(factory.makeConstructor("Bottom", 0), new IStrategoTerm[] {}, null));
+		ConstProp tmp73 = (ConstProp) new ConstPropBottom();
 		return new Value(tmp73);
 	}
 
 	public static Value top() {
 		ITermFactory factory = Flock.instance.factory;
-		ConstProp tmp74 = (ConstProp) new ConstProp(
-				factory.makeAppl(factory.makeConstructor("Top", 0), new IStrategoTerm[] {}, null));
+		ConstProp tmp74 = (ConstProp) new ConstPropTop();
 		return new Value(tmp74);
 	}
 
@@ -217,12 +217,12 @@ class Value implements FlockValueLattice {
 		if (TermUtils.isTuple(term4)
 				&& (TermUtils.isAppl(Helpers.at(term4, 0)) && (M.appl(Helpers.at(term4, 0)).getName().equals("Top")
 						&& Helpers.at(term4, 0).getSubtermCount() == 0))) {
-			result10 = new ConstProp(factory.makeAppl(factory.makeConstructor("Top", 0), new IStrategoTerm[] {}, null));
+			result10 = new ConstPropTop();
 		}
 		if (TermUtils.isTuple(term4)
 				&& (TermUtils.isAppl(Helpers.at(term4, 1)) && (M.appl(Helpers.at(term4, 1)).getName().equals("Top")
 						&& Helpers.at(term4, 1).getSubtermCount() == 0))) {
-			result10 = new ConstProp(factory.makeAppl(factory.makeConstructor("Top", 0), new IStrategoTerm[] {}, null));
+			result10 = new ConstPropTop();
 		}
 		if (TermUtils.isTuple(term4)
 				&& (TermUtils.isAppl(Helpers.at(term4, 0)) && (M.appl(Helpers.at(term4, 0)).getName().equals("Const")
@@ -231,10 +231,7 @@ class Value implements FlockValueLattice {
 										&& Helpers.at(term4, 1).getSubtermCount() == 1)))))) {
 			IStrategoTerm usri = Helpers.at(Helpers.at(term4, 0), 0);
 			IStrategoTerm usrj = Helpers.at(Helpers.at(term4, 1), 0);
-			result10 = (boolean) usri.equals(usrj)
-					? new ConstProp(factory.makeAppl(factory.makeConstructor("Const", 1),
-							new IStrategoTerm[] { Helpers.toTerm(usri) }, null))
-					: new ConstProp(factory.makeAppl(factory.makeConstructor("Top", 0), new IStrategoTerm[] {}, null));
+			result10 = (boolean) usri.equals(usrj) ? new ConstPropConst(Integer.parseInt(M.string(usri))) : new ConstPropTop();
 		}
 		if (TermUtils.isTuple(term4)
 				&& (TermUtils.isAppl(Helpers.at(term4, 1)) && (M.appl(Helpers.at(term4, 1)).getName().equals("Bottom")
@@ -303,6 +300,7 @@ class TransferFunction0 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
+		Flock.increment("tf0");
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
@@ -315,26 +313,8 @@ class TransferFunction1 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
-		ITermFactory factory = Flock.instance.factory;
-		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Node prev = node;
-		IStrategoTerm usrn = Helpers.at(Helpers.at(term, 0), 0);
-		Stream<Map.Entry> result11 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
-				.filter(o -> {
-					Entry entry = (Entry) o;
-					Object usrk = entry.getKey();
-					Object usrv = entry.getValue();
-					return !usrk.equals(usrn);
-				});
-		Stream tmp70 = (Stream<Map.Entry>) result11;
-		Stream tmp71 = (Stream<Map.Entry>) MapUtils
-				.create(usrn,
-						new Value(new ConstProp(
-								factory.makeAppl(factory.makeConstructor("Top", 0), new IStrategoTerm[] {}, null))))
-				.entrySet().stream();
-		Stream tmp72 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp70, tmp71));
-		Stream tmp56 = (Stream<Map.Entry>) tmp72;
-		return TransferFunction.assignEvalResult(direction, node, res, tmp56);
+		Flock.increment("tf1");
+		throw new NotImplementedException();
 	}
 }
 
@@ -342,26 +322,8 @@ class TransferFunction2 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
-		ITermFactory factory = Flock.instance.factory;
-		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Node prev = node;
-		IStrategoTerm usrn = Helpers.at(Helpers.at(Helpers.at(term, 0), 0), 0);
-		Stream<Map.Entry> result12 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
-				.filter(o -> {
-					Entry entry = (Entry) o;
-					Object usrk = entry.getKey();
-					Object usrv = entry.getValue();
-					return !usrk.equals(usrn);
-				});
-		Stream tmp67 = (Stream<Map.Entry>) result12;
-		Stream tmp68 = (Stream<Map.Entry>) MapUtils
-				.create(usrn,
-						new Value(new ConstProp(
-								factory.makeAppl(factory.makeConstructor("Top", 0), new IStrategoTerm[] {}, null))))
-				.entrySet().stream();
-		Stream tmp69 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp67, tmp68));
-		Stream tmp55 = (Stream<Map.Entry>) tmp69;
-		return TransferFunction.assignEvalResult(direction, node, res, tmp55);
+		Flock.increment("tf2");
+		throw new NotImplementedException();
 	}
 }
 
@@ -369,25 +331,8 @@ class TransferFunction3 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
-		ITermFactory factory = Flock.instance.factory;
-		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Node prev = node;
-		IStrategoTerm usrn = Helpers.at(Helpers.at(Helpers.at(term, 0), 0), 0);
-		IStrategoTerm usri = Helpers.at(Helpers.at(term, 1), 0);
-		Stream<Map.Entry> result13 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
-				.filter(o -> {
-					Entry entry = (Entry) o;
-					Object usrk = entry.getKey();
-					Object usrv = entry.getValue();
-					return !usrk.equals(usrn);
-				});
-		Stream tmp64 = (Stream<Map.Entry>) result13;
-		Stream tmp65 = (Stream<Map.Entry>) MapUtils.create(usrn, new Value(new ConstProp(factory
-				.makeAppl(factory.makeConstructor("Const", 1), new IStrategoTerm[] { Helpers.toTerm(usri) }, null))))
-				.entrySet().stream();
-		Stream tmp66 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp64, tmp65));
-		Stream tmp52 = (Stream<Map.Entry>) tmp66;
-		return TransferFunction.assignEvalResult(direction, node, res, tmp52);
+		Flock.increment("tf3");
+		throw new NotImplementedException();
 	}
 }
 
@@ -395,6 +340,7 @@ class TransferFunction4 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
+		Flock.increment("tf4");
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
@@ -407,11 +353,7 @@ class TransferFunction4 extends TransferFunction {
 					return !usrk.equals(usrn);
 				});
 		Stream tmp61 = (Stream<Map.Entry>) result122;
-		Stream tmp62 = (Stream<Map.Entry>) MapUtils
-				.create(usrn,
-						new Value(new ConstProp(
-								factory.makeAppl(factory.makeConstructor("Top", 0), new IStrategoTerm[] {}, null))))
-				.entrySet().stream();
+		Stream tmp62 = (Stream<Map.Entry>) MapUtils.create(usrn, new Value(new ConstPropTop())).entrySet().stream();
 		Stream tmp63 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp61, tmp62));
 		Stream tmp49 = (Stream<Map.Entry>) tmp63;
 		return TransferFunction.assignEvalResult(direction, node, res, tmp49);
@@ -422,25 +364,19 @@ class TransferFunction5 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
+		// Flock.increment("tf5");
+		//long t = System.nanoTime();
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
+
 		IStrategoTerm usrn = Helpers.at(term, 0);
 		IStrategoTerm usri = Helpers.at(Helpers.at(term, 2), 0);
-		Stream<Map.Entry> result123 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
-				.filter(o -> {
-					Entry entry = (Entry) o;
-					Object usrk = entry.getKey();
-					Object usrv = entry.getValue();
-					return !usrk.equals(usrn);
-				});
-		Stream tmp58 = (Stream<Map.Entry>) result123;
-		Stream tmp59 = (Stream<Map.Entry>) MapUtils.create(usrn, new Value(new ConstProp(factory
-				.makeAppl(factory.makeConstructor("Const", 1), new IStrategoTerm[] { Helpers.toTerm(usri) }, null))))
-				.entrySet().stream();
-		Stream tmp60 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp58, tmp59));
-		Stream tmp46 = (Stream<Map.Entry>) tmp60;
-		return TransferFunction.assignEvalResult(direction, node, res, tmp46);
+		Map x = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value());
+		Map result = new HashMap<>(x);
+		result.put(usrn, new Value(new ConstPropConst(Integer.parseInt(M.string(usri)))));
+		//Flock.printDebug("" + ((System.nanoTime() - t)/100000.0d));
+		return TransferFunction.assignEvalResult(direction, node, res, result);
 	}
 }
 
@@ -448,6 +384,7 @@ class TransferFunction6 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
+		Flock.increment("tf6");
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		SimpleMap tmp43 = (SimpleMap) SimpleMap.bottom();

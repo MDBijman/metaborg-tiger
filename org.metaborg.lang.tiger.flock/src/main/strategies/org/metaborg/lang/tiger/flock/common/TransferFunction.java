@@ -12,13 +12,13 @@ public abstract class TransferFunction {
 	 * single predecessor, in which case we can copy a reference to the result of
 	 * evaluation instead of performing a lub.
 	 */
-	public abstract boolean eval(Analysis.Direction dir, FlockLattice res, Node node);
+	public abstract boolean eval(SingleAnalysis.Direction dir, FlockLattice res, Node node);
 
 	/*
 	 * Efficiently assigns result to lattice.
 	 * Return true if lattice changed.
 	 */
-	public static boolean assignEvalResult(Analysis.Direction dir, Node node, FlockLattice lattice, Object result) {
+	public static boolean assignEvalResult(SingleAnalysis.Direction dir, Node node, FlockLattice lattice, Object result) {
 		// Here we can assign reference if result is not a stream
 		if (node.predecessors(dir).size() == 1) {
 			// Its a stream so we must do lub since the lattice is aware of how to lub

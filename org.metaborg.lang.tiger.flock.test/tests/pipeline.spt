@@ -10,12 +10,7 @@ in
 	(return; a)
 end
 ]] run flock-test-run-return to [[
-let 
-	var a: int := 10
-	var b: int := 10
-in
-	a
-end
+10
 ]]
 
 test let [[

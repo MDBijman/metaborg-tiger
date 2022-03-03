@@ -3,14 +3,14 @@ package org.metaborg.lang.tiger.flock.live;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.metaborg.lang.tiger.flock.common.Analysis;
-import org.metaborg.lang.tiger.flock.common.Analysis.Direction;
 import org.metaborg.lang.tiger.flock.common.Flock;
 import org.metaborg.lang.tiger.flock.common.FlockLattice;
 import org.metaborg.lang.tiger.flock.common.FlockLattice.MaySet;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.Helpers;
+import org.metaborg.lang.tiger.flock.common.IAnalysis;
 import org.metaborg.lang.tiger.flock.common.SetUtils;
+import org.metaborg.lang.tiger.flock.common.SingleAnalysis;
 import org.metaborg.lang.tiger.flock.common.TermTree.ApplTerm;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 import org.metaborg.lang.tiger.flock.common.TransferFunction;
@@ -18,7 +18,7 @@ import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
 import org.spoofax.terms.util.TermUtils;
 
-public class LiveVariableAnalysis extends Analysis {
+public class LiveVariableAnalysis extends SingleAnalysis {
 	public LiveVariableAnalysis() {
 		super("live", Direction.BACKWARD);
 	}
@@ -130,7 +130,7 @@ class TransferFunctions {
 class TransferFunction0 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+	public boolean eval(IAnalysis.Direction direction, FlockLattice res, Node node) {
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
@@ -142,7 +142,7 @@ class TransferFunction0 extends TransferFunction {
 class TransferFunction1 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+	public boolean eval(IAnalysis.Direction direction, FlockLattice res, Node node) {
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
@@ -157,7 +157,7 @@ class TransferFunction1 extends TransferFunction {
 class TransferFunction2 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+	public boolean eval(IAnalysis.Direction direction, FlockLattice res, Node node) {
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
@@ -177,7 +177,7 @@ class TransferFunction2 extends TransferFunction {
 class TransferFunction3 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+	public boolean eval(IAnalysis.Direction direction, FlockLattice res, Node node) {
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
@@ -197,7 +197,7 @@ class TransferFunction3 extends TransferFunction {
 class TransferFunction4 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node next = node;
@@ -217,7 +217,7 @@ class TransferFunction4 extends TransferFunction {
 class TransferFunction5 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
-	public boolean eval(Analysis.Direction direction, FlockLattice res, Node node) {
+	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Set tmp77 = (Set) SetUtils.create();

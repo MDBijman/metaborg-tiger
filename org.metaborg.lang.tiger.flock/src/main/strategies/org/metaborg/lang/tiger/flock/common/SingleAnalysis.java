@@ -12,22 +12,17 @@ import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.spoofax.terms.util.NotImplementedException;
 
-public abstract class Analysis {
-	public enum Direction {
-		FORWARD, BACKWARD
-	}
-
+public abstract class SingleAnalysis implements IAnalysis {
 	public final String name;
 	public final String propertyName;
 	public final Direction direction;
 
 	public HashSet<Component> cleanComponents = new HashSet<>();
-	public HashSet<Component> dirtyComponents = new HashSet<>();
 	public HashSet<Node> newNodes = new HashSet<>();
 
 	private static final boolean DEBUG = Flock.DEBUG;
 
-	public Analysis(String name, Direction dir) {
+	public SingleAnalysis(String name, Direction dir) {
 		this.name = name;
 		this.propertyName = name;
 		this.direction = dir;
@@ -40,12 +35,10 @@ public abstract class Analysis {
 
 	public void addToDirty(Component c) {
 		this.cleanComponents.remove(c);
-		this.dirtyComponents.add(c);
 	}
 
 	public void addToClean(Component c) {
 		this.cleanComponents.add(c);
-		this.dirtyComponents.remove(c);
 		for (Node n : c.nodes) {
 			this.newNodes.remove(n);
 		}
@@ -53,10 +46,21 @@ public abstract class Analysis {
 
 	public void remove(Component c) {
 		this.cleanComponents.remove(c);
-		this.dirtyComponents.remove(c);
 		for (Node n : c.nodes) {
 			this.newNodes.remove(n);
 		}
+	}
+
+	public boolean isDirty(Component c) {
+		return !this.cleanComponents.contains(c);
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public Direction getDirection() {
+		return this.direction;
 	}
 
 	public void remove(Node n) {
@@ -66,7 +70,52 @@ public abstract class Analysis {
 	public void clear() {
 		this.newNodes.clear();
 		this.cleanComponents.clear();
-		this.dirtyComponents.clear();
+	}
+
+	@Override
+	public void removeAnalysisResults(SCCs sccs, Component c) {
+		Set<Component> forwardReachable = null;
+		Set<Component> backwardReachable = null;
+
+		if (this.direction == Direction.FORWARD) {
+			if (forwardReachable == null) {
+				forwardReachable = new HashSet<>();
+				forwardReachable.add(c);
+				this.collectDirtySuccessors(sccs, c, forwardReachable);
+			}
+
+			for (Component c2 : forwardReachable) {
+				this.removeNodeResults(sccs, c2.nodes);
+			}
+		} else if (this.direction == Direction.BACKWARD) {
+			if (backwardReachable == null) {
+				backwardReachable = new HashSet<>();
+				backwardReachable.add(c);
+				this.collectDirtyPredecessors(sccs, c, backwardReachable);
+			}
+
+			for (Component c2 : backwardReachable) {
+				this.removeNodeResults(sccs, c2.nodes);
+			}
+		}
+	}
+
+	private void collectDirtyPredecessors(SCCs sccs, Component c, Set<Component> result) {
+		for (Component neighbour : sccs.revNeighbours.get(c)) {
+			if (!this.isDirty(c) && !result.contains(neighbour)) {
+				result.add(neighbour);
+				collectDirtyPredecessors(sccs, neighbour, result);
+			}
+		}
+	}
+
+	private void collectDirtySuccessors(SCCs sccs, Component c, Set<Component> result) {
+		for (Component neighbour : sccs.neighbours.get(c)) {
+			if (!this.isDirty(c) && !result.contains(neighbour)) {
+				result.add(neighbour);
+				collectDirtySuccessors(sccs, neighbour, result);
+			}
+		}
 	}
 
 	public void validate(Graph g, SCCs sccs) {
@@ -74,19 +123,10 @@ public abstract class Analysis {
 			return;
 
 		for (Component c : this.cleanComponents) {
-			if (this.dirtyComponents.contains(c)) {
-				throw new RuntimeException("Clean component also in dirty list");
-			}
 			for (Node n : c.nodes) {
 				if (this.newNodes.contains(n)) {
 					throw new RuntimeException("New node in clean component");
 				}
-			}
-		}
-
-		for (Component c : sccs.components) {
-			if (!this.cleanComponents.contains(c) && !this.dirtyComponents.contains(c)) {
-				throw new RuntimeException("Component is neither dirty nor clean");
 			}
 		}
 	}
@@ -121,7 +161,7 @@ public abstract class Analysis {
 	 * @param target Component containing the node which we are querying
 	 */
 	public void performDataAnalysis(Graph cfg, SCCs sccs, Component target) {
-		if (!this.dirtyComponents.contains(target)) {
+		if (!this.isDirty(target)) {
 			return;
 		}
 
@@ -158,13 +198,12 @@ public abstract class Analysis {
 		 * successors of an uninitialized node before visiting the node itself.
 		 */
 		Flock.beginTime("Analysis@loop2");
-		for (Node node : newNodes) {
-			if (cfg.roots().contains(node)) {
-				node.getProperty(this.propertyName).init.eval(this.direction, node.getProperty(this.propertyName).lattice, node);
-			}
+		if (target.nodes.contains(cfg.getStart())) {
+			cfg.getStart().getProperty(this.propertyName).init.eval(this.direction,
+					cfg.getStart().getProperty(this.propertyName).lattice, cfg.getStart());
 		}
 		Flock.endTime("Analysis@loop2");
-		
+
 		Flock.beginTime("Analysis@loop3");
 		for (Node node : newNodes) {
 			Flock.increment("Analysis@loop3");
@@ -202,8 +241,11 @@ public abstract class Analysis {
 			}
 		}
 		Flock.endTime("Analysis@worklist");
-		Flock.endTime("Analysis@" + this.name);
+		Flock.beginTime("Analysis@markClean");
 		this.addToClean(target);
+		Flock.endTime("Analysis@markClean");
+		Flock.endTime("Analysis@" + this.name);
+
 	}
 
 	private Set<Node> getPredecessors(Graph g, Node n) {
