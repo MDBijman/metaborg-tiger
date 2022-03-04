@@ -364,7 +364,7 @@ class TransferFunction5 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
-		// Flock.increment("tf5");
+		Flock.increment("tf5");
 		//long t = System.nanoTime();
 		ITermFactory factory = Flock.instance.factory;
 		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();

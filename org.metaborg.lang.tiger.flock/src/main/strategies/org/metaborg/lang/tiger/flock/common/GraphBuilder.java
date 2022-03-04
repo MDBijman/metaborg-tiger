@@ -113,8 +113,6 @@ public class GraphBuilder {
 
 	public Graph build(TermTree tree) {
 		HashMap<TermId, Node> nodes = new HashMap<>();
-		HashMap<Node, Set<Node>> children = new HashMap<>();
-		HashMap<Node, Set<Node>> parents = new HashMap<>();
 		
 		// Fill nodes
 		for (TermId t : this.nodes) {
@@ -126,7 +124,7 @@ public class GraphBuilder {
 		Node entry = nodes.get(ENTRY);
 		Node exit = nodes.get(EXIT);
 
-		Graph g = new Graph(nodes, children, parents, this.entry, this.exit, entry, exit, start, end);
+		Graph g = new Graph(nodes, this.entry, this.exit, entry, exit, start, end);
 
 		for (Node n : nodes.values()) {
 			n.withGraph(g);
@@ -141,7 +139,7 @@ public class GraphBuilder {
 				}
 				tChildren.add(nodes.get(c));
 			}
-			children.put(nodes.get(t.getKey()), tChildren);
+			nodes.get(t.getKey()).children = tChildren;
 		}
 
 		// Fill parents
@@ -150,7 +148,7 @@ public class GraphBuilder {
 			for (TermId c : t.getValue()) {
 				tParents.add(nodes.get(c));
 			}
-			parents.put(nodes.get(t.getKey()), tParents);
+			nodes.get(t.getKey()).parents = tParents;
 		}
 		
 		for (TermId t : this.irregular) {

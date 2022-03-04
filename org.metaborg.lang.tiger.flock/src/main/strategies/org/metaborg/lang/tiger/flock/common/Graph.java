@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.metaborg.lang.tiger.flock.common.Graph.Node.NodeType;
+import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
 
 public class Graph {
@@ -27,6 +28,8 @@ public class Graph {
 		public ITerm virtualTerm = null;
 		public HashMap<String, Property> properties = new HashMap<>();
 		public Graph graph = null;
+		public Set<Node> parents = new HashSet<>();
+		public Set<Node> children = new HashSet<>();
 
 		private Node(NodeType t) {
 			this.type = t;
@@ -72,9 +75,9 @@ public class Graph {
 
 		public Collection<Node> predecessors(SingleAnalysis.Direction dir) {
 			if (dir == SingleAnalysis.Direction.FORWARD) {
-				return graph.parentsOf(this);
+				return this.parents;
 			} else {
-				return graph.childrenOf(this);
+				return this.children;
 			}
 		}
 
@@ -105,23 +108,12 @@ public class Graph {
 	public void validate() {
 		if (!DEBUG)
 			return;
-
-		for (Node n : this.nodes.values()) {
-			if (!this.children.containsKey(n)) {
-				throw new RuntimeException("Missing children for node " + n.toString());
-			}
-			if (!this.parents.containsKey(n)) {
-				throw new RuntimeException("Missing parents for node " + n.toString());
-			}
-		}
 	}
 
 	/*
 	 * Graph Structure fields
 	 */
 
-	private HashMap<Node, Set<Node>> children = new HashMap<>();
-	private HashMap<Node, Set<Node>> parents = new HashMap<>();
 	private HashMap<TermId, Node> nodes = new HashMap<>();
 
 	private HashMap<TermId, TermId> entry = new HashMap<>();
@@ -136,12 +128,10 @@ public class Graph {
 	public Graph() {
 	}
 
-	public Graph(HashMap<TermId, Node> nodes, HashMap<Node, Set<Node>> children, HashMap<Node, Set<Node>> parents,
+	public Graph(HashMap<TermId, Node> nodes, 
 			HashMap<TermId, TermId> entry, HashMap<TermId, TermId> exit, Node theEntry, Node theExit, Node theStart,
 			Node theEnd) {
 		this.nodes = nodes;
-		this.children = children;
-		this.parents = parents;
 		this.entry = entry;
 		this.exit = exit;
 		this.theEntry = theEntry;
@@ -166,14 +156,6 @@ public class Graph {
 		return this.exit.get(n);
 	}
 		
-	public Set<Node> childrenOf(Node n) {
-		return this.children.get(n);
-	}
-
-	public Set<Node> parentsOf(Node n) {
-		return this.parents.get(n);
-	}
-
 	public Collection<Node> nodes() {
 		return this.nodes.values();
 	}
@@ -195,38 +177,6 @@ public class Graph {
 	 */
 
 	/**
-	 * Adds the given child relations to this graph, adding to existing collections
-	 * if exists.
-	 * 
-	 * @param other
-	 */
-	private void mergeChildren(HashMap<Node, Set<Node>> other) {
-		for (Entry<Node, Set<Node>> e : other.entrySet()) {
-			Node newKey = e.getKey().withGraph(this);
-			Set<Node> newNodes = e.getValue().stream().map(n -> n.withGraph(this)).collect(Collectors.toSet());
-
-			this.children.putIfAbsent(newKey, new HashSet<>());
-			this.children.get(newKey).addAll(newNodes);
-		}
-	}
-
-	/**
-	 * Adds the given parent relations to this graph, adding to existing collections
-	 * if exists.
-	 * 
-	 * @param other
-	 */
-	private void mergeParents(HashMap<Node, Set<Node>> other) {
-		for (Entry<Node, Set<Node>> e : other.entrySet()) {
-			Node newKey = e.getKey().withGraph(this);
-			Set<Node> newNodes = e.getValue().stream().map(n -> n.withGraph(this)).collect(Collectors.toSet());
-
-			this.parents.putIfAbsent(newKey, new HashSet<>());
-			this.parents.get(newKey).addAll(newNodes);
-		}
-	}
-
-	/**
 	 * Adds the nodes to this graph.
 	 * 
 	 * @param other
@@ -245,17 +195,7 @@ public class Graph {
 	 */
 	public void mergeGraph(Graph o) {
 		this.mergeNodes(o.nodes);
-		this.mergeChildren(o.children);
-		this.mergeParents(o.parents);
-
-		for (Node child : this.childrenOf(o.theStart.withGraph(this))) {
-			this.createEdge(this.theStart, child);
-		}
-
-		for (Node parent : this.parentsOf(o.theEnd.withGraph(this))) {
-			this.createEdge(parent, this.theEnd);
-		}
-
+		
 		this.removeNode(o.theStart.withGraph(this));
 		this.removeNode(o.theEnd.withGraph(this));
 
@@ -279,13 +219,11 @@ public class Graph {
 	public void addNode(Node n) {
 		Node newNode = new Node(this, n, NodeType.NORMAL);
 		this.nodes.put(newNode.getId(), newNode);
-		this.parents.put(newNode, new HashSet<>());
-		this.children.put(newNode, new HashSet<>());
 	}
 
 	public void createEdge(Node parent, Node child) {
-		this.children.get(parent).add(child);
-		this.parents.get(child).add(parent);
+		parent.children.add(child);
+		child.parents.add(parent);
 	}
 
 	public void removeNodeAndConnectNeighbours(Node n) {
@@ -298,20 +236,18 @@ public class Graph {
 		if (this.theExit.equals(n))
 			throw new RuntimeException("Cannot remove exit");
 
-		for (Node child : this.children.get(n)) {
-			this.parents.get(child).remove(n);
+		for (Node child : n.children) {
+			child.parents.remove(n);
 		}
-		for (Node parent : this.parents.get(n)) {
-			this.children.get(parent).remove(n);
+		for (Node parent : n.parents) {
+			parent.children.remove(n);
 		}
-		for (Node child : this.children.get(n)) {
-			for (Node parent : this.parents.get(n)) {
+		for (Node child : n.children) {
+			for (Node parent : n.parents) {
 				this.createEdge(parent, child);
 			}
 		}
 
-		this.children.remove(n);
-		this.parents.remove(n);
 		this.nodes.remove(n.getId());
 	}
 
@@ -328,15 +264,13 @@ public class Graph {
 		if (this.theExit.equals(n))
 			throw new RuntimeException("Cannot remove exit");
 
-		for (Node child : this.children.get(n)) {
-			this.parents.get(child).remove(n);
+		for (Node child : n.children) {
+			child.parents.remove(n);
 		}
-		for (Node parent : this.parents.get(n)) {
-			this.children.get(parent).remove(n);
+		for (Node parent : n.parents) {
+			parent.children.remove(n);
 		}
 
-		this.children.remove(n);
-		this.parents.remove(n);
 		this.nodes.remove(n.getId());
 	}
 
@@ -365,8 +299,8 @@ public class Graph {
 			this.removeTerm(remove);
 		}
 
-		for (Node pred : this.parents.get(this.nodes.get(entry))) {
-			for (Node succ : this.children.get(this.nodes.get(exit))) {
+		for (Node pred : this.nodes.get(entry).parents) {
+			for (Node succ : this.nodes.get(exit).children) {
 				this.createEdge(pred, succ);
 			}
 		}
@@ -388,13 +322,13 @@ public class Graph {
 		TermId exit = this.exit.get(root);
 
 		// Create edges between the parents of `root` and the entry of newGraph
-		Set<Node> parents = this.parents.get(this.nodes.get(entry));
+		Set<Node> parents = this.nodes.get(entry).parents;
 		for (Node n : parents) {
 			this.createEdge(n, this.nodes.get(newGraph.theEntry.id));
 		}
 
 		// Create edges between the children of `root` and the exit of newGraph
-		Set<Node> children = this.children.get(this.nodes.get(exit));
+		Set<Node> children = this.nodes.get(exit).children;
 		for (Node n : children) {
 			this.createEdge(this.nodes.get(newGraph.theExit.id), n);
 		}
@@ -490,7 +424,7 @@ public class Graph {
 
 			result.append("\"];");
 
-			for (Node child : this.childrenOf(node)) {
+			for (Node child : node.children) {
 				result.append(node.getId().getId() + "->" + child.getId().getId() + ";");
 			}
 		}
@@ -554,7 +488,7 @@ public class Graph {
 
 			result.append("\\\"];");
 
-			for (Node child : this.childrenOf(node)) {
+			for (Node child : node.children) {
 				result.append(node.getId().getId() + "->" + child.getId().getId() + ";");
 			}
 		}

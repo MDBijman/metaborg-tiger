@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.Graph.Node.NodeType;
 import org.metaborg.lang.tiger.flock.common.IAnalysis.Direction;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.metaborg.lang.tiger.flock.graph.GraphFactory;
@@ -56,7 +57,7 @@ public class FlockIncremental extends Flock {
 		Flock.beginTime("FlockIncremental@replaceNode");
 
 		this.validate();
-		
+
 		Flock.beginTime("FlockIncremental@replaceNode:updateTermTree");
 		// Gather ids and compute regularity
 		TermId rootId = Helpers.getTermId(current);
@@ -111,12 +112,19 @@ public class FlockIncremental extends Flock {
 			Set<Node> predecessors = new HashSet<>(removedNodes.size());
 			Set<Node> successors = new HashSet<>(removedNodes.size());
 			for (Node n : removedNodes) {
-				predecessors.addAll(this.graph.parentsOf(n));
-				successors.addAll(this.graph.childrenOf(n));
+				predecessors.addAll(n.parents);
+				successors.addAll(n.children);
 			}
 			predecessors.removeAll(removedNodes);
 			successors.removeAll(removedNodes);
 			Flock.endTime("FlockIncremental@replaceNode:gatherNeighbours");
+
+			// Before we change the CFG we must record some SCC information
+			Component common = this.graph_scss.commonSCCs(predecessors, successors);
+			Flock.beginTime("SCCs@replaceNodes:makeSubSCCs");
+			// We only compute SCCs if there was no common component
+			SCCs subgraphSCCs = common == null ? SCCs.startingFromEntry(subGraph) : null;
+			Flock.endTime("SCCs@replaceNodes:makeSubSCCs");
 
 			Flock.beginTime("FlockIncremental@replaceNode:replaceCFG");
 			// Replace nodes in CFG
@@ -124,15 +132,18 @@ public class FlockIncremental extends Flock {
 			Flock.endTime("FlockIncremental@replaceNode:replaceCFG");
 
 			Flock.beginTime("FlockIncremental@replaceNode:replaceSCC");
+
 			// Efficient update of SCCs
-			this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph);
+			this.graph_scss.replaceNodes(this.graph, removedNodes, predecessors, successors, subGraph, common,
+					subgraphSCCs);
 			Flock.endTime("FlockIncremental@replaceNode:replaceSCC");
 		}
 
 		Flock.beginTime("FlockIncremental@replaceNode:addToNew");
 		// Add new nodes to analysis
 		for (Node n : subGraph.nodes()) {
-			this.addToNew(n);
+			if (n.type != NodeType.START && n.type != NodeType.END)
+				this.addToNew(n);
 		}
 		Flock.endTime("FlockIncremental@replaceNode:addToNew");
 

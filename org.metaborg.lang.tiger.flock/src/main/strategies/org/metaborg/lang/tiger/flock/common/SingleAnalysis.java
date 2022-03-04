@@ -17,7 +17,6 @@ public abstract class SingleAnalysis implements IAnalysis {
 	public final String propertyName;
 	public final Direction direction;
 
-	public HashSet<Component> cleanComponents = new HashSet<>();
 	public HashSet<Node> newNodes = new HashSet<>();
 
 	private static final boolean DEBUG = Flock.DEBUG;
@@ -34,25 +33,25 @@ public abstract class SingleAnalysis implements IAnalysis {
 	}
 
 	public void addToDirty(Component c) {
-		this.cleanComponents.remove(c);
+		c.clean = false;
 	}
 
 	public void addToClean(Component c) {
-		this.cleanComponents.add(c);
+		c.clean = true;
 		for (Node n : c.nodes) {
 			this.newNodes.remove(n);
 		}
 	}
 
 	public void remove(Component c) {
-		this.cleanComponents.remove(c);
+		c.clean = false;
 		for (Node n : c.nodes) {
 			this.newNodes.remove(n);
 		}
 	}
 
 	public boolean isDirty(Component c) {
-		return !this.cleanComponents.contains(c);
+		return !c.clean;
 	}
 
 	public String getName() {
@@ -69,30 +68,22 @@ public abstract class SingleAnalysis implements IAnalysis {
 
 	public void clear() {
 		this.newNodes.clear();
-		this.cleanComponents.clear();
 	}
 
 	@Override
 	public void removeAnalysisResults(SCCs sccs, Component c) {
-		Set<Component> forwardReachable = null;
-		Set<Component> backwardReachable = null;
-
 		if (this.direction == Direction.FORWARD) {
-			if (forwardReachable == null) {
-				forwardReachable = new HashSet<>();
-				forwardReachable.add(c);
-				this.collectDirtySuccessors(sccs, c, forwardReachable);
-			}
+			Set<Component> forwardReachable = new HashSet<>();
+			forwardReachable.add(c);
+			this.collectCleanPredecessors(sccs, c, forwardReachable);
 
 			for (Component c2 : forwardReachable) {
 				this.removeNodeResults(sccs, c2.nodes);
 			}
 		} else if (this.direction == Direction.BACKWARD) {
-			if (backwardReachable == null) {
-				backwardReachable = new HashSet<>();
-				backwardReachable.add(c);
-				this.collectDirtyPredecessors(sccs, c, backwardReachable);
-			}
+			Set<Component> backwardReachable = new HashSet<>();
+			backwardReachable.add(c);
+			this.collectCleanSuccessors(sccs, c, backwardReachable);
 
 			for (Component c2 : backwardReachable) {
 				this.removeNodeResults(sccs, c2.nodes);
@@ -100,20 +91,20 @@ public abstract class SingleAnalysis implements IAnalysis {
 		}
 	}
 
-	private void collectDirtyPredecessors(SCCs sccs, Component c, Set<Component> result) {
-		for (Component neighbour : sccs.revNeighbours.get(c)) {
+	private void collectCleanPredecessors(SCCs sccs, Component c, Set<Component> result) {
+		for (Component neighbour : c.parents) {
 			if (!this.isDirty(c) && !result.contains(neighbour)) {
 				result.add(neighbour);
-				collectDirtyPredecessors(sccs, neighbour, result);
+				collectCleanPredecessors(sccs, neighbour, result);
 			}
 		}
 	}
 
-	private void collectDirtySuccessors(SCCs sccs, Component c, Set<Component> result) {
-		for (Component neighbour : sccs.neighbours.get(c)) {
+	private void collectCleanSuccessors(SCCs sccs, Component c, Set<Component> result) {
+		for (Component neighbour : c.children) {
 			if (!this.isDirty(c) && !result.contains(neighbour)) {
 				result.add(neighbour);
-				collectDirtySuccessors(sccs, neighbour, result);
+				collectCleanSuccessors(sccs, neighbour, result);
 			}
 		}
 	}
@@ -121,14 +112,6 @@ public abstract class SingleAnalysis implements IAnalysis {
 	public void validate(Graph g, SCCs sccs) {
 		if (!DEBUG)
 			return;
-
-		for (Component c : this.cleanComponents) {
-			for (Node n : c.nodes) {
-				if (this.newNodes.contains(n)) {
-					throw new RuntimeException("New node in clean component");
-				}
-			}
-		}
 	}
 
 	/*
@@ -166,11 +149,11 @@ public abstract class SingleAnalysis implements IAnalysis {
 		}
 
 		if (this.direction == Direction.FORWARD) {
-			for (Component pred : sccs.revNeighbours.get(target)) {
+			for (Component pred : target.parents) {
 				this.performDataAnalysis(cfg, sccs, pred);
 			}
 		} else {
-			for (Component succ : sccs.neighbours.get(target)) {
+			for (Component succ : target.children) {
 				this.performDataAnalysis(cfg, sccs, succ);
 			}
 		}
@@ -208,7 +191,7 @@ public abstract class SingleAnalysis implements IAnalysis {
 		for (Node node : newNodes) {
 			Flock.increment("Analysis@loop3");
 			FlockLattice init = node.getProperty(this.propertyName).lattice;
-			for (Node pred : this.getPredecessors(cfg, node)) {
+			for (Node pred : this.getPredecessors(node)) {
 				pred.getProperty(this.propertyName).transfer.eval(this.direction, init, pred);
 			}
 			node.getProperty(this.propertyName).lattice = init;
@@ -221,7 +204,7 @@ public abstract class SingleAnalysis implements IAnalysis {
 
 			Flock.increment("Analysis@worklist");
 
-			Set<Node> successors = this.getSuccessors(cfg, node);
+			Set<Node> successors = this.getSuccessors(node);
 
 			for (Node successor : successors) {
 				if (!target.nodes.contains(successor))
@@ -248,19 +231,19 @@ public abstract class SingleAnalysis implements IAnalysis {
 
 	}
 
-	private Set<Node> getPredecessors(Graph g, Node n) {
+	private Set<Node> getPredecessors(Node n) {
 		if (this.direction == Direction.BACKWARD) {
-			return g.childrenOf(n);
+			return n.children;
 		} else {
-			return g.parentsOf(n);
+			return n.parents;
 		}
 	}
 
-	private Set<Node> getSuccessors(Graph g, Node n) {
+	private Set<Node> getSuccessors(Node n) {
 		if (this.direction == Direction.FORWARD) {
-			return g.childrenOf(n);
+			return n.children;
 		} else {
-			return g.parentsOf(n);
+			return n.parents;
 		}
 	}
 }
