@@ -29,7 +29,7 @@ public abstract class SingleAnalysis implements IAnalysis {
 
 	public void addToNew(SCCs sccs, Node n) {
 		this.newNodes.add(n);
-		this.addToDirty(sccs.nodeComponent.get(n));
+		this.addToDirty(n.component);
 	}
 
 	public void addToDirty(Component c) {
@@ -133,7 +133,7 @@ public abstract class SingleAnalysis implements IAnalysis {
 	public abstract void initNodeTransferFunction(Node node);
 
 	public void performDataAnalysis(Graph g, SCCs sccs, Node n) {
-		this.performDataAnalysis(g, sccs, sccs.nodeComponent.get(n));
+		this.performDataAnalysis(g, sccs, n.component);
 	}
 
 	/**

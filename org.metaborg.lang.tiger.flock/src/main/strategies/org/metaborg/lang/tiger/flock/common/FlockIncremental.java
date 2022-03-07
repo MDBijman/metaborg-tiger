@@ -204,7 +204,7 @@ public class FlockIncremental extends Flock {
 	}
 
 	private void removeAnalysisResults(Collection<Node> removedNodes) {
-		Set<Component> outdatedComponents = removedNodes.stream().map(this.graph_scss.nodeComponent::get)
+		Set<Component> outdatedComponents = removedNodes.stream().map(n -> n.component)
 				.collect(Collectors.toSet());
 
 		for (Component c : outdatedComponents) {

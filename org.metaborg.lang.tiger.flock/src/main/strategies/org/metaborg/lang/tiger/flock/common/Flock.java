@@ -35,8 +35,8 @@ public abstract class Flock {
 	public Flock() {
 		this.analyses = new ArrayList<IAnalysis>();
 		this.analyses.add(new LiveVariableAnalysis());
-		//this.analyses.add(new ValueAnalysis());
-		this.analyses.add(new FastValueAnalysis());
+		this.analyses.add(new ValueAnalysis());
+		//this.analyses.add(new FastValueAnalysis());
 		//this.analyses.add(new SpecializableValueAnalysis());
 		// this.analyses.add(new AvailableExpressions());
 	}

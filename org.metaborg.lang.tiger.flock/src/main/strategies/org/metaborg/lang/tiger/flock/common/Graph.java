@@ -28,6 +28,7 @@ public class Graph {
 		public ITerm virtualTerm = null;
 		public HashMap<String, Property> properties = new HashMap<>();
 		public Graph graph = null;
+		public Component component = null;
 		public Set<Node> parents = new HashSet<>();
 		public Set<Node> children = new HashSet<>();
 

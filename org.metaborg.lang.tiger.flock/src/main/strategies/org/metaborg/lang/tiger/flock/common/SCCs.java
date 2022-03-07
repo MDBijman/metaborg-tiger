@@ -22,7 +22,6 @@ public class SCCs {
 	}
 
 	HashSet<Component> components = new HashSet<>();
-	HashMap<Node, Component> nodeComponent = new HashMap<>();
 	private static final boolean DEBUG = Flock.DEBUG;
 
 	public SCCs() {
@@ -61,7 +60,7 @@ public class SCCs {
 		comp_loop: for (Component c : new_scss.components) {
 			// Get one of the matching components of this sccs of one of the nodes of c
 			// That component should match c
-			Component matchingComponent = this.nodeComponent.get(c.nodes.iterator().next());
+			Component matchingComponent = c.nodes.iterator().next().component;
 			if (matchingComponent == null || matchingComponent.nodes.size() != c.nodes.size()) {
 				newComponents.add(c);
 				continue comp_loop;
@@ -106,7 +105,7 @@ public class SCCs {
 			changedMapping.put(c, new_here);
 			for (Node n : c.nodes) {
 				new_here.nodes.add(n);
-				this.nodeComponent.put(n, new_here);
+				n.component = new_here;
 			}
 		}
 
@@ -128,11 +127,11 @@ public class SCCs {
 
 		// Get common components between predecessors and successors
 		for (Node pred : oldPredecessors) {
-			predecessorSCCs.add(this.nodeComponent.get(pred));
+			predecessorSCCs.add(pred.component);
 		}
 
 		for (Node suc : oldSuccessors) {
-			successorSCCs.add(this.nodeComponent.get(suc));
+			successorSCCs.add(suc.component);
 		}
 		Set<Component> commonSCCs = predecessorSCCs;
 		commonSCCs.retainAll(successorSCCs);
@@ -161,13 +160,13 @@ public class SCCs {
 		if (commonComponent != null) {
 			for (Node n : subgraph.nodes()) {
 				commonComponent.nodes.add(n);
-				this.nodeComponent.put(n, commonComponent);
+				n.component = commonComponent;
 			}
 
 			// Remove information of replaced nodes
 			for (Node n : replaced) {
-				this.nodeComponent.get(n).nodes.remove(n);
-				this.nodeComponent.remove(n);
+				n.component.nodes.remove(n);
+				n.component = null;
 			}
 		}
 		// Case 2: The replaced subgraph is not part of a greater SCC
@@ -180,10 +179,10 @@ public class SCCs {
 
 			Flock.beginTime("SCCs@replaceNodes:linkSCCpred");
 			// Add edges between old predecessors and new root components
-			Component rootScc = this.nodeComponent.get(subgraph.getEntry());
+			Component rootScc = subgraph.getEntry().component;
 
 			for (Node pred : oldPredecessors) {
-				Component predScc = this.nodeComponent.get(pred);
+				Component predScc = pred.component;
 
 				this.makeEdge(predScc, rootScc);
 			}
@@ -191,10 +190,10 @@ public class SCCs {
 
 			Flock.beginTime("SCCs@replaceNodes:linkSCCsucc");
 			// Add edges between new leaf and old successor components
-			Component leafScc = this.nodeComponent.get(subgraph.getExit());
+			Component leafScc = subgraph.getExit().component;
 
 			for (Node suc : oldSuccessors) {
-				Component sucScc = this.nodeComponent.get(suc);
+				Component sucScc = suc.component;
 
 				this.makeEdge(leafScc, sucScc);
 			}
@@ -209,7 +208,7 @@ public class SCCs {
 			// from a single program node (e.g. for-loop). But this does not generalize to
 			// more complex CFGs.
 			for (Node n : replaced) {
-				this.removeComponent(this.nodeComponent.get(n));
+				this.removeComponent(n.component);
 			}
 			Flock.endTime("SCCs@replaceNodes:removeOld");
 		}
@@ -243,12 +242,11 @@ public class SCCs {
 
 	private void mergeSCCs(SCCs other) {
 		this.components.addAll(other.components);
-		this.nodeComponent.putAll(other.nodeComponent);
 	}
 
 	private void removeComponent(Component c) {
 		for (Node n : c.nodes) {
-			this.nodeComponent.remove(n);
+			n.component = null;
 		}
 		for (Component parent : c.parents) {
 			parent.children.remove(c);
@@ -271,8 +269,7 @@ public class SCCs {
 
 		long nextIndex = 1;
 		if (index.get(g.getEntry()) == null) {
-			nextIndex = strongConnect(g, g.getEntry(), nextIndex, S, onStack, lowlink, index, components,
-					nodeComponent);
+			nextIndex = strongConnect(g, g.getEntry(), nextIndex, S, onStack, lowlink, index, components);
 		}
 
 		// There are dangling nodes (i.e. dead code)
@@ -280,7 +277,7 @@ public class SCCs {
 		if (index.size() != g.nodes().size()) {
 			for (Node n : g.nodes()) {
 				if (index.get(n) == null && !n.equals(g.getStart()) && !n.equals(g.getEnd())) {
-					nextIndex = strongConnect(g, n, nextIndex, S, onStack, lowlink, index, components, nodeComponent);
+					nextIndex = strongConnect(g, n, nextIndex, S, onStack, lowlink, index, components);
 				}
 			}
 		}
@@ -297,8 +294,7 @@ public class SCCs {
 
 		long nextIndex = 1;
 		if (index.get(g.getStart()) == null) {
-			nextIndex = strongConnect(g, g.getStart(), nextIndex, S, onStack, lowlink, index, components,
-					nodeComponent);
+			nextIndex = strongConnect(g, g.getStart(), nextIndex, S, onStack, lowlink, index, components);
 		}
 
 		// There are dangling nodes (i.e. dead code)
@@ -306,7 +302,7 @@ public class SCCs {
 		if (index.size() != g.nodes().size()) {
 			for (Node n : g.nodes()) {
 				if (index.get(n) == null) {
-					nextIndex = strongConnect(g, n, nextIndex, S, onStack, lowlink, index, components, nodeComponent);
+					nextIndex = strongConnect(g, n, nextIndex, S, onStack, lowlink, index, components);
 				}
 			}
 		}
@@ -328,10 +324,10 @@ public class SCCs {
 	 */
 	private void computeComponentEdges(Graph g, Component c) {
 		for (Node n : c.nodes) {
-			Component nComp = this.nodeComponent.get(n);
+			Component nComp = n.component;
 
 			for (Node v : n.children) {
-				Component vComp = this.nodeComponent.get(v);
+				Component vComp = v.component;
 
 				if (vComp != nComp) {
 					this.makeEdge(nComp, vComp);
@@ -343,8 +339,7 @@ public class SCCs {
 
 	// Tarjans
 	private long strongConnect(Graph g, Node v, long next_index, Stack<Node> S, HashSet<Node> onStack,
-			HashMap<Node, Long> lowlink, HashMap<Node, Long> index, HashSet<Component> components,
-			HashMap<Node, Component> nodeComponent) {
+			HashMap<Node, Long> lowlink, HashMap<Node, Long> index, HashSet<Component> components) {
 		Flock.beginTime("SCCs@strongConnect");
 		Stack<Pair<Node, Node>> stack = new Stack<>();
 
@@ -394,7 +389,7 @@ public class SCCs {
 				do {
 					w = S.pop();
 					onStack.remove(w);
-					nodeComponent.put(w, component);
+					w.component = component;
 					component.nodes.add(w);
 				} while (w != n);
 				components.add(component);
@@ -409,13 +404,9 @@ public class SCCs {
 			return;
 
 		for (Node n : g.nodes()) {
-			if (this.nodeComponent.get(n) == null) {
+			if (n.component == null) {
 				throw new RuntimeException("Node component entry missing for " + n.toString());
 			}
-		}
-
-		if (g.nodes().size() != this.nodeComponent.size()) {
-			throw new RuntimeException("Node sizes not matching");
 		}
 
 		for (Component c : this.components) {
@@ -424,6 +415,8 @@ public class SCCs {
 					throw new RuntimeException("Missing reverse neighbour");
 				}
 			}
+			if (c.nodes.size() == 0)
+				throw new RuntimeException("Component without nodes");
 		}
 	}
 
