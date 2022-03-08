@@ -64,6 +64,13 @@ rules /// editor transformation actions
     ; filename := <guarantee-extension(|"opt.tig")> path
     ; result   := <pp-tiger-string> p'
     
+  editor-analyze-and-transform-test:
+    (p, _, _, path, project-path) -> (filename, result)
+    with
+      p' := <flock-test-run-return> p
+    ; filename := <guarantee-extension(|"opt.tig")> path
+    ; result   := <pp-tiger-string> p'
+    
   editor-transform-dr:
     (p, _, _, path, project-path) -> (filename, result)
     with
@@ -116,8 +123,6 @@ rules // pipeline
   	  opt-repeat(|5)
   	; topdown(try(remove-all(?Hole())))
   > with-ids
-  ; <flock-debug-graph>()
-  ; <flock-debug-graph(|"values")> ()
   ; <flock-end-timer> "pipeline"
   ; <debug> <run-time>
   ; <flock-debug-runtime> ()

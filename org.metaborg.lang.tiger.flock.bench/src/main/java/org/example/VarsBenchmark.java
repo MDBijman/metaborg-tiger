@@ -13,25 +13,27 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 
-//@State(Scope.Thread)
-//@Fork(jvmArgsAppend = { "-Xms4g", "-Xmx16g", "-Xss16m" })
+@State(Scope.Thread)
+@Fork(jvmArgsAppend = { "-Xms4g", "-Xmx16g", "-Xss16m" })
 public class VarsBenchmark extends BaseBenchmark {
 	public IContext context;
 	public IStrategoTerm ast;
-	
-	@Param({"1", "10", "100", "1000", "2000", "3000", "4000", "5000"})
+
+	@Param({ "1000", "2000", "3000", "4000", "7000", "10000" })
 	int count;
-	
+
 	@Setup
 	public void setup() throws MetaborgException, IOException {
 		ISpoofaxParseUnit tigerParseUnit = this.parseTiger("vars_" + count);
 		context = this.getContext(tigerParseUnit);
 		ast = tigerParseUnit.ast();
-		this.doStrategyTransformation(context, ast, "disable-logs");
+
+		this.doStrategyTransformation(context, ast, "flock-disable-logging");
+		this.doStrategyTransformation(context, ast, "flock-disable-timing");
 	}
-	
-	//@Benchmark
+
+	@Benchmark
 	public IStrategoTerm run() throws MetaborgException {
 		return this.doStrategyTransformation(context, ast, "pipeline");
-	}	
+	}
 }

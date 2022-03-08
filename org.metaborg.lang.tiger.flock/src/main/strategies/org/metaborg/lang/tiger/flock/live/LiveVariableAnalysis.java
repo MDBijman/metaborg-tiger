@@ -19,8 +19,8 @@ import org.spoofax.interpreter.terms.ITermFactory;
 import org.spoofax.terms.util.TermUtils;
 
 public class LiveVariableAnalysis extends SingleAnalysis {
-	public LiveVariableAnalysis() {
-		super("live", Direction.BACKWARD);
+	public LiveVariableAnalysis(int id) {
+		super("live", Direction.BACKWARD, id);
 	}
 
 	@Override

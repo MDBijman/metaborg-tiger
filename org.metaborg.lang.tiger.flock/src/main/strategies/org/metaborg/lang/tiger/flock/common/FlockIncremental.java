@@ -29,7 +29,6 @@ public class FlockIncremental extends Flock {
 
 	@Override
 	public void init(IStrategoTerm program) {
-		this.clearAnalyses();
 		for (Node n : this.graph.nodes()) {
 			this.addToNew(n);
 		}
@@ -58,17 +57,15 @@ public class FlockIncremental extends Flock {
 
 		this.validate();
 
-		Flock.beginTime("FlockIncremental@replaceNode:updateTermTree");
 		// Gather ids and compute regularity
+		Flock.beginTime("FlockIncremental@replaceNode:gatherIds");
 		TermId rootId = Helpers.getTermId(current);
 		Set<TermId> innerIds = getAllIds(current);
-		boolean irregular = false;
-		for (TermId t : innerIds) {
-			irregular |= this.termTree.isIrregular(t);
-		}
+		Flock.endTime("FlockIncremental@replaceNode:gatherIds");
 
 		// Replace nodes in tree
-		this.termTree.replace(Helpers.getTermId(current), replacement);
+		Flock.beginTime("FlockIncremental@replaceNode:updateTermTree");
+		boolean irregular = this.termTree.replace(Helpers.getTermId(current), replacement);
 		Flock.endTime("FlockIncremental@replaceNode:updateTermTree");
 
 		// Also check if any of the new nodes are irregular
@@ -84,11 +81,12 @@ public class FlockIncremental extends Flock {
 		// Remove analysis results reachable from node
 		Set<Node> removedNodes = getAllNodes(current);
 		Flock.beginTime("FlockIncremental@replaceNode:removeAnalysisResults");
-		this.removeAnalysisResults(removedNodes);
+		if (irregular) {
+			this.removeAnalysisResults(removedNodes);
+		} else {
+			this.removeAnalysisResults(this.graph.getNode(this.graph.exitOf(rootId)).component);
+		}
 		Flock.endTime("FlockIncremental@replaceNode:removeAnalysisResults");
-		Flock.beginTime("FlockIncremental@replaceNode:removeNodesInAnalyses");
-		this.removeNodesInAnalyses(removedNodes);
-		Flock.beginTime("FlockIncremental@replaceNode:removeNodesInAnalyses");
 
 		Flock.beginTime("FlockIncremental@replaceNode:createCfg");
 		// Create new sub-CFG
@@ -109,22 +107,16 @@ public class FlockIncremental extends Flock {
 		} else {
 			// Efficient
 			Flock.beginTime("FlockIncremental@replaceNode:gatherNeighbours");
-			Set<Node> predecessors = new HashSet<>(removedNodes.size());
-			Set<Node> successors = new HashSet<>(removedNodes.size());
-			for (Node n : removedNodes) {
-				predecessors.addAll(n.parents);
-				successors.addAll(n.children);
-			}
-			predecessors.removeAll(removedNodes);
-			successors.removeAll(removedNodes);
+			Set<Node> predecessors = this.graph.getNode(this.graph.entryOf(rootId)).parents;
+			Set<Node> successors = this.graph.getNode(this.graph.exitOf(rootId)).children;
 			Flock.endTime("FlockIncremental@replaceNode:gatherNeighbours");
 
 			// Before we change the CFG we must record some SCC information
 			Component common = this.graph_scss.commonSCCs(predecessors, successors);
-			Flock.beginTime("SCCs@replaceNodes:makeSubSCCs");
+			Flock.beginTime("FlockIncremental@replaceNode:makeSubSCCs");
 			// We only compute SCCs if there was no common component
 			SCCs subgraphSCCs = common == null ? SCCs.startingFromEntry(subGraph) : null;
-			Flock.endTime("SCCs@replaceNodes:makeSubSCCs");
+			Flock.endTime("FlockIncremental@replaceNode:makeSubSCCs");
 
 			Flock.beginTime("FlockIncremental@replaceNode:replaceCFG");
 			// Replace nodes in CFG
@@ -168,7 +160,6 @@ public class FlockIncremental extends Flock {
 		// Remove analysis results reachable from node
 		Set<Node> removedNodes = getAllNodes(node);
 		this.removeAnalysisResults(removedNodes);
-		this.removeNodesInAnalyses(removedNodes);
 
 		TermId rootId = Helpers.getTermId(node);
 		Set<TermId> innerIds = getAllIds(node);
@@ -189,14 +180,6 @@ public class FlockIncremental extends Flock {
 		Flock.endTime("FlockIncremental@removeNode");
 	}
 
-	private void removeNodesInAnalyses(Collection<Node> removedNodes) {
-		for (IAnalysis a : this.analyses) {
-			for (Node n : removedNodes) {
-				a.remove(n);
-			}
-		}
-	}
-
 	private void removeAnalysisResults(Set<Component> cs) {
 		for (Component c : cs) {
 			this.removeAnalysisResults(c);
@@ -204,8 +187,9 @@ public class FlockIncremental extends Flock {
 	}
 
 	private void removeAnalysisResults(Collection<Node> removedNodes) {
-		Set<Component> outdatedComponents = removedNodes.stream().map(n -> n.component)
-				.collect(Collectors.toSet());
+		Flock.beginTime("abc");
+		Set<Component> outdatedComponents = removedNodes.stream().map(n -> n.component).collect(Collectors.toSet());
+		Flock.endTime("abc");
 
 		for (Component c : outdatedComponents) {
 			this.removeAnalysisResults(c);

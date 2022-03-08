@@ -24,8 +24,8 @@ import org.spoofax.terms.util.M;
 import org.spoofax.terms.util.TermUtils;
 
 public class ValueAnalysis extends SingleAnalysis {
-	public ValueAnalysis() {
-		super("values", Direction.FORWARD);
+	public ValueAnalysis(int id) {
+		super("values", Direction.FORWARD, id);
 	}
 
 	@Override

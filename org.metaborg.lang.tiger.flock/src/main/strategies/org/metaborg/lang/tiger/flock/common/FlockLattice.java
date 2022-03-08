@@ -6,23 +6,22 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
+import io.usethesource.capsule.*;
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
 import org.spoofax.terms.StrategoList;
-import org.spoofax.terms.StrategoTuple;
 import org.spoofax.terms.util.NotImplementedException;
 
 public interface FlockLattice extends Cloneable {
 	public abstract boolean lub(Object o);
-	
+
 	public abstract FlockLattice copy();
 
 	public abstract Object value();
-	
+
 	public abstract void setValue(Object value);
-	
+
 	public default boolean leq(FlockLattice r) {
 		FlockLattice clone = this.copy();
 		clone.lub(r);
@@ -40,13 +39,13 @@ public interface FlockLattice extends Cloneable {
 	public default boolean geq(FlockLattice r) {
 		return this.glb(r).equals(this);
 	}
-	
+
 	public abstract IStrategoTerm toTerm();
-	
+
 	/*
 	 * Default Implementations
 	 */
-	
+
 	public static interface FlockCollectionLattice extends FlockLattice, Iterable {
 		@Override
 		public default IStrategoTerm toTerm() {
@@ -58,27 +57,28 @@ public interface FlockLattice extends Cloneable {
 			return result;
 		}
 	}
+
 	public static interface FlockValueLattice extends FlockLattice {
 		public abstract FlockValue value();
-		
+
 		@Override
 		public default IStrategoTerm toTerm() {
 			return this.value().toTerm();
 		}
 	}
-	
+
 	public static class MustSet implements FlockCollectionLattice {
 		Set value;
-		
+
 		public MustSet(MustSet o) {
 			this.value = new HashSet<>();
 			this.value.addAll(o.value);
 		}
-		
+
 		public MustSet(Set v) {
 			this.value = v;
 		}
-		
+
 		public static MustSet bottom() {
 			return new MustSet(new UniversalSet());
 		}
@@ -86,22 +86,22 @@ public interface FlockLattice extends Cloneable {
 		public static MustSet top() {
 			return new MustSet(new HashSet());
 		}
-		
+
 		@Override
 		public FlockLattice copy() {
 			return new MustSet(new HashSet<>(this.value));
 		}
-		
+
 		@Override
 		public Object value() {
 			return value;
 		}
-		
+
 		@Override
 		public void setValue(Object value) {
 			this.value = (Set) value;
 		}
-		
+
 		@Override
 		public boolean lub(Object r) {
 			return SetUtils.intersectionInplace(this, r);
@@ -135,7 +135,7 @@ public interface FlockLattice extends Cloneable {
 			}
 			return result;
 		}
-		
+
 		@Override
 		public boolean equals(Object other) {
 			if (other == null)
@@ -151,16 +151,16 @@ public interface FlockLattice extends Cloneable {
 
 	public static class MaySet implements FlockCollectionLattice {
 		Set value;
-		
+
 		public MaySet(MaySet v) {
 			this.value = new HashSet<>();
 			this.value.addAll(v.value);
 		}
-		
+
 		public MaySet(Set v) {
 			this.value = v;
 		}
-		
+
 		public static MaySet bottom() {
 			return new MaySet(new HashSet());
 		}
@@ -173,22 +173,22 @@ public interface FlockLattice extends Cloneable {
 		public FlockLattice copy() {
 			return new MaySet(new HashSet<>(this.value));
 		}
-		
+
 		@Override
 		public String toString() {
 			return value.toString();
 		}
-		
+
 		@Override
 		public Object value() {
 			return value;
 		}
-		
+
 		@Override
 		public void setValue(Object value) {
 			this.value = (Set) value;
 		}
-		
+
 		@Override
 		public boolean lub(Object o) {
 			return SetUtils.unionInplace(this, o);
@@ -208,7 +208,7 @@ public interface FlockLattice extends Cloneable {
 		public boolean geq(FlockLattice r) {
 			return SetUtils.isSupersetEquals(this.value(), r.value());
 		}
-	
+
 		@Override
 		public Iterator iterator() {
 			return value.iterator();
@@ -222,7 +222,7 @@ public interface FlockLattice extends Cloneable {
 			}
 			return result;
 		}
-		
+
 		@Override
 		public boolean equals(Object other) {
 			if (other == null)
@@ -242,11 +242,11 @@ public interface FlockLattice extends Cloneable {
 		public SimpleMap(FlockLattice o) {
 			this.value = ((SimpleMap) o).value;
 		}
-		
+
 		public SimpleMap(SimpleMap o) {
 			this.value = o.value;
 		}
-		
+
 		public SimpleMap(Map v) {
 			this.value = v;
 		}
@@ -254,11 +254,11 @@ public interface FlockLattice extends Cloneable {
 		public static SimpleMap bottom() {
 			return new SimpleMap(new HashMap<>());
 		}
-		
+
 		public static SimpleMap top() {
 			throw new NotImplementedException();
 		}
-		
+
 		@Override
 		public FlockLattice copy() {
 			return new SimpleMap(new HashMap<>(this.value));
@@ -268,25 +268,25 @@ public interface FlockLattice extends Cloneable {
 		public Iterator iterator() {
 			return value.entrySet().iterator();
 		}
-		
+
 		@Override
 		public boolean lub(Object o) {
 			return MapUtils.unionInplace(this, o);
 		}
-		
+
 		@Override
 		public Object value() {
 			return value;
 		}
-		
+
 		@Override
 		public void setValue(Object value) {
 			this.value = (Map) value;
 		}
-		
+
 		@Override
 		public IStrategoTerm toTerm() {
-		    ITermFactory tf = Flock.instance.factory;
+			ITermFactory tf = Flock.instance.factory;
 
 			IStrategoList result = tf.makeList();
 			for (Object o : this.value.entrySet()) {
@@ -296,12 +296,12 @@ public interface FlockLattice extends Cloneable {
 			}
 			return result;
 		}
-		
+
 		@Override
 		public String toString() {
 			return value.toString();
 		}
-		
+
 		@Override
 		public boolean equals(Object other) {
 			if (other == null)
@@ -311,6 +311,107 @@ public interface FlockLattice extends Cloneable {
 			if (other.getClass() != this.getClass())
 				return false;
 			SimpleMap rhs = (SimpleMap) other;
+			return this.value.equals(rhs.value);
+		}
+	}
+
+	public static class ImmutableMap implements FlockCollectionLattice {
+		io.usethesource.capsule.Map.Immutable value;
+
+		public ImmutableMap(FlockLattice o) {
+			this.value = ((ImmutableMap) o).value;
+		}
+
+		public ImmutableMap(ImmutableMap o) {
+			this.value = o.value;
+		}
+
+		public ImmutableMap(io.usethesource.capsule.Map.Immutable o) {
+			this.value = o;
+		}
+
+		public static ImmutableMap bottom() {
+			return new ImmutableMap(io.usethesource.capsule.Map.Immutable.of());
+		}
+
+		public static ImmutableMap top() {
+			throw new NotImplementedException();
+		}
+
+		@Override
+		public ImmutableMap copy() {
+			return new ImmutableMap(this.value);
+		}
+
+		@Override
+		public Iterator iterator() {
+			return value.entrySet().iterator();
+		}
+
+		@Override
+		public boolean lub(Object o) {
+			if (o instanceof ImmutableMap) {
+				ImmutableMap om = (ImmutableMap) o;
+
+				io.usethesource.capsule.Map.Immutable other = om.value;
+				io.usethesource.capsule.Map.Transient result = this.value.asTransient();
+				boolean change = false;
+				for (Object p : other.entrySet()) {
+					java.util.Map.Entry<Object, Object> e = (java.util.Map.Entry<Object, Object>) p;
+					if (result.containsKey(e.getKey())) {
+						final FlockLattice left = (FlockLattice) result.get(e.getKey());
+						final FlockLattice right = (FlockLattice) e.getValue();
+						final FlockLattice copyLeft = left.copy();
+						change |= copyLeft.lub(right);
+						result.__put(e.getKey(), copyLeft);
+					} else {
+						result.__put(e.getKey(), e.getValue());
+					}
+				}
+				return change;
+			} else {
+				throw new RuntimeException("Cannot lub Immutable map with unexpected type");
+			}
+
+		}
+
+		@Override
+		public Object value() {
+			return value;
+		}
+
+		@Override
+		public void setValue(Object value) {
+			this.value = (io.usethesource.capsule.Map.Immutable) value;
+		}
+
+		@Override
+		public IStrategoTerm toTerm() {
+			ITermFactory tf = Flock.instance.factory;
+
+			IStrategoList result = tf.makeList();
+			for (Object o : this.value.entrySet()) {
+				Entry e = (Entry) o;
+				IStrategoTerm[] kids = { Helpers.toTerm(e.getKey()), Helpers.toTerm(e.getValue()) };
+				result = tf.makeListCons(tf.makeTuple(kids, null), result);
+			}
+			return result;
+		}
+
+		@Override
+		public String toString() {
+			return value.toString();
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (other == null)
+				return false;
+			if (other == this)
+				return true;
+			if (other.getClass() != this.getClass())
+				return false;
+			ImmutableMap rhs = (ImmutableMap) other;
 			return this.value.equals(rhs.value);
 		}
 	}

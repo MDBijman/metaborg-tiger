@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.metaborg.lang.tiger.flock.capsulevalue.CapsuleValueAnalysis;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.metaborg.lang.tiger.flock.fastvalue.FastValueAnalysis;
@@ -34,11 +35,16 @@ public abstract class Flock {
 
 	public Flock() {
 		this.analyses = new ArrayList<IAnalysis>();
-		this.analyses.add(new LiveVariableAnalysis());
-		this.analyses.add(new ValueAnalysis());
+		this.analyses.add(new LiveVariableAnalysis(this.analyses.size()));
+		this.analyses.add(new CapsuleValueAnalysis(this.analyses.size()));
+		//this.analyses.add(new ValueAnalysis());
 		//this.analyses.add(new FastValueAnalysis());
 		//this.analyses.add(new SpecializableValueAnalysis());
 		// this.analyses.add(new AvailableExpressions());
+	}
+	
+	public int numberOfAnalyses() {
+		return this.analyses.size();
 	}
 
 	protected void initPosition(Graph g, ITermFactory factory) {
@@ -121,12 +127,6 @@ public abstract class Flock {
 	protected void addToDirty(Component c) {
 		for (IAnalysis ga : analyses) {
 			ga.addToDirty(c);
-		}
-	}
-
-	protected void clearAnalyses() {
-		for (IAnalysis ga : analyses) {
-			ga.clear();
 		}
 	}
 

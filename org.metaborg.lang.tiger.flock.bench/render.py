@@ -48,7 +48,7 @@ def plot_benchmark(fig, ax, name, simple_name):
 
 fig, ax = plt.subplots()
 plot_benchmark(fig, ax, "org.example.BranchBenchmark.run", "branches")
-#plot_benchmark(fig, ax, "org.example.VarsBenchmark.run", "variables")
+plot_benchmark(fig, ax, "org.example.VarsBenchmark.run", "variables")
 plt.savefig(f"results/{today}{tag}_benchmark.png")
 
 

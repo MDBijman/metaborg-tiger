@@ -24,6 +24,7 @@ menus
 	    action: "Inline"        = editor-transform-inline (source)
 	    action: "Const. Prop."  = editor-transform-const-prop (source)
 	    action: "Optimize (Dynamic Rules)" = editor-transform-dr (source)
+	    action: "Optimize (Testing)" = editor-analyze-and-transform-test (source)
 	end
   
     submenu: "Analyze" (openeditor)

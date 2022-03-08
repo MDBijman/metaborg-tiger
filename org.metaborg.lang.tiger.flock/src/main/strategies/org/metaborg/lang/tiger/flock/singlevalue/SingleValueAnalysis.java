@@ -21,8 +21,8 @@ import org.spoofax.terms.util.TermUtils;
 public class SingleValueAnalysis extends SingleAnalysis {
 	public IStrategoTerm variable;
 
-	public SingleValueAnalysis(IStrategoTerm variable) {
-		super("values_" + M.string(variable), Direction.FORWARD);
+	public SingleValueAnalysis(IStrategoTerm variable, int id) {
+		super("values_" + M.string(variable), Direction.FORWARD, id);
 		this.variable = variable;
 	}
 

@@ -53,20 +53,6 @@ public abstract class SpecializableAnalysis implements IAnalysis {
 	}
 
 	@Override
-	public void remove(Node n) {
-		for (SingleAnalysis sa : specializations.values()) {
-			sa.remove(n);
-		}
-	}
-
-	@Override
-	public void clear() {
-		for (SingleAnalysis sa : specializations.values()) {
-			sa.clear();
-		}
-	}
-
-	@Override
 	public Direction getDirection() {
 		return this.direction;
 	}

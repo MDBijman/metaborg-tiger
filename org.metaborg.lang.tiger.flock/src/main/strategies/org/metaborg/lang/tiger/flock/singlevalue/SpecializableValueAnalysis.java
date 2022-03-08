@@ -11,6 +11,7 @@ public class SpecializableValueAnalysis extends SpecializableAnalysis {
 
 	@Override
 	public SingleAnalysis makeSpecialization(IStrategoTerm sub) {
-		return new SingleValueAnalysis(sub);
+		throw new RuntimeException("Specializations + analysis ids not yet implemented");
+		//return new SingleValueAnalysis(sub);
 	}
 }

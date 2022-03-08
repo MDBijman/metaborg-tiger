@@ -19,9 +19,9 @@ public class BranchBenchmark extends BaseBenchmark {
 	public IContext context;
 	public IStrategoTerm ast;
 
-	@Param({/*"1", "10", "100",*/ "1000","2000", "3000",  "4000", "7000"})
+	@Param({ /* "1", "10", "100", */ "1000", "2000", "3000", "4000", "7000", "10000" })
 	int count;
-	
+
 	@Setup
 	public void setup() throws MetaborgException, IOException {
 		ISpoofaxParseUnit tigerParseUnit = this.parseTiger("branches_" + count);
@@ -30,9 +30,9 @@ public class BranchBenchmark extends BaseBenchmark {
 		this.doStrategyTransformation(context, ast, "flock-disable-logging");
 		this.doStrategyTransformation(context, ast, "flock-disable-timing");
 	}
-	
+
 	@Benchmark
 	public IStrategoTerm run() throws MetaborgException {
 		return this.doStrategyTransformation(context, ast, "pipeline");
-	}	
+	}
 }

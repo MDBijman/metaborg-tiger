@@ -27,10 +27,24 @@ public class TermTree {
 	public abstract class ITerm {
 		private TermId id;
 		private TermTree tree;
+		public boolean irregular = false;
 
 		public ITerm(TermTree tree, TermId id) {
 			this.id = id;
 			this.tree = tree;
+		}
+
+		public boolean containsIrregular() {
+			if (irregular)
+				return true;
+
+			for (ITerm c : this.children()) {
+				if (c.containsIrregular()) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		public boolean isAppl() {
@@ -219,7 +233,6 @@ public class TermTree {
 	private HashMap<ITerm, ArrayList<ITerm>> children = new HashMap<>();
 	private HashMap<ITerm, ITerm> parents = new HashMap<>();
 	private HashMap<TermId, ITerm> nodes = new HashMap<>();
-	private HashSet<TermId> irregular = new HashSet<>();
 	private ITerm root;
 	private static final boolean DEBUG = Flock.DEBUG;
 
@@ -227,9 +240,10 @@ public class TermTree {
 		root = this.createTermInTree(term);
 	}
 
-	public void replace(TermId toReplace, IStrategoTerm replaceWith) {
+	public boolean replace(TermId toReplace, IStrategoTerm replaceWith) {
 		ITerm toReplaceNode = this.nodes.get(toReplace);
 		ITerm newNode = this.createTermInTree(replaceWith);
+		boolean result = toReplaceNode.containsIrregular();
 		if (toReplaceNode == root) {
 			this.remove(toReplaceNode);
 			this.root = newNode;
@@ -240,6 +254,7 @@ public class TermTree {
 			this.parents.put(newNode, parent);
 			this.remove(toReplaceNode);
 		}
+		return result;
 	}
 
 	public void remove(TermId n) {
@@ -263,7 +278,6 @@ public class TermTree {
 		this.nodes.remove(n.id);
 		this.children.remove(n);
 		this.parents.remove(n);
-		this.irregular.remove(n.id);
 
 		if (this.root == n) {
 			this.root = null;
@@ -284,7 +298,6 @@ public class TermTree {
 		this.nodes.remove(toRemove);
 		this.children.remove(n);
 		this.parents.remove(n);
-		this.irregular.remove(n.id);
 	}
 
 	public void validate() {
@@ -502,10 +515,10 @@ public class TermTree {
 	}
 
 	public void markIrregular(TermId t) {
-		this.irregular.add(t);
+		this.nodes.get(t).irregular = true;
 	}
 
 	public boolean isIrregular(TermId t) {
-		return this.irregular.contains(t);
+		return this.nodes.get(t).irregular;
 	}
 }

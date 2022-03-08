@@ -22,10 +22,6 @@ public interface IAnalysis {
 
 	public void remove(Component c);
 
-	public void remove(Node n);
-
-	public void clear();
-
 	public Direction getDirection();
 
 	public void removeAnalysisResults(SCCs sccs, Component c);

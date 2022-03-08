@@ -18,7 +18,13 @@ public class SCCs {
 		Set<Node> nodes = new HashSet<>();
 		Set<Component> parents = new HashSet<>();
 		Set<Component> children = new HashSet<>();
-		boolean clean = false;
+		ArrayList<Boolean> clean = new ArrayList<>(Flock.instance.numberOfAnalyses());
+
+		public Component() {
+			for (int i = 0; i < Flock.instance.numberOfAnalyses(); i++) {
+				this.clean.add(false);
+			}
+		}
 	}
 
 	HashSet<Component> components = new HashSet<>();
@@ -88,6 +94,12 @@ public class SCCs {
 
 		for (Component c : changedComponents) {
 			this.removeComponent(c);
+		}
+
+		for (Component c : unchangedComponents) {
+			for (Node n : c.nodes) {
+				n.component = c;
+			}
 		}
 
 		/*
@@ -208,7 +220,8 @@ public class SCCs {
 			// from a single program node (e.g. for-loop). But this does not generalize to
 			// more complex CFGs.
 			for (Node n : replaced) {
-				this.removeComponent(n.component);
+				if (n.component != null)
+					this.removeComponent(n.component);
 			}
 			Flock.endTime("SCCs@replaceNodes:removeOld");
 		}
@@ -254,7 +267,6 @@ public class SCCs {
 		for (Component child : c.children) {
 			child.parents.remove(c);
 		}
-
 		c.children.clear();
 		c.parents.clear();
 		this.components.remove(c);

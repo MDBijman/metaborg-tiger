@@ -29,11 +29,19 @@ public class Graph {
 		public HashMap<String, Property> properties = new HashMap<>();
 		public Graph graph = null;
 		public Component component = null;
+		ArrayList<Boolean> initialized = new ArrayList<>(Flock.instance.numberOfAnalyses());
 		public Set<Node> parents = new HashSet<>();
 		public Set<Node> children = new HashSet<>();
 
+		private void fillInitialized() {
+			for (int i = 0; i < Flock.instance.numberOfAnalyses(); i++) {
+				this.initialized.add(false);
+			}			
+		}
+		
 		private Node(NodeType t) {
 			this.type = t;
+			this.fillInitialized();
 		}
 
 		public Node(Graph parent, Node other, NodeType t) {
@@ -42,12 +50,14 @@ public class Graph {
 			this.properties = other.properties;
 			this.virtualTerm = other.virtualTerm;
 			this.graph = parent;
+			this.fillInitialized();
 		}
 
 		public Node(Graph parent, TermId id, NodeType t) {
 			this.type = t;
 			this.id = id;
 			this.graph = parent;
+			this.fillInitialized();
 		}
 
 		public Node(Graph parent, TermId id, ITerm t, NodeType ty) {
@@ -55,6 +65,7 @@ public class Graph {
 			this.id = id;
 			this.virtualTerm = t;
 			this.graph = parent;
+			this.fillInitialized();
 		}
 
 		public Node withGraph(Graph parent) {
@@ -129,9 +140,8 @@ public class Graph {
 	public Graph() {
 	}
 
-	public Graph(HashMap<TermId, Node> nodes, 
-			HashMap<TermId, TermId> entry, HashMap<TermId, TermId> exit, Node theEntry, Node theExit, Node theStart,
-			Node theEnd) {
+	public Graph(HashMap<TermId, Node> nodes, HashMap<TermId, TermId> entry, HashMap<TermId, TermId> exit,
+			Node theEntry, Node theExit, Node theStart, Node theEnd) {
 		this.nodes = nodes;
 		this.entry = entry;
 		this.exit = exit;
@@ -152,11 +162,11 @@ public class Graph {
 	public TermId entryOf(TermId n) {
 		return this.entry.get(n);
 	}
-	
+
 	public TermId exitOf(TermId n) {
 		return this.exit.get(n);
 	}
-		
+
 	public Collection<Node> nodes() {
 		return this.nodes.values();
 	}
@@ -196,7 +206,7 @@ public class Graph {
 	 */
 	public void mergeGraph(Graph o) {
 		this.mergeNodes(o.nodes);
-		
+
 		this.removeNode(o.theStart.withGraph(this));
 		this.removeNode(o.theEnd.withGraph(this));
 
@@ -333,7 +343,7 @@ public class Graph {
 		for (Node n : children) {
 			this.createEdge(this.nodes.get(newGraph.theExit.id), n);
 		}
-		
+
 		// If we delete the entry node, `newGraphs` entry is the new entry
 		if (this.theEntry.equals(this.getNode(entry))) {
 			this.theEntry = newGraph.theEntry.withGraph(this);
@@ -513,7 +523,7 @@ public class Graph {
 	public Node getEnd() {
 		return theEnd;
 	}
-	
+
 	public Node getEntry() {
 		return theEntry;
 	}

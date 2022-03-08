@@ -26,8 +26,8 @@ import org.spoofax.terms.util.NotImplementedException;
 import org.spoofax.terms.util.TermUtils;
 
 public class FastValueAnalysis extends SingleAnalysis {
-	public FastValueAnalysis() {
-		super("values", Direction.FORWARD);
+	public FastValueAnalysis(int id) {
+		super("values", Direction.FORWARD, id);
 	}
 
 	@Override
@@ -340,23 +340,8 @@ class TransferFunction4 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
-		Flock.increment("tf4");
-		ITermFactory factory = Flock.instance.factory;
-		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Node prev = node;
-		IStrategoTerm usrn = Helpers.at(term, 0);
-		Stream<Map.Entry> result122 = ((Map) ((FlockLattice) UserFunctions.values_f(prev)).value()).entrySet().stream()
-				.filter(o -> {
-					Entry entry = (Entry) o;
-					Object usrk = entry.getKey();
-					Object usrv = entry.getValue();
-					return !usrk.equals(usrn);
-				});
-		Stream tmp61 = (Stream<Map.Entry>) result122;
-		Stream tmp62 = (Stream<Map.Entry>) MapUtils.create(usrn, new Value(new ConstPropTop())).entrySet().stream();
-		Stream tmp63 = (Stream<Map.Entry>) MapUtils.create(MapUtils.union(tmp61, tmp62));
-		Stream tmp49 = (Stream<Map.Entry>) tmp63;
-		return TransferFunction.assignEvalResult(direction, node, res, tmp49);
+		throw new NotImplementedException();
+
 	}
 }
 

@@ -1,0 +1,6 @@
+"Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit","Param: count"
+"org.example.BranchBenchmark.run","avgt",1,5,213.335959,28.454360,"ms/op",1000
+"org.example.BranchBenchmark.run","avgt",1,5,454.586089,19.386396,"ms/op",2000
+"org.example.BranchBenchmark.run","avgt",1,5,751.791730,75.682663,"ms/op",3000
+"org.example.BranchBenchmark.run","avgt",1,5,982.928868,147.271827,"ms/op",4000
+"org.example.BranchBenchmark.run","avgt",1,5,1775.135500,55.422827,"ms/op",7000
