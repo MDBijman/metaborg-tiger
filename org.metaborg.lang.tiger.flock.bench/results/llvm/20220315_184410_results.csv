@@ -1,0 +1,21 @@
+"benchmark", "count", "time (ms)"
+branches, 1, 46
+branches, 10, 11
+branches, 100, 14
+branches, 1000, 105
+vars, 1, 11
+vars, 10, 11
+vars, 100, 11
+vars, 1000, 18
+mod_inline, 1, 11
+mod_inline, 10, 11
+mod_inline, 100, 18
+mod_inline, 1000, 84
+rec_inline, 1, 12
+rec_inline, 10, 11
+rec_inline, 100, 17
+rec_inline, 1000, 69
+scoped_vars, 1, 10
+scoped_vars, 10, 11
+scoped_vars, 100, 11
+scoped_vars, 1000, 17

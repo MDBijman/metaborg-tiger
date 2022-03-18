@@ -19,8 +19,8 @@ import org.metaborg.lang.tiger.flock.common.TransferFunction;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 
 public class AvailableExpressions extends SingleAnalysis {
-	public AvailableExpressions() {
-		super("expressions", Direction.FORWARD);
+	public AvailableExpressions(int id) {
+		super("expressions", Direction.FORWARD, id);
 	}
 
 	@Override

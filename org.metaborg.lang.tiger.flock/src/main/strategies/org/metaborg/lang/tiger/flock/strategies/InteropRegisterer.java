@@ -24,7 +24,7 @@ public class InteropRegisterer extends JavaInteropRegisterer {
     		flock_enable_timing_0_0.instance,
     		flock_disable_logging_0_0.instance,
     		flock_enable_logging_0_0.instance,
-    		flock_opt_3_0.instance,
+    		flock_opt_2_0.instance,
     		get_live_0_0.instance,
     		get_values_0_0.instance,
     		get_values_0_1.instance,

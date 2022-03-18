@@ -23,7 +23,7 @@ public class get_values_0_1 extends Strategy {
 		TermId id = new TermId(((IStrategoInt) current).intValue());
 		Node node = Flock.instance.getNode(id);
 		if (node == null) {
-			Flock.printDebug("CfgNode is null with id " + id.getId());
+//			Flock.printDebug("CfgNode is null with id " + id.getId());
 			return null;
 		}
 		Flock.instance.analysisWithName("values").performDataAnalysis(Flock.instance.graph, Flock.instance.graph_scss,

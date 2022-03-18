@@ -114,9 +114,10 @@ rules // transformation actions
   	  
 rules // pipeline
 
-  pipeline: p -> p'
+  pipeline: p -> Mod([])
   with
     with-ids := <flock-initialize> p
+  ; <debug> <run-time>
   //; <flock-disable-logging> ()
   ; <flock-begin-timer> "pipeline"
   ; p' := <
@@ -127,15 +128,16 @@ rules // pipeline
   ; <debug> <run-time>
   ; <flock-debug-runtime> ()
   
+  
   opt-repeat(|n) = flock-fixpoint(opt|n)
  
   // 1) Dit is de originele implementatie van 'opt'
  
-  let-opt: l@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|l)> i
-  let-opt: l@Let(decls, expr) -> new-l
-  where {| InlineFn, InlineCount:
-  	new-l := <some(opt)> l
-  |}
+//  let-opt: l@Let(decls, [i@Int(n)]) -> <strip-annos; flock-replace-node(|l)> i
+//  let-opt: Let(decls, expr){a*} -> Let(new-decls, new-expr){a*}
+//  where {| InlineFn, InlineCount:
+//  	(new-decls, new-expr) := <opt> (decls, expr)
+//  |}
 
   fundec-opt: FunDec(n, params, rt, body) -> FunDec(n, params, rt, new-body)
   where
@@ -148,7 +150,7 @@ rules // pipeline
   		; new-node := <flock-replace-node(|c)> replacement)
   	)> body
 
-  opt = flock-opt(let-opt, fundec-opt, opt-one)
+  opt = flock-opt(fundec-opt, opt-one)
    //debug; preserve-annotation(some(opt)) < try(opt-one) + (opt-one)
   // 2) Deze implementatie heeft de performance issues
 

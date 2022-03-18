@@ -132,7 +132,7 @@ strategies
 		?Assign(x, e)
 		; where(<is-value> e)
 		//; rules(PropConst.x : LValue(Var(x)) -> e where <debug> "replacing" depends on [(x, x)])
-		; rules(PropConst : LValue(Var(x)) -> e depends on [(x, x)])
+		; rules(PropConst+x : LValue(Var(x)) -> e depends on [(x, x)])
 		
 	prop-const-function-effects =
 		map({x: ?LValue(Var(x)); undefine-dynamic-rules(|["PropConst"], x)})

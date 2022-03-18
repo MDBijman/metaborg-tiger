@@ -1,24 +1,8 @@
-  /* define a recursive function */
-  let
-
-    function printnl(x : string) =
-      (print(x); print("\n"))
-
-    function mod(i : int, j : int) : int =
-      i - ((i / j) * j)
-
-    function inttostring(n : int) : string =
-      if n < 10 
-      then chr(48 + n)
-      else concat(inttotring(n / 10), inttostring(mod(n, 10)))
-
-    /* calculate n! */
-    function nfactor(n: int): int =
-      if n = 0 then 1 else (n * nfactor(n-1))
-    
-    var x: int := 10
-    
-    var y: int := 11
-  in
-    printnl(inttostring(nfactor(x)))
-  end
+let
+	var x: int := 10
+in
+     (print(x)
+    ; x := 11
+    ; x := 12
+    ; print(x))
+end

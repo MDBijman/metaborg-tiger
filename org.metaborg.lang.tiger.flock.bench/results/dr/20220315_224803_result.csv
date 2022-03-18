@@ -1,0 +1,19 @@
+"Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit","Param: count"
+"org.example.dr.BranchBenchmark.run","avgt",1,5,0.209162,0.003752,"ms/op",10
+"org.example.dr.BranchBenchmark.run","avgt",1,5,0.751222,0.011745,"ms/op",100
+"org.example.dr.BranchBenchmark.run","avgt",1,5,6.394198,0.150976,"ms/op",1000
+"org.example.dr.BranchBenchmark.run","avgt",1,5,13.099108,0.082203,"ms/op",2000
+"org.example.dr.BranchBenchmark.run","avgt",1,5,20.461627,1.925976,"ms/op",3000
+"org.example.dr.BranchBenchmark.run","avgt",1,5,27.360132,1.061866,"ms/op",4000
+"org.example.dr.BranchBenchmark.run","avgt",1,5,35.795057,0.468710,"ms/op",5000
+"org.example.dr.BranchBenchmark.run","avgt",1,5,48.525964,0.571152,"ms/op",7500
+"org.example.dr.BranchBenchmark.run","avgt",1,5,72.348279,14.608862,"ms/op",10000
+"org.example.dr.VarsBenchmark.run","avgt",1,5,0.190913,0.005871,"ms/op",10
+"org.example.dr.VarsBenchmark.run","avgt",1,5,0.648328,0.007069,"ms/op",100
+"org.example.dr.VarsBenchmark.run","avgt",1,5,5.135586,0.284151,"ms/op",1000
+"org.example.dr.VarsBenchmark.run","avgt",1,5,10.325694,0.072672,"ms/op",2000
+"org.example.dr.VarsBenchmark.run","avgt",1,5,15.133361,0.113062,"ms/op",3000
+"org.example.dr.VarsBenchmark.run","avgt",1,5,20.868793,0.222883,"ms/op",4000
+"org.example.dr.VarsBenchmark.run","avgt",1,5,26.096779,0.069759,"ms/op",5000
+"org.example.dr.VarsBenchmark.run","avgt",1,5,40.195921,3.298807,"ms/op",7500
+"org.example.dr.VarsBenchmark.run","avgt",1,5,53.716278,7.525380,"ms/op",10000

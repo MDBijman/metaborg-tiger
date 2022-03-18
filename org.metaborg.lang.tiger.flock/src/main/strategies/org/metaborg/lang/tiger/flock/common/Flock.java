@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.metaborg.lang.tiger.flock.capsulevalue.CapsuleValueAnalysis;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
-import org.metaborg.lang.tiger.flock.fastvalue.FastValueAnalysis;
+import org.metaborg.lang.tiger.flock.experiments.capsulevalue.CapsuleValueAnalysis;
+import org.metaborg.lang.tiger.flock.experiments.fastcapsulevalue.FastCapsuleValueAnalysis;
+import org.metaborg.lang.tiger.flock.experiments.fastvalue.FastValueAnalysis;
+import org.metaborg.lang.tiger.flock.experiments.singlevalue.SpecializableValueAnalysis;
 import org.metaborg.lang.tiger.flock.live.LiveVariableAnalysis;
-import org.metaborg.lang.tiger.flock.singlevalue.SpecializableValueAnalysis;
 import org.metaborg.lang.tiger.flock.value.ValueAnalysis;
 import org.spoofax.interpreter.library.IOAgent;
 import org.spoofax.interpreter.terms.IStrategoInt;
@@ -36,7 +37,7 @@ public abstract class Flock {
 	public Flock() {
 		this.analyses = new ArrayList<IAnalysis>();
 		this.analyses.add(new LiveVariableAnalysis(this.analyses.size()));
-		this.analyses.add(new CapsuleValueAnalysis(this.analyses.size()));
+		this.analyses.add(new FastCapsuleValueAnalysis(this.analyses.size()));
 		//this.analyses.add(new ValueAnalysis());
 		//this.analyses.add(new FastValueAnalysis());
 		//this.analyses.add(new SpecializableValueAnalysis());

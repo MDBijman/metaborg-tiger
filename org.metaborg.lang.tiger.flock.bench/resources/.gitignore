@@ -1,0 +1,6 @@
+tiger/*.tig
+c/*.ll
+c/*.c
+c/*.tmp
+c/sed*
+*.aterm
