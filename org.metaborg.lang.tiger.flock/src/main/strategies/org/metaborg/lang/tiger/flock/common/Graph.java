@@ -15,6 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.metaborg.lang.tiger.flock.common.Graph.Node.NodeType;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.metaborg.lang.tiger.flock.common.TermTree.ITerm;
+import org.metaborg.lang.tiger.flock.graph.GraphFactory.PartialGraph;
 
 public class Graph {
 	public static class Node {
@@ -36,9 +37,9 @@ public class Graph {
 		private void fillInitialized() {
 			for (int i = 0; i < Flock.instance.numberOfAnalyses(); i++) {
 				this.initialized.add(false);
-			}			
+			}
 		}
-		
+
 		private Node(NodeType t) {
 			this.type = t;
 			this.fillInitialized();
@@ -130,25 +131,25 @@ public class Graph {
 
 	private HashMap<TermId, TermId> entry = new HashMap<>();
 	private HashMap<TermId, TermId> exit = new HashMap<>();
-	private Node theEntry = null;
-	private Node theExit = null;
-	private Node theStart = null;
-	private Node theEnd = null;
+	private HashSet<TermId> starts = new HashSet<>();
+	private HashSet<TermId> ends = new HashSet<>();
 
 	private static final boolean DEBUG = Flock.DEBUG;
 
 	public Graph() {
 	}
 
-	public Graph(HashMap<TermId, Node> nodes, HashMap<TermId, TermId> entry, HashMap<TermId, TermId> exit,
-			Node theEntry, Node theExit, Node theStart, Node theEnd) {
+	public Graph(HashMap<TermId, Node> nodes, HashMap<TermId, TermId> entry, HashMap<TermId, TermId> exit) {
 		this.nodes = nodes;
 		this.entry = entry;
 		this.exit = exit;
-		this.theEntry = theEntry;
-		this.theExit = theExit;
-		this.theStart = theStart;
-		this.theEnd = theEnd;
+
+		for (Node n : nodes.values()) {
+			if (n.type == NodeType.START)
+				this.starts.add(n.id);
+			else if (n.type == NodeType.END)
+				this.ends.add(n.id);
+		}
 	}
 
 	/*
@@ -171,12 +172,12 @@ public class Graph {
 		return this.nodes.values();
 	}
 
-	public Node root() {
-		return this.getStart();
+	public HashSet<TermId> starts() {
+		return this.starts;
 	}
 
-	public Node leaf() {
-		return this.theEnd;
+	public HashSet<TermId> ends() {
+		return this.ends;
 	}
 
 	public long size() {
@@ -207,11 +208,10 @@ public class Graph {
 	public void mergeGraph(Graph o) {
 		this.mergeNodes(o.nodes);
 
-		this.removeNode(o.theStart.withGraph(this));
-		this.removeNode(o.theEnd.withGraph(this));
-
 		this.entry.putAll(o.entry);
 		this.exit.putAll(o.exit);
+		this.starts.addAll(o.starts);
+		this.ends.addAll(o.ends);
 	}
 
 	/*
@@ -238,15 +238,6 @@ public class Graph {
 	}
 
 	public void removeNodeAndConnectNeighbours(Node n) {
-		if (this.theStart.equals(n))
-			throw new RuntimeException("Cannot remove start");
-		if (this.theEnd.equals(n))
-			throw new RuntimeException("Cannot remove end");
-		if (this.theEntry.equals(n))
-			throw new RuntimeException("Cannot remove entry");
-		if (this.theExit.equals(n))
-			throw new RuntimeException("Cannot remove exit");
-
 		for (Node child : n.children) {
 			child.parents.remove(n);
 		}
@@ -266,14 +257,6 @@ public class Graph {
 	 * Removes node n from the graph, removing all edges with it.
 	 */
 	public void removeNode(Node n) {
-		if (this.theStart.equals(n))
-			throw new RuntimeException("Cannot remove start");
-		if (this.theEnd.equals(n))
-			throw new RuntimeException("Cannot remove end");
-		if (this.theEntry.equals(n))
-			throw new RuntimeException("Cannot remove entry");
-		if (this.theExit.equals(n))
-			throw new RuntimeException("Cannot remove exit");
 
 		for (Node child : n.children) {
 			child.parents.remove(n);
@@ -323,11 +306,11 @@ public class Graph {
 		Flock.endTime("Graph@removeNodes");
 	}
 
-	public void replaceNodes(TermId root, Set<TermId> innerTerms, Graph newGraph) {
+	public void replaceNodes(TermId root, Set<TermId> innerTerms, PartialGraph newGraph) {
 		Flock.beginTime("Graph@replaceNodes");
 
 		// First put all elements of newGraph into this graph
-		this.mergeGraph(newGraph);
+		this.mergeGraph(newGraph.graph);
 
 		TermId entry = this.entry.get(root);
 		TermId exit = this.exit.get(root);
@@ -335,24 +318,24 @@ public class Graph {
 		// Create edges between the parents of `root` and the entry of newGraph
 		Set<Node> parents = this.nodes.get(entry).parents;
 		for (Node n : parents) {
-			this.createEdge(n, this.nodes.get(newGraph.theEntry.id));
+			this.createEdge(n, this.nodes.get(newGraph.entry));
 		}
 
 		// Create edges between the children of `root` and the exit of newGraph
 		Set<Node> children = this.nodes.get(exit).children;
 		for (Node n : children) {
-			this.createEdge(this.nodes.get(newGraph.theExit.id), n);
+			this.createEdge(this.nodes.get(newGraph.exit), n);
 		}
 
-		// If we delete the entry node, `newGraphs` entry is the new entry
-		if (this.theEntry.equals(this.getNode(entry))) {
-			this.theEntry = newGraph.theEntry.withGraph(this);
-		}
-
-		// If we delete the exit node, `newGraphs` exit is the new exit
-		if (this.theExit.equals(this.getNode(exit))) {
-			this.theExit = newGraph.theExit.withGraph(this);
-		}
+		// // If we delete the entry node, `newGraphs` entry is the new entry
+//		if (this.theEntry.equals(this.getNode(entry))) {
+//			this.theEntry = newGraph.theEntry.withGraph(this);
+//		}
+//
+//		// If we delete the exit node, `newGraphs` exit is the new exit
+//		if (this.theExit.equals(this.getNode(exit))) {
+//			this.theExit = newGraph.theExit.withGraph(this);
+//		}
 
 		// Remove all of the inner nodes
 		for (TermId remove : innerTerms) {
@@ -514,21 +497,5 @@ public class Graph {
 
 	public String toGraphviz() {
 		return toGraphviz(null);
-	}
-
-	public Node getStart() {
-		return theStart;
-	}
-
-	public Node getEnd() {
-		return theEnd;
-	}
-
-	public Node getEntry() {
-		return theEntry;
-	}
-
-	public Node getExit() {
-		return theExit;
 	}
 }

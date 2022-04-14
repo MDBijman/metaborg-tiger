@@ -20,7 +20,7 @@ public class ScopedVarsBenchmark extends BaseBenchmark {
 	public IContext context;
 	public IStrategoTerm ast;
 
-	@Param({ "1000", "2000", "3000", "4000", "5000", "7500", "10000" })
+	@Param({ "1000", "3000", "5000" })
 	int count;
 
 	@Setup

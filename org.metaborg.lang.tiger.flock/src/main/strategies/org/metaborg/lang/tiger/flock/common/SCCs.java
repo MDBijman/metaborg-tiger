@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.Graph.Node.NodeType;
+import org.metaborg.lang.tiger.flock.graph.GraphFactory.PartialGraph;
 import org.spoofax.terms.util.NotImplementedException;
 
 public class SCCs {
@@ -34,10 +36,10 @@ public class SCCs {
 
 	}
 
-	public static SCCs startingFromEntry(Graph g) {
+	public static SCCs startingFromEntry(Graph g, TermId entry) {
 		Flock.beginTime("SCCs@constructor");
 		SCCs r = new SCCs();
-		r.computeSCCsFromEntry(g);
+		r.computeSCCsFromEntry(g, entry);
 		Flock.endTime("SCCs@constructor");
 		return r;
 	}
@@ -165,12 +167,12 @@ public class SCCs {
 	 * commonComponent is null, then subgraphSCCs must not be null
 	 */
 	public void replaceNodes(Graph graph, Set<Node> replaced, Set<Node> oldPredecessors, Set<Node> oldSuccessors,
-			Graph subgraph, Component commonComponent, SCCs subgraphSCCs) {
+			PartialGraph subgraph, Component commonComponent, SCCs subgraphSCCs) {
 		Flock.beginTime("SCCs@replaceNodes");
 		// Case 1: The replaced subgraph is part of a greater SCC
 		// So the new subgraph is also part of the same SCC
 		if (commonComponent != null) {
-			for (Node n : subgraph.nodes()) {
+			for (Node n : subgraph.graph.nodes()) {
 				commonComponent.nodes.add(n);
 				n.component = commonComponent;
 			}
@@ -191,7 +193,7 @@ public class SCCs {
 
 			Flock.beginTime("SCCs@replaceNodes:linkSCCpred");
 			// Add edges between old predecessors and new root components
-			Component rootScc = subgraph.getEntry().component;
+			Component rootScc = subgraph.graph.getNode(subgraph.entry).component;
 
 			for (Node pred : oldPredecessors) {
 				Component predScc = pred.component;
@@ -202,7 +204,7 @@ public class SCCs {
 
 			Flock.beginTime("SCCs@replaceNodes:linkSCCsucc");
 			// Add edges between new leaf and old successor components
-			Component leafScc = subgraph.getExit().component;
+			Component leafScc = subgraph.graph.getNode(subgraph.exit).component;
 
 			for (Node suc : oldSuccessors) {
 				Component sucScc = suc.component;
@@ -272,7 +274,7 @@ public class SCCs {
 		this.components.remove(c);
 	}
 
-	private void computeSCCsFromEntry(Graph g) {
+	private void computeSCCsFromEntry(Graph g, TermId entry) {
 		// Using AtomicLong to pass mutable reference
 		Stack<Node> S = new Stack<>();
 		HashSet<Node> onStack = new HashSet<>();
@@ -280,15 +282,16 @@ public class SCCs {
 		HashMap<Node, Long> index = new HashMap<>();
 
 		long nextIndex = 1;
-		if (index.get(g.getEntry()) == null) {
-			nextIndex = strongConnect(g, g.getEntry(), nextIndex, S, onStack, lowlink, index, components);
+		if (index.get(g.getNode(entry)) == null) {
+			nextIndex = strongConnect(g, g.getNode(entry), nextIndex, S, onStack, lowlink, index, components);
 		}
 
 		// There are dangling nodes (i.e. dead code)
 		// But we have to deal with these as well
 		if (index.size() != g.nodes().size()) {
 			for (Node n : g.nodes()) {
-				if (index.get(n) == null && !n.equals(g.getStart()) && !n.equals(g.getEnd())) {
+				// Why the checks against start/end?
+				if (index.get(n) == null && n.type != NodeType.START && n.type != NodeType.END) {
 					nextIndex = strongConnect(g, n, nextIndex, S, onStack, lowlink, index, components);
 				}
 			}
@@ -305,8 +308,8 @@ public class SCCs {
 		HashMap<Node, Long> index = new HashMap<>();
 
 		long nextIndex = 1;
-		if (index.get(g.getStart()) == null) {
-			nextIndex = strongConnect(g, g.getStart(), nextIndex, S, onStack, lowlink, index, components);
+		for (TermId start : g.starts()) {
+			nextIndex = strongConnect(g, g.getNode(start), nextIndex, S, onStack, lowlink, index, components);
 		}
 
 		// There are dangling nodes (i.e. dead code)

@@ -72,21 +72,63 @@ benchmarks = [
         ]
     },
     {
-        'name': "Inlining (a)",
+        'name': "Inlining (Modular)",
         'outname': "mod_inline",
         'instances': [
             {
-                'key': "org.example.dr.BranchBenchmark.run",
+                'key': "org.example.dr.ModInlineBenchmark.run",
                 'type': "dynamic rules",
                 'file': "results/dr/result.csv"
             },
             {
-                'key': "org.example.flock.BranchBenchmark.run",
+                'key': "org.example.flock.ModInlineBenchmark.run",
                 'type': "flock",
                 'file': "results/flock/result.csv"
             },
             {
-                'key': "branches",
+                'key': "mod_inline",
+                'type': "llvm",
+                'file': "results/llvm/result.csv"
+            },
+        ]
+    },
+    # {
+    #     'name': "Inlining (Recursive)",
+    #     'outname': "rec_inline",
+    #     'instances': [
+    #         {
+    #             'key': "org.example.dr.RecInlineBenchmark.run",
+    #             'type': "dynamic rules",
+    #             'file': "results/dr/result.csv"
+    #         },
+    #         {
+    #             'key': "org.example.flock.RecInlineBenchmark.run",
+    #             'type': "flock",
+    #             'file': "results/flock/result.csv"
+    #         },
+    #         {
+    #             'key': "rec_inline",
+    #             'type': "llvm",
+    #             'file': "results/llvm/result.csv"
+    #         },
+    #     ]
+    # },
+    {
+        'name': "Scoped Vars",
+        'outname': "scoped_vars",
+        'instances': [
+            {
+                'key': "org.example.dr.ScopedVarsBenchmark.run",
+                'type': "dynamic rules",
+                'file': "results/dr/result.csv"
+            },
+            {
+                'key': "org.example.flock.ScopedVarsBenchmark.run",
+                'type': "flock",
+                'file': "results/flock/result.csv"
+            },
+            {
+                'key': "scoped_vars",
                 'type': "llvm",
                 'file': "results/llvm/result.csv"
             },
@@ -123,5 +165,5 @@ for bench in benchmarks:
     fig, ax = plt.subplots()
     render_benchmark(fig, ax, bench)
 
-    # plt.savefig(f"results/render/{datestring}_{bench['outname']}.pgf", bbox_inches='tight')
-    plt.savefig(f"results/render/{datestring}_{bench['outname']}.png", bbox_inches='tight')
+    plt.savefig(f"results/render/{datestring}_{bench['outname']}.pgf", bbox_inches='tight')
+    #plt.savefig(f"results/render/{datestring}_{bench['outname']}.png", bbox_inches='tight')

@@ -22,20 +22,16 @@ public class flock_initialize_impl_0_0 extends Strategy {
 		try {
 			Flock.resetTimers();
 			Flock.resetCounters();
-			Flock.beginTime("api@analyse");
+			Flock.beginTime("api@initialize");
 			Flock.instance.io = context.getIOAgent();
 			Flock.instance.factory = factory;
-
-			Flock.beginTime("aaa");
-			Flock.instance.createTermGraph(current);
-			Flock.endTime("aaa");
-			Flock.beginTime("bbb");
-			Flock.instance.createControlFlowGraph(context, current);
-			Flock.endTime("bbb");
-			//Flock.log("graphviz", Flock.instance.graph.toGraphviz());
 			Flock.log("api", "initialize");
+
+			Flock.instance.createTermGraph(current);
+			Flock.instance.createControlFlowGraph(context, current);
+			//Flock.log("graphviz", Flock.instance.graph.toGraphviz());
 			Flock.instance.init(current);
-			Flock.endTime("api@analyse");
+			Flock.endTime("api@initialize");
 		} catch (ParseError e) {
 			context.getIOAgent().printError(e.toString());
 			return null;

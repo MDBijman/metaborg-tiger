@@ -64,13 +64,14 @@ strategies // control-flow
 		; ((?IfThen(b, e); !IfThen(<id> b, <recur> e)) /~Rs1 \~Rs2 / id)
 		; after)
 		
-//	forward-prop-if(transform, before, recur, after | Rs1 , Rs2 ) =
-//		|[ if <recur> then <id> else <id> ]|
-//		; (transform
-//		<+ before
-//		; (|[ if <id> then <recur> else <id> ]|
-//		/~Rs1 \~Rs2 / |[ if <id> then <id> else <recur> ]|)
-//		; after)
+	forward-prop-if(transform, before, recur, after | Rs1 , Rs2 ) =
+		  ?If(b, t, e)
+	    ; !If(<recur> b, <id> t, <id> e)
+		; (transform
+		<+ before
+		; (?If(b, t, e); !If(<id> b, <recur> t, <id> e)
+		/~Rs1 \~Rs2 / ?If(b, t, e); !If(<id> b, <id> t, <recur> e))
+		; after)
 		
 //	forward-prop-while(transform, before, recur, after | Rs1 , Rs2 ) =
 //		|[ while <id> do <id> ]|
@@ -120,10 +121,10 @@ strategies
 		| ["PropConst"], [], [] )
 
 	prop-const-transform(recur) =
-		/*EvalFor <+*/ EvalIf; recur /*<+ (?While(c, b); !While(<recur> c, b)); EvalWhile; recur*/
+		/*EvalFor <+*/ EvalLet <+ EvalIf; recur /*<+ (?While(c, b); !While(<recur> c, b)); EvalWhile; recur*/
 	
 	prop-const-after =
-		PropConst + prop-const-assign <+ prop-const-declare	<+ EvalBinOp //<+ EvalRelOp <+ EvalString
+		PropConst + prop-const-assign <+ prop-const-declare	<+ EvalBinOp <+ EvalLet //<+ EvalRelOp <+ EvalString
 	
 	prop-const-declare =
 		?VarDec(x, ta, e); where( <prop-const-assign> Assign(x, e) )
@@ -131,11 +132,60 @@ strategies
 	prop-const-assign = 
 		?Assign(x, e)
 		; where(<is-value> e)
-		//; rules(PropConst.x : LValue(Var(x)) -> e where <debug> "replacing" depends on [(x, x)])
 		; rules(PropConst+x : LValue(Var(x)) -> e depends on [(x, x)])
 		
 	prop-const-function-effects =
 		map({x: ?LValue(Var(x)); undefine-dynamic-rules(|["PropConst"], x)})
+
+
+strategies
+
+	inline = inline-call <+ inline-let <+ inline-fundecs <+ all(inline)
+
+	inline-call = UnfoldCall; exprename; inline
+
+	inline-let = ?Let(d, e); {| UnfoldCall : !Let(<inline> d, <inline> e) |}
+
+	inline-fundecs =
+	   map(define-unfold)
+	 ; map(inline)
+
+	define-unfold =
+	  ?FunDec(f, x, ta, e)
+	; where(<debug> f)
+	; rules(UnfoldCall : Call(f, a) -> Let(d, [e])
+	  where <debug> ["inlining", f];<zip(bind-arg)> (x, a) => d )
+	
+	bind-arg:
+	  (FArg(x, ta), e ) -> VarDec(x, ta, e)
+	
+	undefine-unfold =
+	  ?FunDec(f, x, ta, e); rules(UnfoldCall :- Call(f, _))
+
+strategies
+
+	RenameVarDec: VarDec(x, ta, e) -> VarDec(y, ta, e)
+	where new => y ; rules(RenameVar : Var(x) -> Var(y))
+
+	exprename = try(RenameVarDec + RenameVar); all(exprename)
+
+	exprename = rec rn(
+		RenameVar
+		<+ ?VarDec(n, t, e); !VarDec(n, t, <rn> e); RenameVarDec
+		<+ ?Let(d, e); {| RenameVar : all(rn) |}
+		<+ ?FunDec(n, a, t, b)
+		; {| RenameVar : RenameArgs; !FunDec(n, a, t, <rn> b) |}
+		<+ all(rn))
+		
+	RenameVarDec: VarDec(x, ta, e) -> VarDec(y, ta, e) where <NewVar> x => y
+	
+	RenameArgs: FunDec(f, x1, ta, e) -> FunDec(f, x2, ta, e)
+	where <map(?FArg(n, t); !FArg(<NewVar>, t))> x1 => x2
+	
+	NewVar :
+		x -> y where if <RenameVar> Var(x) then new else !x end => y
+		; rules( RenameVar: Var(x) -> Var(y) )
+
 
 //strategies
 //
@@ -217,6 +267,7 @@ strategies
 	EvalBinOp : Plus(Int(i), Int(j)) -> Int(k) where <addS> (i, j) => k
 	EvalBinOp : Gt(Int(i), Int(j)) -> Int("1") where <gtS> (i, j)
 	EvalBinOp : Times(Int(i), Int(j)) -> Int(k) where <mulS> (i, j) => k
+	EvalLet : Let(_, [Int(n)]) -> Int(n)
 //	EvalWhile : |[ while 0 do e ]| -> |[ () ]|
 	EvalIf : If(Int("0"), e1, e2) -> e2
 	EvalIf : If(i, e1, e2) -> e1 where <debug> <id>; <not(eq)> (i, Int("0"))

@@ -1,14 +1,17 @@
 package org.metaborg.lang.tiger.flock.common;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.metaborg.lang.tiger.flock.common.Graph.Node;
+import org.metaborg.lang.tiger.flock.common.Graph.Node.NodeType;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.spoofax.terms.util.NotImplementedException;
 
@@ -51,6 +54,10 @@ public abstract class SingleAnalysis implements IAnalysis {
 		return !c.clean.get(this.analysisId);
 	}
 
+	public boolean isClean(Component c) {
+		return c.clean.get(this.analysisId);
+	}
+
 	public String getName() {
 		return this.name;
 	}
@@ -69,19 +76,33 @@ public abstract class SingleAnalysis implements IAnalysis {
 	}
 
 	private void markCleanPredecessors(SCCs sccs, Component c) {
-		for (Component neighbour : c.parents) {
-			if (!this.isDirty(neighbour)) {
-				this.removeNodeResults(sccs, neighbour.nodes);
-				markCleanPredecessors(sccs, neighbour);
+		Stack<Component> todo = new Stack<Component>();
+		todo.add(c);
+		this.removeNodeResults(sccs, c.nodes);
+
+		while (!todo.empty()) {
+			Component next = todo.pop();
+			for (Component neighbour : next.parents) {
+				if (this.isClean(neighbour)) {
+					this.removeNodeResults(sccs, neighbour.nodes);
+					todo.add(neighbour);
+				}
 			}
 		}
 	}
 
 	private void markCleanSuccessors(SCCs sccs, Component c) {
-		for (Component neighbour : c.children) {
-			if (!this.isDirty(neighbour)) {
-				this.removeNodeResults(sccs, neighbour.nodes);
-				markCleanSuccessors(sccs, neighbour);
+		Stack<Component> todo = new Stack<Component>();
+		todo.add(c);
+		this.removeNodeResults(sccs, c.nodes);
+
+		while (!todo.empty()) {
+			Component next = todo.pop();
+			for (Component neighbour : next.children) {
+				if (this.isClean(neighbour)) {
+					this.removeNodeResults(sccs, neighbour.nodes);
+					todo.add(neighbour);
+				}
 			}
 		}
 	}
@@ -159,9 +180,10 @@ public abstract class SingleAnalysis implements IAnalysis {
 		 * successors of an uninitialized node before visiting the node itself.
 		 */
 		Flock.beginTime("Analysis@loop2");
-		if (target.nodes.contains(cfg.getStart())) {
-			cfg.getStart().getProperty(this.propertyName).init.eval(this.direction,
-					cfg.getStart().getProperty(this.propertyName).lattice, cfg.getStart());
+		for (Node n : target.nodes) {
+			if (n.type == NodeType.START) {
+				n.getProperty(this.propertyName).init.eval(this.direction, n.getProperty(this.propertyName).lattice, n);
+			}
 		}
 		Flock.endTime("Analysis@loop2");
 

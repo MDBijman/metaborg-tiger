@@ -55,7 +55,7 @@ rules /// editor transformation actions
     with
       p' := <transform-inline> p
     ; filename := <guarantee-extension(|"inlined.tig")> path
-    ; result   := <pp-tiger-string> p'  
+    ; result   := <pp-tiger-string> p'
 
   editor-analyze-and-transform:
     (p, _, _, path, project-path) -> (filename, result)
@@ -74,7 +74,7 @@ rules /// editor transformation actions
   editor-transform-dr:
     (p, _, _, path, project-path) -> (filename, result)
     with
-      p' := <prop-const> p
+      p' := <inline; prop-const> p
     ; <debug> <run-time>
     ; filename := <guarantee-extension(|"opt.tig")> path
     ; result   := <pp-tiger-string> p'
@@ -114,14 +114,14 @@ rules // transformation actions
   	  
 rules // pipeline
 
-  pipeline: p -> Mod([])
+  pipeline: p -> p'
   with
-    with-ids := <flock-initialize> p
-  ; <debug> <run-time>
+    <debug> <run-time>
   //; <flock-disable-logging> ()
+  ; with-ids := <flock-initialize> p
   ; <flock-begin-timer> "pipeline"
   ; p' := <
-  	  opt-repeat(|5)
+  	  opt-repeat(|1)
   	; topdown(try(remove-all(?Hole())))
   > with-ids
   ; <flock-end-timer> "pipeline"
@@ -139,7 +139,7 @@ rules // pipeline
 //  	(new-decls, new-expr) := <opt> (decls, expr)
 //  |}
 
-  fundec-opt: FunDec(n, params, rt, body) -> FunDec(n, params, rt, new-body)
+  fundec-opt: FunDec(n, params, rt, body){a*} -> FunDec(n, params, rt, new-body){a*}
   where
     <finally(opt,
   	    ?new-body
@@ -150,18 +150,14 @@ rules // pipeline
   		; new-node := <flock-replace-node(|c)> replacement)
   	)> body
 
-  opt = flock-opt(fundec-opt, opt-one)
-   //debug; preserve-annotation(some(opt)) < try(opt-one) + (opt-one)
-  // 2) Deze implementatie heeft de performance issues
+  opt = flock-opt(pre, fundec-opt, post)
 
-  //opt = (?FunDec(n, _, _, _) < fail + (preserve-annotation(some(opt)) < try(opt-one) + (opt-one)))
+  pre  = repeat1(InlineFn <+ reorder)
+  post = repeat1(propagate-constant <+ fold-constant <+ simplify-seq <+ remove-let <+ remove-dead-branch)
 
-  // 3) Deze implementatie heeft geen performance issues
-
-  // opt = (?FunDec(_, _, _, _) < fail + (preserve-annotation(some(opt)) < try(opt-one) + (opt-one)))
-
-  // Fail if neither the term nor any of its subterms can be optimized
-  opt-one = propagate-constant <+ fold-constant <+ simplify-seq <+ remove-dead-branch /*<+ remove-dead-vardec*/ <+ InlineFn
+  reorder: p@Plus(Let(ds, [expr]), Int(n)) -> <flock-replace-node(|p)> Let(ds, [Plus(expr, Int(n))])
+  merge-let: p@Let(ds1, [Let(ds2, e)]) -> <flock-replace-node(|p)> Let(<concat> [ds1, ds2], e)
+  remove-let: p@Let(ds1, [Int(n)]) -> <flock-replace-node(|p)> Int(n)
 
 strategies
   
@@ -181,6 +177,12 @@ strategies
     sum := <(string-to-int, string-to-int); addi; int-to-string> (v1, v2)
   ; <concat-strings; flock-debug> ["[fold-expressions] ", v1, " + ", v2, " -> ", sum]
   ; new-node := <flock-replace-node(|e)> Int(sum)
+
+  fold-constant: e@Plus(Plus(i, Int(v1)), Int(v2)) -> new-node
+  where
+    sum := <(string-to-int, string-to-int); addi; int-to-string> (v1, v2)
+  ; <concat-strings; flock-debug> ["[fold-expressions] ", v1, " + ", v2, " -> ", sum]
+  ; new-node := <flock-replace-node(|e)> Plus(i, Int(sum))
 
   fold-constant: e@Minus(Int(v1), Int(v2)) -> new-node
   where

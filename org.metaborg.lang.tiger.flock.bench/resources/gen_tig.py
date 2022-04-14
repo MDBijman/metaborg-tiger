@@ -16,7 +16,7 @@ def gen_scoped_vars(n):
     f = open("tiger/scoped_vars_" + str(n) + ".tig", "w")
     f.write(f"let var a{0}: int := 1 in\n")
     for i in range(1, n):
-        f.write(f"let var a{i}: int := a{i - 1} + 1 in\n")
+        f.write(f"let var a{i}: int := a{i - 1} + a{0} + 1 in\n")
     f.write(f"\ta{n - 1}\n")
     for i in range(n):
         f.write(f"end\n")
@@ -50,9 +50,9 @@ gen_branches(int(n))
 
 def gen_recursive_inlining(n):
     f = open("tiger/rec_inline_" + str(n) + ".tig", "w")
-    f.write("let function a0(a: int): int = a + 1\n")
+    f.write("let function a0(n: int): int = n + 1\n")
     for i in range(1, n):
-        f.write(f"    function a{i}(a: int): int = a{i-1}(a) + 1\n")
+        f.write(f"    function a{i}(n{i}: int): int = a{i-1}(n{i}) + 1\n")
     f.write(f"in\n")
     f.write(f"\ta{n - 1}(1)\n")
     f.write(f"end\n")

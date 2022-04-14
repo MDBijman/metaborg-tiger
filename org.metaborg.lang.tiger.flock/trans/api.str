@@ -11,7 +11,7 @@ strategies // API
   flock-add-id-single: t -> t { FlockNodeId(<flock-make-id>) }
   flock-debug: t -> t //where <debug> t
   external flock-traverse-cfg(s|)
-  external flock-opt(s, t|)
+  external flock-opt(pre, fn, post|)
 
   external flock-disable-logging(|)
   external flock-enable-logging(|)

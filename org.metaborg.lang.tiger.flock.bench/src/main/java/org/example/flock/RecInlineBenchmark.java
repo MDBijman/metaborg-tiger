@@ -20,7 +20,7 @@ public class RecInlineBenchmark extends BaseBenchmark {
 	public IContext context;
 	public IStrategoTerm ast;
 
-	@Param({ "1000", "2000", "3000", "4000", "5000", "7500", "10000" })
+	@Param({ "1000",  "3000", "5000"})
 	int count;
 
 	@Setup
@@ -32,7 +32,7 @@ public class RecInlineBenchmark extends BaseBenchmark {
 		this.doStrategyTransformation(context, ast, "flock-disable-timing");
 	}
 
-	@Benchmark
+	//@Benchmark
 	public IStrategoTerm run() throws MetaborgException {
 		return this.doStrategyTransformation(context, ast, "pipeline");
 	}

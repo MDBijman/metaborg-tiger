@@ -1,7 +1,7 @@
 cd resources/c
 
-benchmarks=(branches vars mod_inline rec_inline scoped_vars)
-N=(1000 2000 3000 4000 5000 7500 10000)
+benchmarks=(branches vars mod_inline scoped_vars)
+N=(1000 3000 5000)
 repeats=3
 files=(./*.)
 timestamp=$(date +"%Y%m%d")_$(date +"%k%M%S")

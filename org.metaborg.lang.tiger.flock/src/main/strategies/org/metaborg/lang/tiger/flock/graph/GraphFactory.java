@@ -1,5 +1,9 @@
 package org.metaborg.lang.tiger.flock.graph;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.metaborg.lang.tiger.flock.common.Graph;
 import org.metaborg.lang.tiger.flock.common.GraphBuilder;
 import org.metaborg.lang.tiger.flock.common.Helpers;
@@ -11,29 +15,51 @@ import org.spoofax.terms.util.M;
 import org.spoofax.terms.util.TermUtils;
 
 public class GraphFactory {
+	public static class PartialGraph {
+		public Graph graph;
+		public TermId entry, exit;
+		
+		private PartialGraph(Graph g, TermId entry, TermId exit) {
+			this.graph = g;
+			this.entry = entry;
+			this.exit = exit;
+		}
+	}
+	
 	public static Graph createCfgRecursive(TermTree tree, IStrategoTerm term) {
-		return createCfgRecursive_inner(term).build(tree);
+		List<GraphBuilder> r = createCfgRecursive_inner(term);
+		if (r.isEmpty()) {
+			return null;
+		}
+		Iterator<GraphBuilder> it = r.iterator();
+		GraphBuilder result = it.next();
+		while (it.hasNext()) {
+			GraphBuilder sub = it.next();
+			result.mergeAsGraph(sub);
+
+		}
+		return result.build(tree);
 	}
 
-	public static Graph createCfgOnce(TermTree tree, IStrategoTerm term) {
-		return createCfg_inner(term).build(tree);
+	public static PartialGraph createCfgOnce(TermTree tree, IStrategoTerm term) {
+		GraphBuilder rb = createCfg_inner(term);
+		Graph r = rb.build(tree);
+		return new PartialGraph(r, rb.ENTRY, rb.EXIT);
 	}
 
-	public static GraphBuilder createCfgRecursive_inner(IStrategoTerm term) {
-		GraphBuilder result_graph = GraphBuilder.empty(Helpers.getTermId(term));
+	public static List<GraphBuilder> createCfgRecursive_inner(IStrategoTerm term) {
+		ArrayList<GraphBuilder> graphs = new ArrayList<>();
 		for (IStrategoTerm subterm : term.getSubterms()) {
-			GraphBuilder subgraph = createCfgRecursive_inner(subterm);
-			if (subgraph != null) {
-				result_graph.merge(subgraph);
-			}
+			List<GraphBuilder> subgraph = createCfgRecursive_inner(subterm);
+			graphs.addAll(subgraph);
 		}
 		if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("Mod") && term.getSubtermCount() == 1)) {
 			IStrategoTerm _Mod = term;
 			IStrategoTerm s = Helpers.at(term, 0);
 			GraphBuilder s_nr = createCfg_inner(s);
-			result_graph.merge(s_nr);
-			result_graph.connect(result_graph.START, s_nr.ENTRY);
-			result_graph.connect(s_nr.EXIT, result_graph.END);
+			s_nr.connect(s_nr.START, s_nr.ENTRY);
+			s_nr.connect(s_nr.EXIT, s_nr.END);
+			graphs.add(s_nr);
 		} else if (TermUtils.isAppl(term)
 				&& (M.appl(term).getName().equals("ProcDec") && term.getSubtermCount() == 3)) {
 			IStrategoTerm _ProcDec = term;
@@ -41,9 +67,9 @@ public class GraphFactory {
 			IStrategoTerm args = Helpers.at(term, 1);
 			IStrategoTerm body = Helpers.at(term, 2);
 			GraphBuilder body_nr = createCfg_inner(body);
-			result_graph.merge(body_nr);
-			result_graph.connect(result_graph.START, body_nr.ENTRY);
-			result_graph.connect(body_nr.EXIT, result_graph.END);
+			body_nr.connect(body_nr.START, body_nr.ENTRY);
+			body_nr.connect(body_nr.EXIT, body_nr.END);
+			graphs.add(body_nr);
 		} else if (TermUtils.isAppl(term) && (M.appl(term).getName().equals("FunDec") && term.getSubtermCount() == 4)) {
 			IStrategoTerm _FunDec = term;
 			IStrategoTerm n = Helpers.at(term, 0);
@@ -51,13 +77,11 @@ public class GraphFactory {
 			IStrategoTerm rt = Helpers.at(term, 2);
 			IStrategoTerm body = Helpers.at(term, 3);
 			GraphBuilder body_nr = createCfg_inner(body);
-			result_graph.merge(body_nr);
-			result_graph.connect(result_graph.START, body_nr.ENTRY);
-			result_graph.connect(body_nr.EXIT, result_graph.END);
-		} else {
-			return null;
+			body_nr.connect(body_nr.START, body_nr.ENTRY);
+			body_nr.connect(body_nr.EXIT, body_nr.END);
+			graphs.add(body_nr);
 		}
-		return result_graph;
+		return graphs;
 	}
 
 	private static GraphBuilder createCfg_inner(IStrategoTerm term) {

@@ -10,6 +10,7 @@ import org.metaborg.lang.tiger.flock.common.Graph.Node.NodeType;
 import org.metaborg.lang.tiger.flock.common.IAnalysis.Direction;
 import org.metaborg.lang.tiger.flock.common.SCCs.Component;
 import org.metaborg.lang.tiger.flock.graph.GraphFactory;
+import org.metaborg.lang.tiger.flock.graph.GraphFactory.PartialGraph;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.strategoxt.lang.Context;
 
@@ -44,10 +45,14 @@ public class FlockIncremental extends Flock {
 
 	@Override
 	public void createControlFlowGraph(Context context, IStrategoTerm current) {
+		Flock.beginTime("FlockIncremental@createControlFlowGraph:createCfg");
 		this.graph = GraphFactory.createCfgRecursive(this.termTree, current);
+		Flock.endTime("FlockIncremental@createControlFlowGraph:createCfg");
 		this.graph.validate();
 		initPosition(graph, context.getFactory());
+		Flock.beginTime("FlockIncremental@createControlFlowGraph:createSCCs");
 		this.graph_scss = SCCs.startingFromStart(this.graph);
+		Flock.endTime("FlockIncremental@createControlFlowGraph:createSCCs");
 	}
 
 	@Override
@@ -90,7 +95,7 @@ public class FlockIncremental extends Flock {
 
 		Flock.beginTime("FlockIncremental@replaceNode:createCfg");
 		// Create new sub-CFG
-		Graph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
+		PartialGraph subGraph = GraphFactory.createCfgOnce(this.termTree, replacement);
 		Flock.endTime("FlockIncremental@replaceNode:createCfg");
 
 		// Inefficient fallback for SCC replacement
@@ -115,12 +120,17 @@ public class FlockIncremental extends Flock {
 			Component common = this.graph_scss.commonSCCs(predecessors, successors);
 			Flock.beginTime("FlockIncremental@replaceNode:makeSubSCCs");
 			// We only compute SCCs if there was no common component
-			SCCs subgraphSCCs = common == null ? SCCs.startingFromEntry(subGraph) : null;
+			SCCs subgraphSCCs = common == null ? SCCs.startingFromEntry(subGraph.graph, subGraph.entry) : null;
 			Flock.endTime("FlockIncremental@replaceNode:makeSubSCCs");
 
 			Flock.beginTime("FlockIncremental@replaceNode:replaceCFG");
 			// Replace nodes in CFG
-			this.graph.replaceNodes(rootId, innerIds, subGraph);
+			try {
+				this.graph.replaceNodes(rootId, innerIds, subGraph);
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw e;
+			}
 			Flock.endTime("FlockIncremental@replaceNode:replaceCFG");
 
 			Flock.beginTime("FlockIncremental@replaceNode:replaceSCC");
@@ -133,7 +143,7 @@ public class FlockIncremental extends Flock {
 
 		Flock.beginTime("FlockIncremental@replaceNode:addToNew");
 		// Add new nodes to analysis
-		for (Node n : subGraph.nodes()) {
+		for (Node n : subGraph.graph.nodes()) {
 			if (n.type != NodeType.START && n.type != NodeType.END)
 				this.addToNew(n);
 		}

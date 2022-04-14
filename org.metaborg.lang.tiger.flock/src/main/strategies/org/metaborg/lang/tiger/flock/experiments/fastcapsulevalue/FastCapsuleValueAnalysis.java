@@ -303,9 +303,7 @@ class TransferFunction0 extends TransferFunction {
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
 		ITermFactory factory = Flock.instance.factory;
-		Flock.beginTime("0");
-		//IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
-		Flock.endTime("0");
+		// IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
 		Node prev = node;
 		ImmutableMap tmp57 = (ImmutableMap) UserFunctions.values_f(prev);
 		boolean r = TransferFunction.assignEvalResult(direction, node, res, tmp57);
@@ -341,7 +339,16 @@ class TransferFunction4 extends TransferFunction {
 	@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
 	@Override
 	public boolean eval(SingleAnalysis.Direction direction, FlockLattice res, Node node) {
-		throw new NotImplementedException();
+		ITermFactory factory = Flock.instance.factory;
+		IStrategoTerm term = node.virtualTerm.toTermWithoutAnnotations();
+		Node prev = node;
+		IStrategoTerm usrn = Helpers.at(term, 0);
+		IStrategoTerm usri = Helpers.at(Helpers.at(term, 2), 0);
+		Transient x = ((io.usethesource.capsule.Map.Immutable) ((FlockLattice) UserFunctions.values_f(prev)).value())
+				.asTransient();
+		x.__put(usrn, new Value(new ConstPropTop()));
+		boolean r = TransferFunction.assignEvalResult(direction, node, res, x.freeze());
+		return r;
 	}
 }
 

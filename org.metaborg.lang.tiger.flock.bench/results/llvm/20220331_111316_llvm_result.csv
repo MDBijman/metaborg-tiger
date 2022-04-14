@@ -1,0 +1,16 @@
+"Benchmark","Param: count","Score","Unit","Samples"
+"branches",1000,147,"ms/op",1
+"branches",3000,803,"ms/op",1
+"branches",5000,2154,"ms/op",1
+"vars",1000,17,"ms/op",1
+"vars",3000,64,"ms/op",1
+"vars",5000,44,"ms/op",1
+"mod_inline",1000,85,"ms/op",1
+"mod_inline",3000,239,"ms/op",1
+"mod_inline",5000,379,"ms/op",1
+"rec_inline",1000,76,"ms/op",1
+"rec_inline",3000,198,"ms/op",1
+"rec_inline",5000,337,"ms/op",1
+"scoped_vars",1000,18,"ms/op",1
+"scoped_vars",3000,40,"ms/op",1
+"scoped_vars",5000,46,"ms/op",1

@@ -1,0 +1,12 @@
+"Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit","Param: count"
+"org.example.flock.BranchBenchmark.run","avgt",1,5,161.312665,5.458510,"ms/op",1000
+"org.example.flock.BranchBenchmark.run","avgt",1,5,562.106047,6.728731,"ms/op",3000
+"org.example.flock.BranchBenchmark.run","avgt",1,5,1022.100595,274.528636,"ms/op",5000
+"org.example.flock.ModInlineBenchmark.run","avgt",1,5,333.896642,8.430245,"ms/op",1000
+"org.example.flock.ModInlineBenchmark.run","avgt",1,5,1710.298820,135.700531,"ms/op",3000
+"org.example.flock.ScopedVarsBenchmark.run","avgt",1,5,510.764721,110.526626,"ms/op",1000
+"org.example.flock.ScopedVarsBenchmark.run","avgt",1,5,3349.893640,298.975285,"ms/op",3000
+"org.example.flock.ScopedVarsBenchmark.run","avgt",1,5,12412.466320,896.763967,"ms/op",5000
+"org.example.flock.VarsBenchmark.run","avgt",1,5,85.937210,1.902386,"ms/op",1000
+"org.example.flock.VarsBenchmark.run","avgt",1,5,329.750230,27.565697,"ms/op",3000
+"org.example.flock.VarsBenchmark.run","avgt",1,5,594.787031,85.368553,"ms/op",5000
