@@ -3,6 +3,7 @@ package org.metaborg.lang.tiger.flock.common;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,10 +12,19 @@ import org.metaborg.lang.tiger.flock.common.Graph.Node;
 import org.metaborg.lang.tiger.flock.common.Graph.Node.NodeType;
 
 public class GraphBuilder {
+	public static class TermGraphMapping {
+
+		public TermId ENTRY = Flock.nextNodeId();
+		public TermId EXIT = Flock.nextNodeId();
+		public TermId term;
+
+		public TermGraphMapping(TermId n) {
+			this.term = n;
+		}
+	}
+
 	public final TermId START = Flock.nextNodeId();
 	public final TermId END = Flock.nextNodeId();
-	public TermId ENTRY = Flock.nextNodeId();
-	public TermId EXIT = Flock.nextNodeId();
 	private HashSet<TermId> nodes = new HashSet<>();
 	private HashMap<TermId, NodeType> types = new HashMap<>();
 	private HashMap<TermId, Set<TermId>> children = new HashMap<>();
@@ -23,39 +33,17 @@ public class GraphBuilder {
 	private HashMap<TermId, TermId> exit = new HashMap<>();
 	private HashSet<TermId> irregular = new HashSet<>();
 
-	private GraphBuilder() {
-	}
-
-	public static GraphBuilder empty(TermId t) {
-		GraphBuilder r = new GraphBuilder();
-		r.addNode(r.START, NodeType.START);
-		r.addNode(r.END, NodeType.END);
-		r.addNode(r.ENTRY, NodeType.ENTRY);
-		r.addNode(r.EXIT, NodeType.EXIT);
-		r.entry.put(t, r.ENTRY);
-		r.exit.put(t, r.EXIT);
-		return r;
+	public GraphBuilder() {
+		this.addNode(this.START, NodeType.START);
+		this.addNode(this.END, NodeType.END);
 	}
 
 	public boolean isEmpty() {
 		return this.nodes.size() == 4 && this.entry.size() == 1 && this.exit.size() == 1;
 	}
 
-	public static GraphBuilder fallthrough(TermId t) {
-		GraphBuilder r = GraphBuilder.empty(t);
-		r.connect(r.ENTRY, r.EXIT);
-		return r;
-	}
-
-	public static GraphBuilder fromSingle(TermId n) {
-		GraphBuilder r = new GraphBuilder();
-		r.ENTRY = n;
-		r.EXIT = n;
-		r.addNode(r.START, NodeType.START);
-		r.addNode(r.END, NodeType.END);
-		r.addNode(r.ENTRY, NodeType.ENTRY);
-		r.addNode(r.EXIT, NodeType.EXIT);
-		r.addNode(n, NodeType.NORMAL);
+	public static TermGraphMapping newMapping(TermId t) {
+		TermGraphMapping r = new TermGraphMapping(t);
 		return r;
 	}
 
@@ -91,148 +79,89 @@ public class GraphBuilder {
 	public Collection<TermId> nodes() {
 		return this.nodes;
 	}
+	
+	public void materializeEntryExit(TermGraphMapping o) {
+		this.addNode(o.ENTRY, NodeType.ENTRY);
+		this.addNode(o.EXIT, NodeType.EXIT);
 
-	public void merge(GraphBuilder o) {
-		Flock.beginTime("000");
-		// Fast addAll nodes
-		if (this.nodes.size() > o.nodes.size()) {
-			this.nodes.addAll(o.nodes);
-		} else {
-			o.nodes.addAll(this.nodes);
-			HashSet<TermId> tmp = this.nodes;
-			this.nodes = o.nodes;
-			o.nodes = tmp;
-		}
-
-		// Fast putAll children
-		if (this.children.size() > o.children.size()) {
-			this.children.putAll(o.children);
-		} else {
-			o.children.putAll(this.children);
-			HashMap<TermId, Set<TermId>> tmp = this.children;
-			this.children = o.children;
-			o.children = tmp;
-		}
-
-		// Fast putAll parents
-		if (this.parents.size() > o.parents.size()) {
-			this.parents.putAll(o.parents);
-		} else {
-			o.parents.putAll(this.parents);
-			HashMap<TermId, Set<TermId>> tmp = this.parents;
-			this.parents = o.parents;
-			o.parents = tmp;
-		}
-
-		// Fast putAll types
-		if (this.types.size() > o.types.size()) {
-			this.types.putAll(o.types);
-		} else {
-			o.types.putAll(this.types);
-			HashMap<TermId, NodeType> tmp = this.types;
-			this.types = o.types;
-			o.types = tmp;
-		}
-
-		this.entry.putAll(o.entry);
-		this.exit.putAll(o.exit);
-
-		for (TermId startTerm : this.children.get(o.START)) {
-			this.parents.get(startTerm).remove(o.START);
-			this.connect(this.START, startTerm);
-		}
-		for (TermId endTerm : this.children.get(o.END)) {
-			this.children.get(endTerm).remove(o.END);
-			this.connect(endTerm, this.END);
-		}
-
-		this.deleteNode(o.START);
-		this.deleteNode(o.END);
-		Flock.endTime("000");
+		this.entry.put(o.term, o.ENTRY);
+		this.exit.put(o.term, o.EXIT);
 	}
-
-	public void mergeAsGraph(GraphBuilder o) {
-		Flock.beginTime("001");
-		// Fast addAll nodes
-		if (this.nodes.size() > o.nodes.size()) {
-			this.nodes.addAll(o.nodes);
-		} else {
-			o.nodes.addAll(this.nodes);
-			HashSet<TermId> tmp = this.nodes;
-			this.nodes = o.nodes;
-			o.nodes = tmp;
-		}
-
-		// Fast putAll children
-		if (this.children.size() > o.children.size()) {
-			this.children.putAll(o.children);
-		} else {
-			o.children.putAll(this.children);
-			HashMap<TermId, Set<TermId>> tmp = this.children;
-			this.children = o.children;
-			o.children = tmp;
-		}
-
-		// Fast putAll parents
-		if (this.parents.size() > o.parents.size()) {
-			this.parents.putAll(o.parents);
-		} else {
-			o.parents.putAll(this.parents);
-			HashMap<TermId, Set<TermId>> tmp = this.parents;
-			this.parents = o.parents;
-			o.parents = tmp;
-		}
-
-		// Fast putAll types
-		if (this.types.size() > o.types.size()) {
-			this.types.putAll(o.types);
-		} else {
-			o.types.putAll(this.types);
-			HashMap<TermId, NodeType> tmp = this.types;
-			this.types = o.types;
-			o.types = tmp;
-		}
-
-		this.entry.putAll(o.entry);
-		this.exit.putAll(o.exit);
-
-		Flock.endTime("001");
+	
+	public void materializeNode(TermGraphMapping o) {
+		this.addNode(o.term, NodeType.NORMAL);
 	}
+	
+//	public void materializeUnconnected(TermGraphMapping o) {
+//		this.addNode(o.term, NodeType.NORMAL);
+//		this.addNode(o.ENTRY, NodeType.ENTRY);
+//		this.addNode(o.EXIT, NodeType.EXIT);
+//
+//		this.entry.put(o.term, o.ENTRY);
+//		this.exit.put(o.term, o.EXIT);
+//	}
+//
+//	public void materializeAsNode(TermGraphMapping o) {
+//		this.addNode(o.term, NodeType.NORMAL);
+//		this.addNode(o.ENTRY, NodeType.ENTRY);
+//		this.addNode(o.EXIT, NodeType.EXIT);
+//
+//		this.entry.put(o.term, o.ENTRY);
+//		this.exit.put(o.term, o.EXIT);
+//		this.connect(o.ENTRY, o.term);
+//		this.connect(o.term, o.EXIT);
+//	}
+//
+//	public void materializeAsFallthrough(TermGraphMapping o) {
+//		this.addNode(o.ENTRY, NodeType.ENTRY);
+//		this.addNode(o.EXIT, NodeType.EXIT);
+//
+//		this.entry.put(o.term, o.ENTRY);
+//		this.exit.put(o.term, o.EXIT);
+//		this.connect(o.ENTRY, o.EXIT);
+//	}
 
-	public Graph build(TermTree tree) {
+	public static Graph build(List<GraphBuilder> graphs, TermTree tree) {
 		HashMap<TermId, Node> nodes = new HashMap<>();
-
-		// Fill nodes
-		for (TermId t : this.nodes) {
-			nodes.put(t, new Node(null, t, tree.nodeById(t), types.get(t)));
-		}
-
-		Graph g = new Graph(nodes, this.entry, this.exit);
-
-		for (Node n : nodes.values()) {
-			n.withGraph(g);
-		}
-
-		// Fill children
-		for (Map.Entry<TermId, Set<TermId>> t : this.children.entrySet()) {
-			Set<Node> tChildren = new HashSet<>();
-			for (TermId c : t.getValue()) {
-				tChildren.add(nodes.get(c));
+		HashMap<TermId, TermId> entries = new HashMap<>();
+		HashMap<TermId, TermId> exits = new HashMap<>();
+		for (GraphBuilder builder : graphs) {
+			entries.putAll(builder.entry);
+			exits.putAll(builder.exit);
+			// Fill nodes
+			for (TermId t : builder.nodes) {
+				nodes.put(t, new Node(null, t, tree.nodeById(t), builder.types.get(t)));
 			}
-			nodes.get(t.getKey()).children = tChildren;
 		}
 
-		// Fill parents
-		for (Map.Entry<TermId, Set<TermId>> t : this.parents.entrySet()) {
-			Set<Node> tParents = new HashSet<>();
-			for (TermId c : t.getValue()) {
-				tParents.add(nodes.get(c));
+		Graph g = new Graph(nodes, entries, exits);
+
+		for (GraphBuilder builder : graphs) {
+			for (Node n : nodes.values()) {
+				n.withGraph(g);
 			}
-			nodes.get(t.getKey()).parents = tParents;
-		}
 
-		for (TermId t : this.irregular) {
-			tree.markIrregular(t);
+			// Fill children
+			for (Map.Entry<TermId, Set<TermId>> t : builder.children.entrySet()) {
+				Set<Node> tChildren = new HashSet<>();
+				for (TermId c : t.getValue()) {
+					tChildren.add(nodes.get(c));
+				}
+				nodes.get(t.getKey()).children = tChildren;
+			}
+
+			// Fill parents
+			for (Map.Entry<TermId, Set<TermId>> t : builder.parents.entrySet()) {
+				Set<Node> tParents = new HashSet<>();
+				for (TermId c : t.getValue()) {
+					tParents.add(nodes.get(c));
+				}
+				nodes.get(t.getKey()).parents = tParents;
+			}
+
+			for (TermId t : builder.irregular) {
+				tree.markIrregular(t);
+			}
 		}
 		return g;
 	}
